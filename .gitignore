@@ -17,3 +17,6 @@ media/
 # Editores
 .vscode/
 .idea/
+
+# Others files
+pasos_para_seguir.txt
