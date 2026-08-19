@@ -1,0 +1,29 @@
+<h1>Menú de Suerte Café</h1>
+
+{% for category in categories %}
+    <section>
+        <h2>{{ category.name }}</h2>
+
+        {% for product in category.available_products %}
+            <article>
+                {% if product.image %}
+                    <img
+                        src="{{ product.image.url }}"
+                        alt="{{ product.name }}"
+                        width="150"
+                    >
+                {% endif %}
+
+                <h3>{{ product.name }}</h3>
+                <p>{{ product.description }}</p>
+                <strong>${{ product.price }} MXN</strong>
+            </article>
+        {% empty %}
+            <p>No hay productos disponibles.</p>
+        {% endfor %}
+    </section>
+{% empty %}
+    <p>No existen categorías.</p>
+{% endfor %}
+
+<a href="{% url 'home' %}">Regresar</a>
