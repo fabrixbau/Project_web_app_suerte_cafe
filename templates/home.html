@@ -2,9 +2,13 @@
 
 <p>Bienvenido, {{ user.username }}</p>
 
+<a href="{% url 'menu:list' %}">Ver menú</a>
+
+<a href="{% url 'orders:create' %}">Nuevo pedido</a>
+
+<a href="{% url 'orders:list' %}">Ver pedidos</a>
+
 <form method="post" action="{% url 'logout' %}">
     {% csrf_token %}
     <button type="submit">Cerrar sesión</button>
 </form>
-
-<a href="{% url 'menu:list' %}">Ver menú</a>

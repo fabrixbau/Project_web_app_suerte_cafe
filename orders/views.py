@@ -1,0 +1,130 @@
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ValidationError
+from django.core.paginator import Paginator
+from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_POST
+
+from menu.models import Product
+
+from .forms import OrderCreateForm
+from .models import Order
+from .services import create_order
+
+
+@login_required
+@require_POST
+def order_status_update(request, order_id):
+    order = get_object_or_404(Order, id=order_id)
+    new_status = request.POST.get("status")
+
+    if new_status not in Order.Status.values:
+        messages.error(request, "El estado seleccionado no es válido.")
+    else:
+        order.status = new_status
+        order.save(update_fields=["status", "updated_at"])
+
+        messages.success(
+            request,
+            f"El pedido {order.formatted_number} fue actualizado.",
+        )
+
+    return redirect("orders:list")
+
+
+@login_required
+def order_create(request):
+    products = Product.objects.filter(
+        is_available=True,
+    ).select_related("category").order_by(
+        "category__name",
+        "name",
+    )
+
+    form = OrderCreateForm(request.POST or None)
+
+    if request.method == "POST" and form.is_valid():
+        items = []
+
+        for product in products:
+            raw_quantity = request.POST.get(
+                f"quantity_{product.id}",
+                "0",
+            )
+
+            try:
+                quantity = int(raw_quantity)
+            except ValueError:
+                form.add_error(
+                    None,
+                    f"Cantidad inválida para {product.name}.",
+                )
+                continue
+
+            if quantity < 0:
+                form.add_error(
+                    None,
+                    f"La cantidad de {product.name} no puede ser negativa.",
+                )
+            elif quantity > 0:
+                items.append(
+                    {
+                        "product_id": product.id,
+                        "quantity": quantity,
+                    }
+                )
+
+        if not items:
+            form.add_error(
+                None,
+                "Selecciona al menos un producto.",
+            )
+
+        if not form.errors:
+            customer_data = form.cleaned_data.copy()
+            order_type = customer_data.pop("order_type")
+
+            try:
+                order = create_order(
+                    user=request.user,
+                    order_type=order_type,
+                    items=items,
+                    customer_data=customer_data,
+                )
+            except ValidationError as error:
+                for message in error.messages:
+                    form.add_error(None, message)
+            else:
+                messages.success(
+                    request,
+                    f"Pedido #{order.daily_number:03d} guardado.",
+                )
+                return redirect("orders:create")
+
+    return render(
+        request,
+        "orders/order_create.html",
+        {
+            "form": form,
+            "products": products,
+        },
+    )
+
+
+@login_required
+def order_list(request):
+    orders = Order.objects.select_related(
+        "created_by",
+    ).order_by("-created_at")
+
+    paginator = Paginator(orders, 20)
+    page = paginator.get_page(request.GET.get("page"))
+
+    return render(
+        request,
+        "orders/order_list.html",
+        {
+            "page": page,
+            "status_choices": Order.Status.choices,
+        },
+    )

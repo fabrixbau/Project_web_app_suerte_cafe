@@ -1,0 +1,44 @@
+<h1>Nuevo pedido</h1>
+
+{% for message in messages %}
+    <p>{{ message }}</p>
+{% endfor %}
+
+<form method="post">
+    {% csrf_token %}
+
+    {{ form.as_p }}
+
+    <h2>Productos</h2>
+
+    {% regroup products by category as category_list %}
+
+    {% for category in category_list %}
+        <section>
+            <h3>{{ category.grouper.name }}</h3>
+
+            {% for product in category.list %}
+                <div>
+                    <strong>{{ product.name }}</strong>
+                    <span>${{ product.price }} MXN</span>
+
+                    <label for="quantity_{{ product.id }}">
+                        Cantidad
+                    </label>
+
+                    <input
+                        id="quantity_{{ product.id }}"
+                        name="quantity_{{ product.id }}"
+                        type="number"
+                        min="0"
+                        value="0"
+                    >
+                </div>
+            {% endfor %}
+        </section>
+    {% endfor %}
+
+    <button type="submit">Finalizar pedido</button>
+</form>
+
+<a href="{% url 'home' %}">Regresar</a>

@@ -1,0 +1,86 @@
+<h1>Pedidos</h1>
+
+<a href="{% url 'orders:create' %}">Nuevo pedido</a>
+
+{% for message in messages %}
+    <p>{{ message }}</p>
+{% endfor %}
+
+<table>
+    <thead>
+        <tr>
+            <th>Número</th>
+            <th>Fecha</th>
+            <th>Hora</th>
+            <th>Cliente</th>
+            <th>Tipo</th>
+            <th>Total</th>
+            <th>Estado</th>
+            <th>Empleado</th>
+            <th>Cambiar estado</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for order in page %}
+            <tr>
+                <td>{{ order.formatted_number }}</td>
+                <td>{{ order.operating_date|date:"d/m/Y" }}</td>
+                <td>{{ order.created_at|date:"H:i" }}</td>
+                <td>{{ order.customer_name|default:"Sin nombre" }}</td>
+                <td>{{ order.get_order_type_display }}</td>
+                <td>${{ order.total }} MXN</td>
+                <td>{{ order.get_status_display }}</td>
+                <td>{{ order.employee_name_snapshot }}</td>
+                <td>
+                    <form
+                        method="post"
+                        action="{% url 'orders:status_update' order.id %}"
+                    >
+                        {% csrf_token %}
+
+                        <label for="status_{{ order.id }}">
+                            Nuevo estado
+                        </label>
+
+                        <select
+                            id="status_{{ order.id }}"
+                            name="status"
+                        >
+                            {% for value, label in status_choices %}
+                                <option
+                                    value="{{ value }}"
+                                    {% if value == order.status %}selected{% endif %}
+                                >
+                                    {{ label }}
+                                </option>
+                            {% endfor %}
+                        </select>
+
+                        <button type="submit">Actualizar</button>
+                    </form>
+                </td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td colspan="9">No existen pedidos.</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<nav>
+    {% if page.has_previous %}
+        <a href="?page={{ page.previous_page_number }}">Anterior</a>
+    {% endif %}
+
+    <span>
+        Página {{ page.number }} de {{ page.paginator.num_pages }}
+    </span>
+
+    {% if page.has_next %}
+        <a href="?page={{ page.next_page_number }}">Siguiente</a>
+    {% endif %}
+</nav>
+
+<a href="{% url 'home' %}">Inicio</a>
