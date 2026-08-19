@@ -40,12 +40,6 @@ class OrderCreateForm(forms.ModelForm):
                     "El nombre es obligatorio para entregas.",
                 )
 
-            if not cleaned_data.get("neighborhood"):
-                self.add_error(
-                    "neighborhood",
-                    "La colonia es obligatoria para entregas.",
-                )
-
         return cleaned_data
 
 

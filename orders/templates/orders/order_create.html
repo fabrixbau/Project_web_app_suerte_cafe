@@ -1,3 +1,5 @@
+{% load l10n %}
+
 <h1>Nuevo pedido</h1>
 
 {% for message in messages %}
@@ -7,7 +9,67 @@
 <form method="post">
     {% csrf_token %}
 
-    {{ form.as_p }}
+    {{ form.non_field_errors }}
+
+    <p>
+        {{ form.order_type.label_tag }}
+        {{ form.order_type }}
+        {{ form.order_type.errors }}
+    </p>
+
+    <p>
+        {{ form.customer_name.label_tag }}
+        {{ form.customer_name }}
+        {{ form.customer_name.errors }}
+    </p>
+
+    <div id="phone-fields">
+        <p>
+            {{ form.phone.label_tag }}
+            {{ form.phone }}
+            {{ form.phone.errors }}
+        </p>
+    </div>
+
+    <div id="eat-in-fields">
+        <p>
+            {{ form.table_reference.label_tag }}
+            {{ form.table_reference }}
+            {{ form.table_reference.errors }}
+        </p>
+    </div>
+
+    <div id="delivery-fields">
+        <p>
+            {{ form.street.label_tag }}
+            {{ form.street }}
+            {{ form.street.errors }}
+        </p>
+
+        <p>
+            {{ form.exterior_number.label_tag }}
+            {{ form.exterior_number }}
+            {{ form.exterior_number.errors }}
+        </p>
+
+        <p>
+            {{ form.interior_number.label_tag }}
+            {{ form.interior_number }}
+            {{ form.interior_number.errors }}
+        </p>
+
+        <p>
+            {{ form.neighborhood.label_tag }}
+            {{ form.neighborhood }}
+            {{ form.neighborhood.errors }}
+        </p>
+    </div>
+
+    <p>
+        {{ form.notes.label_tag }}
+        {{ form.notes }}
+        {{ form.notes.errors }}
+    </p>
 
     <h2>Productos</h2>
 
@@ -18,7 +80,11 @@
             <h3>{{ category.grouper.name }}</h3>
 
             {% for product in category.list %}
-                <div>
+                <div
+                    class="product-card"
+                    data-name="{{ product.name }}"
+                    data-price="{{ product.price|unlocalize }}"
+                >
                     <strong>{{ product.name }}</strong>
                     <span>${{ product.price }} MXN</span>
 
@@ -26,19 +92,152 @@
                         Cantidad
                     </label>
 
+                    <button
+                        type="button"
+                        class="decrease-quantity"
+                    >
+                        −
+                    </button>
+
                     <input
                         id="quantity_{{ product.id }}"
+                        class="quantity-input"
                         name="quantity_{{ product.id }}"
                         type="number"
                         min="0"
                         value="0"
                     >
+
+                    <button
+                        type="button"
+                        class="increase-quantity"
+                    >
+                        +
+                    </button>
                 </div>
             {% endfor %}
         </section>
     {% endfor %}
 
+    <section>
+        <h2>Pedido actual</h2>
+
+        <div id="current-order-items">
+            <p>No hay productos seleccionados.</p>
+        </div>
+
+        <p>
+            Artículos:
+            <strong id="total-items">0</strong>
+        </p>
+
+        <p>
+            Total:
+            <strong id="order-total">$0.00 MXN</strong>
+        </p>
+    </section>
+
     <button type="submit">Finalizar pedido</button>
 </form>
 
 <a href="{% url 'home' %}">Regresar</a>
+
+
+<script>
+    const orderType = document.querySelector("#id_order_type");
+    const phoneFields = document.querySelector("#phone-fields");
+    const eatInFields = document.querySelector("#eat-in-fields");
+    const deliveryFields = document.querySelector("#delivery-fields");
+
+    function updateCustomerFields() {
+        const selectedType = orderType.value;
+
+        eatInFields.hidden = selectedType !== "eat_in";
+        deliveryFields.hidden = selectedType !== "delivery";
+
+        phoneFields.hidden = ![
+            "delivery",
+            "pickup",
+        ].includes(selectedType);
+    }
+
+    orderType.addEventListener("change", updateCustomerFields);
+    updateCustomerFields();
+</script>
+
+<script>
+    const productCards = document.querySelectorAll(".product-card");
+    const currentOrderItems = document.querySelector(
+        "#current-order-items"
+    );
+    const totalItemsElement = document.querySelector("#total-items");
+    const orderTotalElement = document.querySelector("#order-total");
+
+    const currencyFormatter = new Intl.NumberFormat("es-MX", {
+        style: "currency",
+        currency: "MXN",
+    });
+
+    function updateOrderSummary() {
+        currentOrderItems.innerHTML = "";
+
+        let totalItems = 0;
+        let orderTotal = 0;
+
+        productCards.forEach((card) => {
+            const input = card.querySelector(".quantity-input");
+            const quantity = Number.parseInt(input.value, 10) || 0;
+            const price = Number.parseFloat(card.dataset.price);
+
+            if (quantity > 0) {
+                const subtotal = price * quantity;
+                const item = document.createElement("p");
+
+                item.textContent =
+                    `${card.dataset.name} × ${quantity} — ` +
+                    currencyFormatter.format(subtotal);
+
+                currentOrderItems.appendChild(item);
+                totalItems += quantity;
+                orderTotal += subtotal;
+            }
+        });
+
+        if (totalItems === 0) {
+            currentOrderItems.innerHTML =
+                "<p>No hay productos seleccionados.</p>";
+        }
+
+        totalItemsElement.textContent = totalItems;
+        orderTotalElement.textContent =
+            currencyFormatter.format(orderTotal);
+    }
+
+    productCards.forEach((card) => {
+        const input = card.querySelector(".quantity-input");
+        const decreaseButton = card.querySelector(".decrease-quantity");
+        const increaseButton = card.querySelector(".increase-quantity");
+
+        decreaseButton.addEventListener("click", () => {
+            const currentValue = Number.parseInt(input.value, 10) || 0;
+            input.value = Math.max(0, currentValue - 1);
+            updateOrderSummary();
+        });
+
+        increaseButton.addEventListener("click", () => {
+            const currentValue = Number.parseInt(input.value, 10) || 0;
+            input.value = currentValue + 1;
+            updateOrderSummary();
+        });
+
+        input.addEventListener("input", () => {
+            if (Number.parseInt(input.value, 10) < 0) {
+                input.value = 0;
+            }
+
+            updateOrderSummary();
+        });
+    });
+
+    updateOrderSummary();
+</script>
