@@ -1,14 +1,29 @@
-<h1>Suerte Café</h1>
+{% extends "base.html" %}
 
-<p>Bienvenido, {{ user.username }}</p>
+{% block title %}Inicio | Suerte Café{% endblock %}
 
-<a href="{% url 'menu:list' %}">Ver menú</a>
+{% block content %}
+    <h1>Suerte Café</h1>
 
-<a href="{% url 'orders:create' %}">Nuevo pedido</a>
+    <p>Bienvenido, {{ user.username }}</p>
 
-<a href="{% url 'orders:list' %}">Ver pedidos</a>
+    <h2>Acciones rápidas</h2>
 
-<form method="post" action="{% url 'logout' %}">
-    {% csrf_token %}
-    <button type="submit">Cerrar sesión</button>
-</form>
+    <p>
+        <a href="{% url 'orders:create' %}">
+            Crear nuevo pedido
+        </a>
+    </p>
+
+    <p>
+        <a href="{% url 'orders:list' %}">
+            Consultar pedidos
+        </a>
+    </p>
+
+    <p>
+        <a href="{% url 'menu:list' %}">
+            Consultar menú
+        </a>
+    </p>
+{% endblock %}

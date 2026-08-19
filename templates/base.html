@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    {% load static %}
+
+    <title>
+        {% block title %}Suerte Café{% endblock %}
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/app.css' %}"
+    >
+</head>
+
+<body>
+    <div class="app-layout">
+        <aside class="sidebar">
+            <a href="{% url 'home' %}" class="brand">
+                <img
+                    src="{% static 'img/logoSuerteCafe.png' %}"
+                    alt="Suerte Café"
+                >
+            </a>
+
+            <nav>
+                <a href="{% url 'orders:create' %}">
+                    Nuevo pedido
+                </a>
+
+                <a href="{% url 'orders:list' %}">
+                    Pedidos
+                </a>
+
+                <a href="{% url 'menu:list' %}">
+                    Menú
+                </a>
+            </nav>
+        </aside>
+
+        <div class="page">
+            <header class="topbar">
+                {% if user.is_authenticated %}
+                    <span>
+                        {{ user.profile.display_name|default:user.username }}
+                    </span>
+
+                    <form
+                        method="post"
+                        action="{% url 'logout' %}"
+                    >
+                        {% csrf_token %}
+                        <button type="submit">
+                            Cerrar sesión
+                        </button>
+                    </form>
+                {% endif %}
+            </header>
+
+            <main class="content">
+                {% for message in messages %}
+                    <p>{{ message }}</p>
+                {% endfor %}
+
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

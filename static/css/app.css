@@ -1,0 +1,62 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    color: #30251f;
+    background: #f7f3ee;
+    font-family: Arial, sans-serif;
+}
+
+.app-layout {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    min-height: 100vh;
+}
+
+.sidebar {
+    padding: 24px;
+    background: #3d2b22;
+}
+
+.brand img {
+    display: block;
+    max-width: 150px;
+    margin: 0 auto 32px;
+}
+
+.sidebar nav {
+    display: grid;
+    gap: 12px;
+}
+
+.sidebar nav a {
+    padding: 12px;
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+}
+
+.sidebar nav a:hover {
+    background: #604538;
+}
+
+.page {
+    min-width: 0;
+}
+
+.topbar {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 16px;
+    min-height: 64px;
+    padding: 12px 24px;
+    background: white;
+    border-bottom: 1px solid #ded6cf;
+}
+
+.content {
+    padding: 24px;
+}
