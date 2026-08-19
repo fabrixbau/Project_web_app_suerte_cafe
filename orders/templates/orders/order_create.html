@@ -86,7 +86,7 @@
                     data-price="{{ product.price|unlocalize }}"
                 >
                     <strong>{{ product.name }}</strong>
-                    <span>${{ product.price }} MXN</span>
+                    <span>${{ product.price }}</span>
 
                     <label for="quantity_{{ product.id }}">
                         Cantidad
@@ -133,7 +133,7 @@
 
         <p>
             Total:
-            <strong id="order-total">$0.00 MXN</strong>
+            <strong id="order-total">$0.00</strong>
         </p>
     </section>
 
@@ -176,6 +176,7 @@
     const currencyFormatter = new Intl.NumberFormat("es-MX", {
         style: "currency",
         currency: "MXN",
+        currencyDisplay: "narrowSymbol",
     });
 
     function updateOrderSummary() {

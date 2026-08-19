@@ -46,7 +46,7 @@
                 <td>{{ order.created_at|date:"H:i" }}</td>
                 <td>{{ order.customer_name|default:"Sin nombre" }}</td>
                 <td>{{ order.get_order_type_display }}</td>
-                <td>${{ order.total }} MXN</td>
+                <td>${{ order.total }}</td>
                 <td>{{ order.get_status_display }}</td>
                 <td>{{ order.employee_name_snapshot }}</td>
                 <td>

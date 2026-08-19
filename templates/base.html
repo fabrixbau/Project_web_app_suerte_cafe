@@ -41,12 +41,21 @@
                     Pedidos
                 </a>
 
-                <a
-                    href="{% url 'menu:list' %}"
-                    class="{% if request.resolver_match.namespace == 'menu' %}active{% endif %}"
-                >
-                    Menú
-                </a>
+                {% if perms.menu.view_category %}
+                    <a
+                        href="{% url 'menu:configuration' %}"
+                        class="{% if request.resolver_match.namespace == 'menu' %}active{% endif %}"
+                    >
+                        Configurar menú
+                    </a>
+                {% else %}
+                    <a
+                        href="{% url 'menu:list' %}"
+                        class="{% if request.resolver_match.namespace == 'menu' %}active{% endif %}"
+                    >
+                        Menú
+                    </a>
+                {% endif %}
             </nav>
         </aside>
 

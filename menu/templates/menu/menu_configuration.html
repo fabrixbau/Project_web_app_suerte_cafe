@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Configurar menú | Suerte Café{% endblock %}
+
+{% block content %}
+    <h1>Configuración del menú</h1>
+
+    {% if perms.menu.add_category %}
+        <p>
+            <a href="{% url 'menu:category_create' %}">
+                Nueva categoría
+            </a>
+        </p>
+    {% endif %}
+
+    {% if perms.menu.add_product %}
+        <p>
+            <a href="{% url 'menu:product_create' %}">
+                Nuevo producto
+            </a>
+        </p>
+    {% endif %}
+
+    <p>
+        <a href="{% url 'menu:list' %}">
+            Ver menú disponible
+        </a>
+    </p>
+
+    {% for category in categories %}
+        <section>
+            <h2>{{ category.name }}</h2>
+
+            {% if category.image %}
+                <img
+                    src="{{ category.image.url }}"
+                    alt="Categoría {{ category.name }}"
+                    width="120"
+                >
+            {% endif %}
+
+            {% if perms.menu.change_category %}
+                <p>
+                    <a href="{% url 'menu:category_edit' category.id %}">
+                        Editar categoría
+                    </a>
+                </p>
+            {% endif %}
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Precio</th>
+                        <th>Disponibilidad</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for product in category.products.all %}
+                        <tr>
+                            <td>{{ product.name }}</td>
+                            <td>${{ product.price }}</td>
+                            <td>
+                                {% if product.is_available %}
+                                    Disponible
+                                {% else %}
+                                    No disponible
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if perms.menu.change_product %}
+                                    <a href="{% url 'menu:product_edit' product.id %}">
+                                        Editar producto
+                                    </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="4">
+                                Esta categoría no tiene productos.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+    {% empty %}
+        <p>No existen categorías.</p>
+    {% endfor %}
+{% endblock %}

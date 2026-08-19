@@ -9,6 +9,14 @@
         <section>
             <h2>{{ category.name }}</h2>
 
+            {% if category.image %}
+                <img
+                    src="{{ category.image.url }}"
+                    alt="Categoría {{ category.name }}"
+                    width="120"
+                >
+            {% endif %}
+
             {% for product in category.available_products %}
                 <article>
                     {% if product.image %}
@@ -21,7 +29,7 @@
 
                     <h3>{{ product.name }}</h3>
                     <p>{{ product.description }}</p>
-                    <strong>${{ product.price }} MXN</strong>
+                    <strong>${{ product.price }}</strong>
                 </article>
             {% empty %}
                 <p>No hay productos disponibles.</p>
