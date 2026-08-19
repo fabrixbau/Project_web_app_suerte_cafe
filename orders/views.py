@@ -13,6 +13,24 @@ from .services import create_order
 
 
 @login_required
+def order_detail(request, order_id):
+    order = get_object_or_404(
+        Order.objects.select_related(
+            "created_by",
+        ).prefetch_related(
+            "items__product",
+        ),
+        id=order_id,
+    )
+
+    return render(
+        request,
+        "orders/order_detail.html",
+        {"order": order},
+    )
+
+
+@login_required
 @require_POST
 def order_status_update(request, order_id):
     order = get_object_or_404(Order, id=order_id)

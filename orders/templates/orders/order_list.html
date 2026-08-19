@@ -24,7 +24,11 @@
     <tbody>
         {% for order in page %}
             <tr>
-                <td>{{ order.formatted_number }}</td>
+                <td>
+                    <a href="{% url 'orders:detail' order.id %}">
+                        {{ order.formatted_number }}
+                    </a>
+                </td>
                 <td>{{ order.operating_date|date:"d/m/Y" }}</td>
                 <td>{{ order.created_at|date:"H:i" }}</td>
                 <td>{{ order.customer_name|default:"Sin nombre" }}</td>
