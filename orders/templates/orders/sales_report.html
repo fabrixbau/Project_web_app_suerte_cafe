@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}Reportes | Suerte Café{% endblock %}
+
+{% block content %}
+<h1>Reportes de ventas</h1>
+<p>Periodo: {{ date_from|date:"d/m/Y" }} al {{ date_to|date:"d/m/Y" }}</p>
+
+<form method="get" class="report-filters">
+    {{ filter_form.non_field_errors }}
+    <p>{{ filter_form.period.label_tag }} {{ filter_form.period }}</p>
+    <div id="custom-dates">
+        <p>{{ filter_form.date_from.label_tag }} {{ filter_form.date_from }} {{ filter_form.date_from.errors }}</p>
+        <p>{{ filter_form.date_to.label_tag }} {{ filter_form.date_to }} {{ filter_form.date_to.errors }}</p>
+    </div>
+    <details>
+        <summary>Filtros de la tabla</summary>
+        {{ filter_form.order_type.as_field_group }}
+        {{ filter_form.status.as_field_group }}
+        {{ filter_form.employee.as_field_group }}
+        {{ filter_form.customer.as_field_group }}
+        {{ filter_form.order_number.as_field_group }}
+    </details>
+    <button type="submit">Aplicar</button>
+    <a href="{% url 'orders:reports' %}">Limpiar</a>
+</form>
+
+<section class="report-cards">
+    <article><span>Ventas completadas</span><strong>${{ summary.total_sales|floatformat:2 }}</strong></article>
+    <article><span>Pedidos completados</span><strong>{{ summary.completed_count }}</strong></article>
+    <article><span>Venta promedio</span><strong>${{ summary.average_order|floatformat:2 }}</strong></article>
+    <article><span>Pedidos cancelados</span><strong>{{ summary.canceled_count }}</strong></article>
+</section>
+
+<div class="report-grid">
+    <section>
+        <h2>Ventas por tipo</h2>
+        {% for item in sales_by_type %}
+            <div class="sales-bar-row">
+                <p><strong>{{ item.label }}</strong> — ${{ item.total|floatformat:2 }} ({{ item.count }})</p>
+                <div class="sales-bar-track"><span style="width: {{ item.bar_width }}%"></span></div>
+            </div>
+        {% endfor %}
+    </section>
+
+    <section>
+        <h2>Productos más vendidos</h2>
+        <ol>
+            {% for product in best_selling_products %}
+                <li>{{ product.product_name_snapshot }} — {{ product.units_sold }} vendidos — ${{ product.sales|floatformat:2 }}</li>
+            {% empty %}
+                <li>No hay ventas completadas en este periodo.</li>
+            {% endfor %}
+        </ol>
+    </section>
+</div>
+
+<h2>Detalle de pedidos</h2>
+<table>
+    <thead>
+        <tr><th>Fecha</th><th>Hora</th><th>Pedido</th><th>Cliente</th><th>Tipo</th><th>Artículos</th><th>Total</th><th>Estado</th><th>Empleado</th></tr>
+    </thead>
+    <tbody>
+        {% for order in page %}
+            <tr>
+                <td>{{ order.operating_date|date:"d/m/Y" }}</td>
+                <td>{{ order.created_at|date:"H:i" }}</td>
+                <td><a href="{% url 'orders:detail' order.id %}">{{ order.formatted_number }}</a></td>
+                <td>{{ order.customer_name|default:"Sin nombre" }}</td>
+                <td>{{ order.get_order_type_display }}</td>
+                <td>{{ order.item_count }}</td>
+                <td>${{ order.total|floatformat:2 }}</td>
+                <td>{{ order.get_status_display }}</td>
+                <td>{{ order.employee_name_snapshot }}</td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="9">No hay pedidos para estos filtros.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<nav>
+    {% if page.has_previous %}<a href="?{% if filter_query %}{{ filter_query }}&{% endif %}page={{ page.previous_page_number }}">Anterior</a>{% endif %}
+    <span>Página {{ page.number }} de {{ page.paginator.num_pages }}</span>
+    {% if page.has_next %}<a href="?{% if filter_query %}{{ filter_query }}&{% endif %}page={{ page.next_page_number }}">Siguiente</a>{% endif %}
+</nav>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const period = document.querySelector("#id_period");
+    const customDates = document.querySelector("#custom-dates");
+    function updateCustomDates() {
+        customDates.hidden = period.value !== "custom";
+    }
+    period.addEventListener("change", updateCustomDates);
+    updateCustomDates();
+</script>
+{% endblock %}

@@ -90,3 +90,64 @@ class OrderFilterForm(forms.Form):
             )
 
         return cleaned_data
+
+
+class SalesReportFilterForm(forms.Form):
+    PERIOD_CHOICES = [
+        ("today", "Hoy"),
+        ("yesterday", "Ayer"),
+        ("week", "Esta semana"),
+        ("month", "Este mes"),
+        ("custom", "Rango personalizado"),
+    ]
+
+    period = forms.ChoiceField(
+        label="Periodo",
+        choices=PERIOD_CHOICES,
+        initial="today",
+    )
+    date_from = forms.DateField(
+        required=False,
+        label="Fecha inicial",
+        widget=forms.DateInput(attrs={"type": "date"}),
+    )
+    date_to = forms.DateField(
+        required=False,
+        label="Fecha final",
+        widget=forms.DateInput(attrs={"type": "date"}),
+    )
+    order_type = forms.ChoiceField(
+        required=False,
+        label="Tipo de pedido",
+        choices=[("", "Todos")] + list(Order.OrderType.choices),
+    )
+    status = forms.ChoiceField(
+        required=False,
+        label="Estado",
+        choices=[("", "Todos")] + list(Order.Status.choices),
+    )
+    employee = forms.CharField(required=False, label="Empleado")
+    customer = forms.CharField(required=False, label="Cliente")
+    order_number = forms.IntegerField(
+        required=False,
+        min_value=1,
+        label="Número de pedido",
+    )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if cleaned_data.get("period") != "custom":
+            return cleaned_data
+
+        date_from = cleaned_data.get("date_from")
+        date_to = cleaned_data.get("date_to")
+        if not date_from or not date_to:
+            raise forms.ValidationError(
+                "Selecciona la fecha inicial y la fecha final."
+            )
+        if date_from > date_to:
+            self.add_error(
+                "date_to",
+                "La fecha final no puede ser anterior a la inicial.",
+            )
+        return cleaned_data

@@ -53,8 +53,14 @@
                     <form
                         method="post"
                         action="{% url 'orders:status_update' order.id %}"
+                        class="status-update-form"
                     >
                         {% csrf_token %}
+                        <input
+                            type="hidden"
+                            name="next"
+                            value="{{ request.get_full_path }}"
+                        >
 
                         <label for="status_{{ order.id }}">
                             Nuevo estado
@@ -63,6 +69,7 @@
                         <select
                             id="status_{{ order.id }}"
                             name="status"
+                            class="status-select status-{{ order.status }}"
                         >
                             {% for value, label in status_choices %}
                                 <option
@@ -74,7 +81,9 @@
                             {% endfor %}
                         </select>
 
-                        <button type="submit">Actualizar</button>
+                        <noscript>
+                            <button type="submit">Actualizar</button>
+                        </noscript>
                     </form>
                 </td>
             </tr>
@@ -104,4 +113,18 @@
     {% endif %}
 </nav>
 
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.querySelectorAll(".status-update-form").forEach((form) => {
+        const select = form.querySelector(".status-select");
+        select.addEventListener("change", () => {
+            select.className = `status-select status-${select.value}`;
+            select.classList.add("is-saving");
+            select.setAttribute("aria-busy", "true");
+            form.requestSubmit();
+        });
+    });
+</script>
 {% endblock %}

@@ -1,15 +1,21 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
+from datetime import timedelta
+from decimal import Decimal
+
 from django.core.paginator import Paginator
+from django.db.models import Avg, Count, DecimalField, IntegerField, Sum
+from django.db.models.functions import Coalesce
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
 from menu.models import Product
 
-from .forms import OrderCreateForm, OrderFilterForm
-from .models import Order
+from .forms import OrderCreateForm, OrderFilterForm, SalesReportFilterForm
+from .models import Order, OrderItem
 from .services import create_order, update_order
 
 
@@ -149,6 +155,14 @@ def order_status_update(request, order_id):
             request,
             f"El pedido {order.formatted_number} fue actualizado.",
         )
+
+    next_url = request.POST.get("next")
+    if next_url and url_has_allowed_host_and_scheme(
+        url=next_url,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        return redirect(next_url)
 
     return redirect("orders:list")
 
@@ -305,5 +319,138 @@ def order_list(request):
             "filter_form": filter_form,
             "filter_query": query_params.urlencode(),
             "status_choices": Order.Status.choices,
+        },
+    )
+
+
+@login_required
+def sales_report(request):
+    filter_form = SalesReportFilterForm(request.GET or None)
+    today = timezone.localdate()
+    date_from = today
+    date_to = today
+
+    if filter_form.is_valid():
+        filters = filter_form.cleaned_data
+        period = filters["period"]
+        if period == "yesterday":
+            date_from = date_to = today - timedelta(days=1)
+        elif period == "week":
+            date_from = today - timedelta(days=today.weekday())
+        elif period == "month":
+            date_from = today.replace(day=1)
+        elif period == "custom":
+            date_from = filters["date_from"]
+            date_to = filters["date_to"]
+    else:
+        filters = {}
+
+    period_orders = Order.objects.filter(
+        operating_date__range=(date_from, date_to)
+    )
+    completed_orders = period_orders.filter(status=Order.Status.COMPLETED)
+    money_field = DecimalField(max_digits=12, decimal_places=2)
+    summary = completed_orders.aggregate(
+        total_sales=Coalesce(
+            Sum("total"), Decimal("0.00"), output_field=money_field
+        ),
+        completed_count=Count("id"),
+        average_order=Coalesce(
+            Avg("total"), Decimal("0.00"), output_field=money_field
+        ),
+    )
+    summary["canceled_count"] = period_orders.filter(
+        status=Order.Status.CANCELED
+    ).count()
+
+    totals_by_type = {
+        row["order_type"]: row
+        for row in completed_orders.values("order_type").annotate(
+            total=Coalesce(
+                Sum("total"), Decimal("0.00"), output_field=money_field
+            ),
+            count=Count("id"),
+        )
+    }
+    maximum_type_total = max(
+        (row["total"] for row in totals_by_type.values()),
+        default=Decimal("0.00"),
+    )
+    sales_by_type = []
+    for value, label in Order.OrderType.choices:
+        row = totals_by_type.get(
+            value,
+            {"total": Decimal("0.00"), "count": 0},
+        )
+        bar_width = (
+            float(row["total"] / maximum_type_total * 100)
+            if maximum_type_total
+            else 0
+        )
+        sales_by_type.append(
+            {
+                "label": label,
+                "total": row["total"],
+                "count": row["count"],
+                "bar_width": round(bar_width, 2),
+            }
+        )
+
+    best_selling_products = (
+        OrderItem.objects.filter(
+            order__operating_date__range=(date_from, date_to),
+            order__status=Order.Status.COMPLETED,
+        )
+        .values("product_name_snapshot")
+        .annotate(
+            units_sold=Sum("quantity"),
+            sales=Sum("subtotal"),
+        )
+        .order_by("-units_sold", "product_name_snapshot")[:10]
+    )
+
+    detail_orders = period_orders.select_related("created_by").annotate(
+        item_count=Coalesce(
+            Sum("items__quantity"),
+            0,
+            output_field=IntegerField(),
+        )
+    )
+    if filters:
+        if filters["order_type"]:
+            detail_orders = detail_orders.filter(order_type=filters["order_type"])
+        if filters["status"]:
+            detail_orders = detail_orders.filter(status=filters["status"])
+        if filters["employee"]:
+            detail_orders = detail_orders.filter(
+                employee_name_snapshot__icontains=filters["employee"]
+            )
+        if filters["customer"]:
+            detail_orders = detail_orders.filter(
+                customer_name__icontains=filters["customer"]
+            )
+        if filters["order_number"]:
+            detail_orders = detail_orders.filter(
+                daily_number=filters["order_number"]
+            )
+
+    detail_orders = detail_orders.order_by("-created_at")
+    paginator = Paginator(detail_orders, 30)
+    page = paginator.get_page(request.GET.get("page"))
+    query_params = request.GET.copy()
+    query_params.pop("page", None)
+
+    return render(
+        request,
+        "orders/sales_report.html",
+        {
+            "filter_form": filter_form,
+            "date_from": date_from,
+            "date_to": date_to,
+            "summary": summary,
+            "sales_by_type": sales_by_type,
+            "best_selling_products": best_selling_products,
+            "page": page,
+            "filter_query": query_params.urlencode(),
         },
     )

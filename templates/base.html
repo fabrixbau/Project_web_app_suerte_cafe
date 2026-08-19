@@ -36,9 +36,16 @@
 
                 <a
                     href="{% url 'orders:list' %}"
-                    class="{% if request.resolver_match.namespace == 'orders' and request.resolver_match.url_name != 'create' %}active{% endif %}"
+                    class="{% if request.resolver_match.namespace == 'orders' and request.resolver_match.url_name != 'create' and request.resolver_match.url_name != 'reports' %}active{% endif %}"
                 >
                     Pedidos
+                </a>
+
+                <a
+                    href="{% url 'orders:reports' %}"
+                    class="{% if request.resolver_match.namespace == 'orders' and request.resolver_match.url_name == 'reports' %}active{% endif %}"
+                >
+                    Reportes
                 </a>
 
                 {% if perms.menu.view_category %}
