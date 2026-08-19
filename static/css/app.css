@@ -42,6 +42,12 @@ body {
     background: #604538;
 }
 
+.sidebar nav a.active {
+    color: #30251f;
+    background: #f3d6a5;
+    font-weight: 700;
+}
+
 .page {
     min-width: 0;
 }
@@ -57,6 +63,127 @@ body {
     border-bottom: 1px solid #ded6cf;
 }
 
+.user-summary {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.profile-avatar {
+    width: 40px;
+    height: 40px;
+    flex: 0 0 40px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.profile-avatar-fallback {
+    display: grid;
+    color: white;
+    background: #795548;
+    font-weight: 700;
+    place-items: center;
+}
+
 .content {
     padding: 24px;
+}
+
+button,
+input,
+select,
+textarea {
+    font: inherit;
+}
+
+button {
+    padding: 10px 14px;
+    color: white;
+    background: #795548;
+    border: 0;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #604238;
+}
+
+input,
+select,
+textarea {
+    max-width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #cfc3b9;
+    border-radius: 6px;
+}
+
+.auth-page {
+    display: grid;
+    min-height: 100vh;
+    padding: 24px;
+    place-items: center;
+    background: #f1e8df;
+}
+
+.auth-card {
+    width: min(100%, 420px);
+    padding: 32px;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 12px 32px rgb(48 37 31 / 12%);
+}
+
+.auth-logo {
+    display: block;
+    width: 160px;
+    max-width: 100%;
+    margin: 0 auto 24px;
+}
+
+.auth-card input {
+    width: 100%;
+    padding: 10px 12px;
+}
+
+.auth-card button {
+    width: 100%;
+    padding: 12px;
+    cursor: pointer;
+}
+
+@media (max-width: 800px) {
+    .app-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .sidebar {
+        padding: 12px;
+    }
+
+    .brand img {
+        width: 100px;
+        margin-bottom: 12px;
+    }
+
+    .sidebar nav {
+        display: flex;
+        overflow-x: auto;
+    }
+
+    .sidebar nav a {
+        flex: 1;
+        min-width: max-content;
+        text-align: center;
+    }
+
+    .topbar {
+        min-height: auto;
+        padding: 10px 16px;
+    }
+
+    .content {
+        padding: 16px;
+        overflow-x: auto;
+    }
 }

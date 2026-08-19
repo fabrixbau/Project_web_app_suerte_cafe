@@ -1,10 +1,10 @@
+{% extends "base.html" %}
 {% load l10n %}
 
-<h1>Nuevo pedido</h1>
+{% block title %}Nuevo pedido | Suerte Café{% endblock %}
 
-{% for message in messages %}
-    <p>{{ message }}</p>
-{% endfor %}
+{% block content %}
+    <h1>Nuevo pedido</h1>
 
 <form method="post">
     {% csrf_token %}
@@ -140,9 +140,9 @@
     <button type="submit">Finalizar pedido</button>
 </form>
 
-<a href="{% url 'home' %}">Regresar</a>
+{% endblock %}
 
-
+{% block extra_js %}
 <script>
     const orderType = document.querySelector("#id_order_type");
     const phoneFields = document.querySelector("#phone-fields");
@@ -241,3 +241,5 @@
 
     updateOrderSummary();
 </script>
+
+{% endblock %}

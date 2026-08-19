@@ -1,7 +1,33 @@
-<h1>Iniciar sesión</h1>
+{% extends "auth_base.html" %}
 
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Entrar</button>
-</form>
+{% block title %}Iniciar sesión | Suerte Café{% endblock %}
+
+{% block content %}
+    <h1>Iniciar sesión</h1>
+
+    {{ form.non_field_errors }}
+
+    <form method="post">
+        {% csrf_token %}
+
+        <p>
+            {{ form.username.label_tag }}
+            {{ form.username }}
+            {{ form.username.errors }}
+        </p>
+
+        <p>
+            {{ form.password.label_tag }}
+            {{ form.password }}
+            {{ form.password.errors }}
+        </p>
+
+        {% if next %}
+            <input type="hidden" name="next" value="{{ next }}">
+        {% endif %}
+
+        <button type="submit">
+            Entrar
+        </button>
+    </form>
+{% endblock %}

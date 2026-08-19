@@ -27,15 +27,24 @@
             </a>
 
             <nav>
-                <a href="{% url 'orders:create' %}">
+                <a
+                    href="{% url 'orders:create' %}"
+                    class="{% if request.resolver_match.namespace == 'orders' and request.resolver_match.url_name == 'create' %}active{% endif %}"
+                >
                     Nuevo pedido
                 </a>
 
-                <a href="{% url 'orders:list' %}">
+                <a
+                    href="{% url 'orders:list' %}"
+                    class="{% if request.resolver_match.namespace == 'orders' and request.resolver_match.url_name != 'create' %}active{% endif %}"
+                >
                     Pedidos
                 </a>
 
-                <a href="{% url 'menu:list' %}">
+                <a
+                    href="{% url 'menu:list' %}"
+                    class="{% if request.resolver_match.namespace == 'menu' %}active{% endif %}"
+                >
                     Menú
                 </a>
             </nav>
@@ -44,9 +53,26 @@
         <div class="page">
             <header class="topbar">
                 {% if user.is_authenticated %}
-                    <span>
-                        {{ user.profile.display_name|default:user.username }}
-                    </span>
+                    <div class="user-summary">
+                        {% if user.profile.image %}
+                            <img
+                                class="profile-avatar"
+                                src="{{ user.profile.image.url }}"
+                                alt="Foto de {{ user.profile.display_name|default:user.username }}"
+                            >
+                        {% else %}
+                            <span
+                                class="profile-avatar profile-avatar-fallback"
+                                aria-hidden="true"
+                            >
+                                {{ user.username|first|upper }}
+                            </span>
+                        {% endif %}
+
+                        <span>
+                            {{ user.profile.display_name|default:user.username }}
+                        </span>
+                    </div>
 
                     <form
                         method="post"

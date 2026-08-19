@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    {% load static %}
+
+    <title>
+        {% block title %}Suerte Café{% endblock %}
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/app.css' %}"
+    >
+</head>
+
+<body class="auth-page">
+    <main class="auth-card">
+        <img
+            class="auth-logo"
+            src="{% static 'img/logoSuerteCafe.png' %}"
+            alt="Suerte Café"
+        >
+
+        {% for message in messages %}
+            <p>{{ message }}</p>
+        {% endfor %}
+
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>
