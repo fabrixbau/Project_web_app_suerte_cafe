@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Empleados | Suerte Café{% endblock %}
+
+{% block content %}
+    <h1>Empleados</h1>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Nombre visible</th>
+                <th>Correo</th>
+                <th>Rol</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for employee in users %}
+                <tr>
+                    <td>{{ employee.username }}</td>
+                    <td>{{ employee.email|default:"-" }}</td>
+                    <td>
+                        {% if employee.is_superuser %}
+                            Superusuario
+                        {% else %}
+                            {% for group in employee.groups.all %}
+                                {{ group.name }}{% if not forloop.last %}, {% endif %}
+                            {% empty %}
+                                Sin rol
+                            {% endfor %}
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if perms.auth.delete_user and employee != user %}
+                            <a href="{% url 'accounts:user_delete' employee.id %}">
+                                Eliminar usuario
+                            </a>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="4">No existen empleados.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

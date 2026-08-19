@@ -56,18 +56,30 @@
                         Menú
                     </a>
                 {% endif %}
+
+                {% if perms.auth.view_user %}
+                    <a
+                        href="{% url 'accounts:user_list' %}"
+                        class="{% if request.resolver_match.namespace == 'accounts' and request.resolver_match.url_name == 'user_list' %}active{% endif %}"
+                    >
+                        Empleados
+                    </a>
+                {% endif %}
             </nav>
         </aside>
 
         <div class="page">
             <header class="topbar">
                 {% if user.is_authenticated %}
-                    <div class="user-summary">
+                    <a
+                        class="user-summary"
+                        href="{% url 'accounts:profile_edit' %}"
+                    >
                         {% if user.profile.image %}
                             <img
                                 class="profile-avatar"
                                 src="{{ user.profile.image.url }}"
-                                alt="Foto de {{ user.profile.display_name|default:user.username }}"
+                                alt="Foto de {{ user.username }}"
                             >
                         {% else %}
                             <span
@@ -79,9 +91,9 @@
                         {% endif %}
 
                         <span>
-                            {{ user.profile.display_name|default:user.username }}
+                            {{ user.username }}
                         </span>
-                    </div>
+                    </a>
 
                     <form
                         method="post"

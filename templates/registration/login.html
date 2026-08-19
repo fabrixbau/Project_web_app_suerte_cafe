@@ -11,9 +11,9 @@
         {% csrf_token %}
 
         <p>
-            {{ form.username.label_tag }}
-            {{ form.username }}
-            {{ form.username.errors }}
+            {{ form.user.label_tag }}
+            {{ form.user }}
+            {{ form.user.errors }}
         </p>
 
         <p>
@@ -30,4 +30,9 @@
             Entrar
         </button>
     </form>
+
+    <p>
+        ¿Aún no tienes una cuenta?
+        <a href="{% url 'accounts:signup' %}">Regístrate</a>
+    </p>
 {% endblock %}

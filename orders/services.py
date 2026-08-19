@@ -43,12 +43,7 @@ def create_order(*, user, order_type, items, customer_data=None):
     counter.last_number += 1
     counter.save(update_fields=["last_number"])
 
-    profile = getattr(user, "profile", None)
-    employee_name = (
-        getattr(profile, "display_name", "")
-        or user.get_full_name()
-        or user.username
-    )
+    employee_name = user.username
 
     order = Order.objects.create(
         daily_number=counter.last_number,
