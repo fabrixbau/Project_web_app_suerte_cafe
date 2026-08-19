@@ -13,6 +13,11 @@ urlpatterns = [
         name="status_update",
     ),
     path(
+        "<int:order_id>/edit/",
+        views.order_edit,
+        name="edit",
+    ),
+    path(
         "<int:order_id>/",
         views.order_detail,
         name="detail",

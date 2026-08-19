@@ -10,7 +10,7 @@ from menu.models import Product
 
 from .forms import OrderCreateForm, OrderFilterForm
 from .models import Order
-from .services import create_order
+from .services import create_order, update_order
 
 
 @login_required
@@ -24,12 +24,114 @@ def order_detail(request, order_id):
         id=order_id,
     )
 
+
     return render(
         request,
         "orders/order_detail.html",
         {"order": order},
     )
 
+
+@login_required
+def order_edit(request, order_id):
+    order = get_object_or_404(
+        Order.objects.prefetch_related("items__product"),
+        id=order_id,
+    )
+
+    current_items = list(order.items.all())
+    existing_product_ids = {
+        item.product_id for item in current_items if item.product_id
+    }
+    products = list(
+        Product.objects.filter(is_available=True)
+        .exclude(id__in=existing_product_ids)
+        .select_related("category")
+        .order_by("category__name", "name")
+    )
+    form = OrderCreateForm(request.POST or None, instance=order)
+
+    if request.method == "POST":
+        form_is_valid = form.is_valid()
+        item_quantities = {}
+        new_items = []
+
+        for item in current_items:
+            raw_quantity = request.POST.get(
+                f"item_quantity_{item.id}", str(item.quantity)
+            )
+            try:
+                quantity = int(raw_quantity)
+            except (TypeError, ValueError):
+                quantity = item.quantity
+                form.add_error(
+                    None,
+                    f"Cantidad inválida para {item.product_name_snapshot}.",
+                )
+            if quantity < 0:
+                quantity = 0
+                form.add_error(
+                    None,
+                    f"La cantidad de {item.product_name_snapshot} no puede ser negativa.",
+                )
+            item.selected_quantity = quantity
+            item_quantities[item.id] = quantity
+
+        for product in products:
+            raw_quantity = request.POST.get(f"product_quantity_{product.id}", "0")
+            try:
+                quantity = int(raw_quantity)
+            except (TypeError, ValueError):
+                quantity = 0
+                form.add_error(None, f"Cantidad inválida para {product.name}.")
+            if quantity < 0:
+                quantity = 0
+                form.add_error(
+                    None,
+                    f"La cantidad de {product.name} no puede ser negativa.",
+                )
+            product.selected_quantity = quantity
+            if quantity > 0:
+                new_items.append(
+                    {"product_id": product.id, "quantity": quantity}
+                )
+
+        if form_is_valid and not form.errors:
+            customer_data = form.cleaned_data.copy()
+            order_type = customer_data.pop("order_type")
+            try:
+                order = update_order(
+                    order=order,
+                    order_type=order_type,
+                    item_quantities=item_quantities,
+                    new_items=new_items,
+                    customer_data=customer_data,
+                )
+            except ValidationError as error:
+                for message in error.messages:
+                    form.add_error(None, message)
+            else:
+                messages.success(
+                    request,
+                    f"El pedido {order.formatted_number} fue editado.",
+                )
+                return redirect("orders:detail", order_id=order.id)
+    else:
+        for item in current_items:
+            item.selected_quantity = item.quantity
+        for product in products:
+            product.selected_quantity = 0
+
+    return render(
+        request,
+        "orders/order_edit.html",
+        {
+            "order": order,
+            "form": form,
+            "current_items": current_items,
+            "products": products,
+        },
+    )
 
 @login_required
 @require_POST

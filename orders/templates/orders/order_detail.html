@@ -61,6 +61,10 @@
 
 <h2>Total: ${{ order.total }}</h2>
 
+<p>
+    <a href="{% url 'orders:edit' order.id %}">Editar pedido</a>
+</p>
+
 <a href="{% url 'orders:list' %}">Regresar a pedidos</a>
 
 {% endblock %}

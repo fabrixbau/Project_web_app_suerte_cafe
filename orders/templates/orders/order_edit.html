@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% load l10n %}
+
+{% block title %}Editar {{ order.formatted_number }} | Suerte Café{% endblock %}
+
+{% block content %}
+<h1>Editar pedido {{ order.formatted_number }}</h1>
+
+<form method="post">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+
+    <p>{{ form.order_type.label_tag }} {{ form.order_type }} {{ form.order_type.errors }}</p>
+    <p>{{ form.customer_name.label_tag }} {{ form.customer_name }} {{ form.customer_name.errors }}</p>
+
+    <div id="phone-fields">
+        <p>{{ form.phone.label_tag }} {{ form.phone }} {{ form.phone.errors }}</p>
+    </div>
+    <div id="eat-in-fields">
+        <p>{{ form.table_reference.label_tag }} {{ form.table_reference }} {{ form.table_reference.errors }}</p>
+    </div>
+    <div id="delivery-fields">
+        <p>{{ form.street.label_tag }} {{ form.street }} {{ form.street.errors }}</p>
+        <p>{{ form.exterior_number.label_tag }} {{ form.exterior_number }} {{ form.exterior_number.errors }}</p>
+        <p>{{ form.interior_number.label_tag }} {{ form.interior_number }} {{ form.interior_number.errors }}</p>
+        <p>{{ form.neighborhood.label_tag }} {{ form.neighborhood }} {{ form.neighborhood.errors }}</p>
+    </div>
+    <p>{{ form.notes.label_tag }} {{ form.notes }} {{ form.notes.errors }}</p>
+
+    <h2>Productos del pedido</h2>
+    <p>Usa cantidad 0 para quitar un producto.</p>
+
+    {% for item in current_items %}
+        <div class="editable-product" data-name="{{ item.product_name_snapshot }}" data-price="{{ item.unit_price|unlocalize }}">
+            <strong>{{ item.product_name_snapshot }}</strong>
+            <span>${{ item.unit_price }}</span>
+            <button type="button" class="decrease-quantity">−</button>
+            <input class="quantity-input" name="item_quantity_{{ item.id }}" type="number" min="0" value="{{ item.selected_quantity }}">
+            <button type="button" class="increase-quantity">+</button>
+        </div>
+    {% endfor %}
+
+    {% if products %}
+        <h2>Agregar otros productos</h2>
+        {% regroup products by category as category_list %}
+        {% for category in category_list %}
+            <section>
+                <h3>{{ category.grouper.name }}</h3>
+                {% for product in category.list %}
+                    <div class="editable-product" data-name="{{ product.name }}" data-price="{{ product.price|unlocalize }}">
+                        <strong>{{ product.name }}</strong>
+                        <span>${{ product.price }}</span>
+                        <button type="button" class="decrease-quantity">−</button>
+                        <input class="quantity-input" name="product_quantity_{{ product.id }}" type="number" min="0" value="{{ product.selected_quantity }}">
+                        <button type="button" class="increase-quantity">+</button>
+                    </div>
+                {% endfor %}
+            </section>
+        {% endfor %}
+    {% endif %}
+
+    <section>
+        <h2>Pedido actualizado</h2>
+        <div id="current-order-items"></div>
+        <p>Artículos: <strong id="total-items">0</strong></p>
+        <p>Total: <strong id="order-total">$0.00</strong></p>
+    </section>
+
+    <button type="submit">Guardar cambios</button>
+    <a href="{% url 'orders:detail' order.id %}">Cancelar</a>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const orderType = document.querySelector("#id_order_type");
+    const phoneFields = document.querySelector("#phone-fields");
+    const eatInFields = document.querySelector("#eat-in-fields");
+    const deliveryFields = document.querySelector("#delivery-fields");
+
+    function updateCustomerFields() {
+        eatInFields.hidden = orderType.value !== "eat_in";
+        deliveryFields.hidden = orderType.value !== "delivery";
+        phoneFields.hidden = !["delivery", "pickup"].includes(orderType.value);
+    }
+    orderType.addEventListener("change", updateCustomerFields);
+    updateCustomerFields();
+
+    const productCards = document.querySelectorAll(".editable-product");
+    const summary = document.querySelector("#current-order-items");
+    const totalItems = document.querySelector("#total-items");
+    const orderTotal = document.querySelector("#order-total");
+    const currencyFormatter = new Intl.NumberFormat("es-MX", {
+        style: "currency",
+        currency: "MXN",
+        currencyDisplay: "narrowSymbol",
+    });
+
+    function updateSummary() {
+        summary.innerHTML = "";
+        let quantityTotal = 0;
+        let priceTotal = 0;
+        productCards.forEach((card) => {
+            const quantity = Number.parseInt(card.querySelector(".quantity-input").value, 10) || 0;
+            if (quantity > 0) {
+                const subtotal = Number.parseFloat(card.dataset.price) * quantity;
+                const row = document.createElement("p");
+                row.textContent = `${card.dataset.name} × ${quantity} — ${currencyFormatter.format(subtotal)}`;
+                summary.appendChild(row);
+                quantityTotal += quantity;
+                priceTotal += subtotal;
+            }
+        });
+        if (quantityTotal === 0) summary.innerHTML = "<p>No hay productos seleccionados.</p>";
+        totalItems.textContent = quantityTotal;
+        orderTotal.textContent = currencyFormatter.format(priceTotal);
+    }
+
+    productCards.forEach((card) => {
+        const input = card.querySelector(".quantity-input");
+        card.querySelector(".decrease-quantity").addEventListener("click", () => {
+            input.value = Math.max(0, (Number.parseInt(input.value, 10) || 0) - 1);
+            updateSummary();
+        });
+        card.querySelector(".increase-quantity").addEventListener("click", () => {
+            input.value = (Number.parseInt(input.value, 10) || 0) + 1;
+            updateSummary();
+        });
+        input.addEventListener("input", () => {
+            if ((Number.parseInt(input.value, 10) || 0) < 0) input.value = 0;
+            updateSummary();
+        });
+    });
+    updateSummary();
+</script>
+{% endblock %}
