@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Eliminar producto | Suerte Café{% endblock %}
+
+{% block content %}
+    <h1>Eliminar producto</h1>
+
+    <p>
+        ¿Realmente deseas eliminar
+        <strong>{{ product.name }}</strong>?
+    </p>
+
+    <p>
+        Los pedidos históricos conservarán el nombre y precio
+        registrados durante la venta.
+    </p>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <button type="submit">
+            Confirmar eliminación
+        </button>
+
+        <a href="{% url 'menu:configuration' %}">
+            Cancelar
+        </a>
+    </form>
+{% endblock %}

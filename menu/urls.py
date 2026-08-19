@@ -22,6 +22,11 @@ urlpatterns = [
         name="category_edit",
     ),
     path(
+        "categories/<int:category_id>/delete/",
+        views.category_delete,
+        name="category_delete",
+    ),
+    path(
         "products/new/",
         views.product_create,
         name="product_create",
@@ -30,5 +35,15 @@ urlpatterns = [
         "products/<int:product_id>/edit/",
         views.product_edit,
         name="product_edit",
+    ),
+    path(
+        "products/<int:product_id>/availability/",
+        views.product_toggle_availability,
+        name="product_toggle_availability",
+    ),
+    path(
+        "products/<int:product_id>/delete/",
+        views.product_delete,
+        name="product_delete",
     ),
 ]

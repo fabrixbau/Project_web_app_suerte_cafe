@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Eliminar categoría | Suerte Café{% endblock %}
+
+{% block content %}
+    <h1>Eliminar categoría</h1>
+
+    {% if has_products %}
+        <p>
+            No puedes eliminar <strong>{{ category.name }}</strong>
+            porque todavía contiene productos.
+        </p>
+
+        <p>
+            Cambia los productos a otra categoría o elimínalos primero.
+        </p>
+
+        <a href="{% url 'menu:configuration' %}">
+            Regresar
+        </a>
+    {% else %}
+        <p>
+            ¿Realmente deseas eliminar la categoría
+            <strong>{{ category.name }}</strong>?
+        </p>
+
+        <form method="post">
+            {% csrf_token %}
+
+            <button type="submit">
+                Confirmar eliminación
+            </button>
+
+            <a href="{% url 'menu:configuration' %}">
+                Cancelar
+            </a>
+        </form>
+    {% endif %}
+{% endblock %}

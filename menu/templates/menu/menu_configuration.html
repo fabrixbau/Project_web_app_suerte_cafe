@@ -47,6 +47,14 @@
                 </p>
             {% endif %}
 
+            {% if perms.menu.delete_category %}
+                <p>
+                    <a href="{% url 'menu:category_delete' category.id %}">
+                        Eliminar categoría
+                    </a>
+                </p>
+            {% endif %}
+
             <table>
                 <thead>
                     <tr>
@@ -73,6 +81,27 @@
                                 {% if perms.menu.change_product %}
                                     <a href="{% url 'menu:product_edit' product.id %}">
                                         Editar producto
+                                    </a>
+
+                                    <form
+                                        method="post"
+                                        action="{% url 'menu:product_toggle_availability' product.id %}"
+                                    >
+                                        {% csrf_token %}
+
+                                        <button type="submit">
+                                            {% if product.is_available %}
+                                                Marcar no disponible
+                                            {% else %}
+                                                Marcar disponible
+                                            {% endif %}
+                                        </button>
+                                    </form>
+                                {% endif %}
+
+                                {% if perms.menu.delete_product %}
+                                    <a href="{% url 'menu:product_delete' product.id %}">
+                                        Eliminar producto
                                     </a>
                                 {% endif %}
                             </td>
