@@ -1,14 +1,16 @@
 from decimal import Decimal
+from datetime import timedelta
 
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.test import TestCase
+from django.urls import reverse
+from django.utils import timezone
 
 from menu.models import Category, Product
 
 from .models import Order
 from .services import create_order
-from django.urls import reverse
 
 
 class CreateOrderTests(TestCase):
@@ -126,3 +128,54 @@ class CreateOrderTests(TestCase):
         self.assertRedirects(response, reverse("orders:list"))
         self.assertEqual(order.status, Order.Status.COMPLETED)
         self.assertEqual(order.formatted_number, "#001")
+
+    def test_order_list_shows_only_today_by_default(self):
+        today_order = create_order(
+            user=self.user,
+            order_type=Order.OrderType.PICKUP,
+            items=[{"product_id": self.product.id, "quantity": 1}],
+        )
+        previous_order = Order.objects.create(
+            daily_number=1,
+            operating_date=timezone.localdate() - timedelta(days=1),
+            created_by=self.user,
+            order_type=Order.OrderType.PICKUP,
+        )
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse("orders:list"))
+        visible_ids = {
+            order.id for order in response.context["page"].object_list
+        }
+
+        self.assertIn(today_order.id, visible_ids)
+        self.assertNotIn(previous_order.id, visible_ids)
+
+    def test_order_list_accepts_a_date_range(self):
+        today = timezone.localdate()
+        today_order = create_order(
+            user=self.user,
+            order_type=Order.OrderType.PICKUP,
+            items=[{"product_id": self.product.id, "quantity": 1}],
+        )
+        previous_order = Order.objects.create(
+            daily_number=1,
+            operating_date=today - timedelta(days=1),
+            created_by=self.user,
+            order_type=Order.OrderType.PICKUP,
+        )
+        self.client.force_login(self.user)
+
+        response = self.client.get(
+            reverse("orders:list"),
+            {
+                "date": today - timedelta(days=1),
+                "date_to": today,
+            },
+        )
+        visible_ids = {
+            order.id for order in response.context["page"].object_list
+        }
+
+        self.assertIn(today_order.id, visible_ids)
+        self.assertIn(previous_order.id, visible_ids)

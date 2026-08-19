@@ -46,7 +46,12 @@ class OrderCreateForm(forms.ModelForm):
 class OrderFilterForm(forms.Form):
     date = forms.DateField(
         required=False,
-        label="Fecha",
+        label="Fecha inicial",
+        widget=forms.DateInput(attrs={"type": "date"}),
+    )
+    date_to = forms.DateField(
+        required=False,
+        label="Fecha final (opcional)",
         widget=forms.DateInput(attrs={"type": "date"}),
     )
     order_number = forms.IntegerField(
@@ -72,3 +77,16 @@ class OrderFilterForm(forms.Form):
         required=False,
         label="Empleado",
     )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        date_from = cleaned_data.get("date")
+        date_to = cleaned_data.get("date_to")
+
+        if date_from and date_to and date_from > date_to:
+            self.add_error(
+                "date_to",
+                "La fecha final no puede ser anterior a la inicial.",
+            )
+
+        return cleaned_data

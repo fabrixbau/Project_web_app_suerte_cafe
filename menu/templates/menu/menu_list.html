@@ -1,29 +1,33 @@
-<h1>Menú de Suerte Café</h1>
+{% extends "base.html" %}
 
-{% for category in categories %}
-    <section>
-        <h2>{{ category.name }}</h2>
+{% block title %}Menú | Suerte Café{% endblock %}
 
-        {% for product in category.available_products %}
-            <article>
-                {% if product.image %}
-                    <img
-                        src="{{ product.image.url }}"
-                        alt="{{ product.name }}"
-                        width="150"
-                    >
-                {% endif %}
+{% block content %}
+    <h1>Menú de Suerte Café</h1>
 
-                <h3>{{ product.name }}</h3>
-                <p>{{ product.description }}</p>
-                <strong>${{ product.price }} MXN</strong>
-            </article>
-        {% empty %}
-            <p>No hay productos disponibles.</p>
-        {% endfor %}
-    </section>
-{% empty %}
-    <p>No existen categorías.</p>
-{% endfor %}
+    {% for category in categories %}
+        <section>
+            <h2>{{ category.name }}</h2>
 
-<a href="{% url 'home' %}">Regresar</a>
+            {% for product in category.available_products %}
+                <article>
+                    {% if product.image %}
+                        <img
+                            src="{{ product.image.url }}"
+                            alt="{{ product.name }}"
+                            width="150"
+                        >
+                    {% endif %}
+
+                    <h3>{{ product.name }}</h3>
+                    <p>{{ product.description }}</p>
+                    <strong>${{ product.price }} MXN</strong>
+                </article>
+            {% empty %}
+                <p>No hay productos disponibles.</p>
+            {% endfor %}
+        </section>
+    {% empty %}
+        <p>No existen categorías.</p>
+    {% endfor %}
+{% endblock %}

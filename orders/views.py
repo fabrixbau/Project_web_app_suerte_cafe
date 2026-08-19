@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from menu.models import Product
@@ -147,11 +148,19 @@ def order_list(request):
 
     if filter_form.is_valid():
         filters = filter_form.cleaned_data
+        date_from = filters["date"]
+        date_to = filters["date_to"]
 
-        if filters["date"]:
+        if date_from and date_to:
             orders = orders.filter(
-                operating_date=filters["date"],
+                operating_date__range=(date_from, date_to),
             )
+        elif date_from or date_to:
+            orders = orders.filter(
+                operating_date=date_from or date_to,
+            )
+        else:
+            orders = orders.filter(operating_date=timezone.localdate())
 
         if filters["order_number"]:
             orders = orders.filter(
@@ -177,6 +186,8 @@ def order_list(request):
             orders = orders.filter(
                 employee_name_snapshot__icontains=filters["employee"],
             )
+    else:
+        orders = orders.filter(operating_date=timezone.localdate())
 
     paginator = Paginator(orders, 20)
     page = paginator.get_page(request.GET.get("page"))
