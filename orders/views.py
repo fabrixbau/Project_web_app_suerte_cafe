@@ -60,9 +60,10 @@ def order_create(request):
     )
 
     form = OrderCreateForm(request.POST or None)
+    items = []
 
-    if request.method == "POST" and form.is_valid():
-        items = []
+    if request.method == "POST":
+        form_is_valid = form.is_valid()
 
         for product in products:
             raw_quantity = request.POST.get(
@@ -73,18 +74,22 @@ def order_create(request):
             try:
                 quantity = int(raw_quantity)
             except ValueError:
+                quantity = 0
                 form.add_error(
                     None,
                     f"Cantidad inválida para {product.name}.",
                 )
-                continue
 
             if quantity < 0:
+                quantity = 0
                 form.add_error(
                     None,
                     f"La cantidad de {product.name} no puede ser negativa.",
                 )
-            elif quantity > 0:
+
+            product.selected_quantity = quantity
+
+            if quantity > 0:
                 items.append(
                     {
                         "product_id": product.id,
@@ -98,7 +103,7 @@ def order_create(request):
                 "Selecciona al menos un producto.",
             )
 
-        if not form.errors:
+        if form_is_valid and not form.errors:
             customer_data = form.cleaned_data.copy()
             order_type = customer_data.pop("order_type")
 
@@ -118,6 +123,9 @@ def order_create(request):
                     f"Pedido #{order.daily_number:03d} guardado.",
                 )
                 return redirect("orders:create")
+    else:
+        for product in products:
+            product.selected_quantity = 0
 
     return render(
         request,
