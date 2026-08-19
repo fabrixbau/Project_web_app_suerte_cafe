@@ -7,7 +7,7 @@ from django.views.decorators.http import require_POST
 
 from menu.models import Product
 
-from .forms import OrderCreateForm
+from .forms import OrderCreateForm, OrderFilterForm
 from .models import Order
 from .services import create_order
 
@@ -135,14 +135,54 @@ def order_list(request):
         "created_by",
     ).order_by("-created_at")
 
+    filter_form = OrderFilterForm(request.GET)
+
+    if filter_form.is_valid():
+        filters = filter_form.cleaned_data
+
+        if filters["date"]:
+            orders = orders.filter(
+                operating_date=filters["date"],
+            )
+
+        if filters["order_number"]:
+            orders = orders.filter(
+                daily_number=filters["order_number"],
+            )
+
+        if filters["customer"]:
+            orders = orders.filter(
+                customer_name__icontains=filters["customer"],
+            )
+
+        if filters["status"]:
+            orders = orders.filter(
+                status=filters["status"],
+            )
+
+        if filters["order_type"]:
+            orders = orders.filter(
+                order_type=filters["order_type"],
+            )
+
+        if filters["employee"]:
+            orders = orders.filter(
+                employee_name_snapshot__icontains=filters["employee"],
+            )
+
     paginator = Paginator(orders, 20)
     page = paginator.get_page(request.GET.get("page"))
+
+    query_params = request.GET.copy()
+    query_params.pop("page", None)
 
     return render(
         request,
         "orders/order_list.html",
         {
             "page": page,
+            "filter_form": filter_form,
+            "filter_query": query_params.urlencode(),
             "status_choices": Order.Status.choices,
         },
     )

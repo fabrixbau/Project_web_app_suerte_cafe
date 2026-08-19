@@ -2,6 +2,15 @@
 
 <a href="{% url 'orders:create' %}">Nuevo pedido</a>
 
+<h2>Buscar pedidos</h2>
+
+<form method="get">
+    {{ filter_form.as_p }}
+
+    <button type="submit">Buscar</button>
+    <a href="{% url 'orders:list' %}">Limpiar filtros</a>
+</form>
+
 {% for message in messages %}
     <p>{{ message }}</p>
 {% endfor %}
@@ -75,7 +84,9 @@
 
 <nav>
     {% if page.has_previous %}
-        <a href="?page={{ page.previous_page_number }}">Anterior</a>
+        <a href="?{% if filter_query %}{{ filter_query }}&{% endif %}page={{ page.previous_page_number }}">
+            Anterior
+        </a>
     {% endif %}
 
     <span>
@@ -83,7 +94,9 @@
     </span>
 
     {% if page.has_next %}
-        <a href="?page={{ page.next_page_number }}">Siguiente</a>
+        <a href="?{% if filter_query %}{{ filter_query }}&{% endif %}page={{ page.next_page_number }}">
+            Siguiente
+        </a>
     {% endif %}
 </nav>
 

@@ -47,3 +47,34 @@ class OrderCreateForm(forms.ModelForm):
                 )
 
         return cleaned_data
+
+
+class OrderFilterForm(forms.Form):
+    date = forms.DateField(
+        required=False,
+        label="Fecha",
+        widget=forms.DateInput(attrs={"type": "date"}),
+    )
+    order_number = forms.IntegerField(
+        required=False,
+        min_value=1,
+        label="Número de pedido",
+    )
+    customer = forms.CharField(
+        required=False,
+        label="Cliente",
+    )
+    status = forms.ChoiceField(
+        required=False,
+        label="Estado",
+        choices=[("", "Todos")] + list(Order.Status.choices),
+    )
+    order_type = forms.ChoiceField(
+        required=False,
+        label="Tipo de pedido",
+        choices=[("", "Todos")] + list(Order.OrderType.choices),
+    )
+    employee = forms.CharField(
+        required=False,
+        label="Empleado",
+    )
