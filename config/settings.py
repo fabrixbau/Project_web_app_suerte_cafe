@@ -121,7 +121,7 @@ STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
 
-LOGIN_REDIRECT_URL = "home"
+LOGIN_REDIRECT_URL = "orders:create"
 LOGOUT_REDIRECT_URL = "login"
 
 MEDIA_URL = "media/"

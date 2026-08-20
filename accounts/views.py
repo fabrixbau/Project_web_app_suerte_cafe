@@ -16,7 +16,7 @@ from .models import Profile
 
 @login_required
 def home(request):
-    return render(request, "home.html")
+    return redirect("orders:create")
 
 
 def login_view(request):

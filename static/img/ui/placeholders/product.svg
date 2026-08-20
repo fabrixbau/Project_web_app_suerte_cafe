@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" role="img" aria-labelledby="title">
+  <title id="title">Producto sin imagen</title>
+  <rect width="600" height="600" rx="48" fill="#eadfd5"/>
+  <path d="M180 220h210v130a105 105 0 0 1-210 0V220Z" fill="#fff8f1" stroke="#795548" stroke-width="18"/>
+  <path d="M390 255h28a62 62 0 0 1 0 124h-35" fill="none" stroke="#795548" stroke-width="18"/>
+  <path d="M235 175c-22-30 26-46 2-78M300 175c-22-30 26-46 2-78M365 175c-22-30 26-46 2-78" fill="none" stroke="#a34f3e" stroke-width="14" stroke-linecap="round"/>
+  <path d="M150 470h300" stroke="#795548" stroke-width="18" stroke-linecap="round"/>
+</svg>

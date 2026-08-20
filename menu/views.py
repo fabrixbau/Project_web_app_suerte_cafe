@@ -3,8 +3,9 @@ from django.contrib.auth.decorators import (
     login_required,
     permission_required,
 )
-from django.db.models import Prefetch
+from django.db.models import Count, Prefetch, Q
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
 from .forms import CategoryForm, ProductForm
@@ -67,14 +68,44 @@ def menu_list(request):
 @login_required
 @permission_required("menu.view_category", raise_exception=True)
 def menu_configuration(request):
-    categories = Category.objects.prefetch_related(
-        "products",
+    active_tab = request.GET.get("tab", "products")
+    if active_tab not in {"products", "categories"}:
+        active_tab = "products"
+
+    categories = Category.objects.annotate(
+        product_count=Count("products"),
     ).order_by("name")
+    products = Product.objects.select_related("category").order_by(
+        "category__name",
+        "name",
+    )
+
+    search = request.GET.get("q", "").strip()
+    category_id = request.GET.get("category", "").strip()
+    availability = request.GET.get("availability", "").strip()
+
+    if search:
+        products = products.filter(
+            Q(name__icontains=search) | Q(description__icontains=search)
+        )
+    if category_id.isdigit():
+        products = products.filter(category_id=category_id)
+    if availability == "available":
+        products = products.filter(is_available=True)
+    elif availability == "unavailable":
+        products = products.filter(is_available=False)
 
     return render(
         request,
         "menu/menu_configuration.html",
-        {"categories": categories},
+        {
+            "categories": categories,
+            "products": products,
+            "active_tab": active_tab,
+            "search": search,
+            "selected_category": category_id,
+            "availability": availability,
+        },
     )
 
 
@@ -226,6 +257,14 @@ def product_toggle_availability(request, product_id):
         request,
         f"{product.name} ahora está {availability}.",
     )
+
+    next_url = request.POST.get("next")
+    if next_url and url_has_allowed_host_and_scheme(
+        url=next_url,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        return redirect(next_url)
 
     return redirect("menu:configuration")
 

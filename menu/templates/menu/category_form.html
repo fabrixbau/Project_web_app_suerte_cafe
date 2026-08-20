@@ -1,21 +1,12 @@
 {% extends "base.html" %}
-
 {% block title %}{{ title }} | Suerte Café{% endblock %}
-
 {% block content %}
-    <h1>{{ title }}</h1>
-
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-
-        {{ form.as_p }}
-
-        <button type="submit">
-            Guardar categoría
-        </button>
-
-        <a href="{% url 'menu:configuration' %}">
-            Cancelar
-        </a>
+<div class="form-page">
+    <div class="page-heading"><div><p class="eyebrow">Menú</p><h1>{{ title }}</h1></div></div>
+    <form method="post" enctype="multipart/form-data" class="modern-form form-card">
+        {% csrf_token %} {{ form.non_field_errors }}
+        {% for field in form %}<div class="form-field">{{ field.label_tag }} {{ field }} {{ field.errors }}</div>{% endfor %}
+        <div class="form-actions"><button type="submit">Guardar categoría</button><a class="action-link action-link-secondary" href="{% url 'menu:configuration' %}?tab=categories">Cancelar</a></div>
     </form>
+</div>
 {% endblock %}

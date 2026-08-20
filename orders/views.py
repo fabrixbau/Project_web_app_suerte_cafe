@@ -143,7 +143,15 @@ def order_edit(request, order_id):
 @require_POST
 def order_status_update(request, order_id):
     order = get_object_or_404(Order, id=order_id)
-    new_status = request.POST.get("status")
+    if request.POST.get("cycle") == "1":
+        status_cycle = {
+            Order.Status.IN_PROGRESS: Order.Status.COMPLETED,
+            Order.Status.COMPLETED: Order.Status.CANCELED,
+            Order.Status.CANCELED: Order.Status.IN_PROGRESS,
+        }
+        new_status = status_cycle[order.status]
+    else:
+        new_status = request.POST.get("status")
 
     if new_status not in Order.Status.values:
         messages.error(request, "El estado seleccionado no es válido.")
@@ -176,7 +184,10 @@ def order_create(request):
         "name",
     )
 
-    form = OrderCreateForm(request.POST or None)
+    form = OrderCreateForm(
+        request.POST or None,
+        initial={"order_type": Order.OrderType.EAT_IN},
+    )
     items = []
 
     if request.method == "POST":

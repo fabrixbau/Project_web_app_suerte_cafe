@@ -1,187 +1,264 @@
 {% extends "base.html" %}
-{% load l10n %}
+{% load l10n static menu_extras %}
 
 {% block title %}Nuevo pedido | Suerte Café{% endblock %}
 
 {% block content %}
-    <h1>Nuevo pedido</h1>
-
-<form method="post">
+<form method="post" class="order-workspace">
     {% csrf_token %}
 
-    {{ form.non_field_errors }}
+    <div class="order-builder">
+        <div class="order-heading">
+            <div>
+                <p class="eyebrow">Tomar orden</p>
+                <h1>Nuevo pedido</h1>
+            </div>
 
-    <p>
-        {{ form.order_type.label_tag }}
-        {{ form.order_type }}
+            <div class="order-type-selector" aria-label="Tipo de pedido">
+                {{ form.order_type.as_hidden }}
+                <button type="button" class="order-type-option" data-order-type="eat_in">
+                    <img src="{% static 'img/ui/icons/utensils.svg' %}" alt="">
+                    Comer aquí
+                </button>
+                <button type="button" class="order-type-option" data-order-type="delivery">
+                    <img src="{% static 'img/ui/icons/truck.svg' %}" alt="">
+                    Entrega
+                </button>
+                <button type="button" class="order-type-option" data-order-type="pickup">
+                    <img src="{% static 'img/ui/icons/shopping-bag.svg' %}" alt="">
+                    Recoger
+                </button>
+            </div>
+        </div>
+
+        {{ form.non_field_errors }}
         {{ form.order_type.errors }}
-    </p>
 
-    <p>
-        {{ form.customer_name.label_tag }}
-        {{ form.customer_name }}
-        {{ form.customer_name.errors }}
-    </p>
-
-    <div id="phone-fields">
-        <p>
-            {{ form.phone.label_tag }}
-            {{ form.phone }}
-            {{ form.phone.errors }}
-        </p>
-    </div>
-
-    <div id="eat-in-fields">
-        <p>
-            {{ form.table_reference.label_tag }}
-            {{ form.table_reference }}
-            {{ form.table_reference.errors }}
-        </p>
-    </div>
-
-    <div id="delivery-fields">
-        <p>
-            {{ form.street.label_tag }}
-            {{ form.street }}
-            {{ form.street.errors }}
-        </p>
-
-        <p>
-            {{ form.exterior_number.label_tag }}
-            {{ form.exterior_number }}
-            {{ form.exterior_number.errors }}
-        </p>
-
-        <p>
-            {{ form.interior_number.label_tag }}
-            {{ form.interior_number }}
-            {{ form.interior_number.errors }}
-        </p>
-
-        <p>
-            {{ form.neighborhood.label_tag }}
-            {{ form.neighborhood }}
-            {{ form.neighborhood.errors }}
-        </p>
-    </div>
-
-    <p>
-        {{ form.notes.label_tag }}
-        {{ form.notes }}
-        {{ form.notes.errors }}
-    </p>
-
-    <h2>Productos</h2>
-
-    {% regroup products by category as category_list %}
-
-    {% for category in category_list %}
-        <section>
-            <h3>{{ category.grouper.name }}</h3>
-
-            {% for product in category.list %}
-                <div
-                    class="product-card"
-                    data-name="{{ product.name }}"
-                    data-price="{{ product.price|unlocalize }}"
-                >
-                    <strong>{{ product.name }}</strong>
-                    <span>${{ product.price }}</span>
-
-                    <label for="quantity_{{ product.id }}">
-                        Cantidad
-                    </label>
-
-                    <button
-                        type="button"
-                        class="decrease-quantity"
-                    >
-                        −
-                    </button>
-
-                    <input
-                        id="quantity_{{ product.id }}"
-                        class="quantity-input"
-                        name="quantity_{{ product.id }}"
-                        type="number"
-                        min="0"
-                        value="{{ product.selected_quantity }}"
-                    >
-
-                    <button
-                        type="button"
-                        class="increase-quantity"
-                    >
-                        +
-                    </button>
+        <section class="customer-panel">
+            <div class="customer-fields-grid">
+                <div class="field-group customer-name-field">
+                    {{ form.customer_name.label_tag }}
+                    {{ form.customer_name }}
+                    {{ form.customer_name.errors }}
                 </div>
-            {% endfor %}
+
+                <div id="phone-fields" class="field-group phone-field">
+                    {{ form.phone.label_tag }}
+                    {{ form.phone }}
+                    {{ form.phone.errors }}
+                </div>
+
+                <div id="eat-in-fields" class="field-group table-field">
+                    {{ form.table_reference.label_tag }}
+                    {{ form.table_reference }}
+                    {{ form.table_reference.errors }}
+                </div>
+
+                <div id="delivery-fields" class="delivery-fields">
+                    <div class="field-group street-field">
+                        {{ form.street.label_tag }}
+                        {{ form.street }}
+                        {{ form.street.errors }}
+                    </div>
+                    <div class="field-group">
+                        {{ form.exterior_number.label_tag }}
+                        {{ form.exterior_number }}
+                        {{ form.exterior_number.errors }}
+                    </div>
+                    <div class="field-group">
+                        {{ form.interior_number.label_tag }}
+                        {{ form.interior_number }}
+                        {{ form.interior_number.errors }}
+                    </div>
+                    <div class="field-group neighborhood-field">
+                        {{ form.neighborhood.label_tag }}
+                        {{ form.neighborhood }}
+                        {{ form.neighborhood.errors }}
+                    </div>
+                </div>
+
+                <div class="field-group notes-field">
+                    {{ form.notes.label_tag }}
+                    {{ form.notes }}
+                    {{ form.notes.errors }}
+                </div>
+            </div>
         </section>
-    {% endfor %}
 
-    <section>
-        <h2>Pedido actual</h2>
+        <h2>Selecciona productos</h2>
+        {% regroup products by category as category_list %}
 
-        <div id="current-order-items">
+        <div class="category-selector" aria-label="Categorías del menú">
+            {% for category in category_list %}
+                <button
+                    type="button"
+                    class="category-card{% if forloop.first %} is-selected{% endif %}"
+                    data-category-target="category-{{ category.grouper.id }}"
+                >
+                    <span class="category-order-icon" aria-hidden="true">{{ category.grouper.name|category_icon }}</span>
+                    <span>{{ category.grouper.name }}</span>
+                </button>
+            {% endfor %}
+        </div>
+
+        {% for category in category_list %}
+            <section
+                id="category-{{ category.grouper.id }}"
+                class="category-products"
+                {% if not forloop.first %}hidden{% endif %}
+            >
+                <h3>{{ category.grouper.name }}</h3>
+                <div class="product-grid">
+                    {% for product in category.list %}
+                        <article
+                            class="product-card"
+                            data-name="{{ product.name }}"
+                            data-price="{{ product.price|unlocalize }}"
+                        >
+                            {% if product.image %}
+                                <img class="product-card-image" src="{{ product.image.url }}" alt="{{ product.name }}">
+                            {% else %}
+                                <img class="product-card-image" src="{% static 'img/ui/placeholders/product.svg' %}" alt="">
+                            {% endif %}
+
+                            <strong>{{ product.name }}</strong>
+                            {% if product.description %}<small>{{ product.description }}</small>{% endif %}
+
+                            <div class="product-card-footer">
+                                <strong>${{ product.price }}</strong>
+                                <div class="quantity-control">
+                                    <button type="button" class="decrease-quantity" aria-label="Quitar uno">−</button>
+                                    <input
+                                        id="quantity_{{ product.id }}"
+                                        class="quantity-input"
+                                        name="quantity_{{ product.id }}"
+                                        type="number"
+                                        min="0"
+                                        value="{{ product.selected_quantity }}"
+                                        aria-label="Cantidad de {{ product.name }}"
+                                    >
+                                    <button type="button" class="increase-quantity" aria-label="Agregar uno">+</button>
+                                </div>
+                            </div>
+                        </article>
+                    {% endfor %}
+                </div>
+            </section>
+        {% empty %}
+            <p>No hay productos disponibles.</p>
+        {% endfor %}
+    </div>
+
+    <aside class="current-order-panel">
+        <div class="current-order-heading">
+            <h2>Pedido actual</h2>
+            <span><strong id="total-items">0</strong> artículos</span>
+        </div>
+
+        <div id="current-order-items" class="current-order-items">
             <p>No hay productos seleccionados.</p>
         </div>
 
-        <p>
-            Artículos:
-            <strong id="total-items">0</strong>
-        </p>
+        <div class="current-order-totals">
+            <p><span>Artículos</span><strong id="summary-items">0</strong></p>
+            <p><span>Subtotal</span><strong id="order-subtotal">$0.00</strong></p>
+            <p class="final-total"><span>Total</span><strong id="order-total">$0.00</strong></p>
+        </div>
 
-        <p>
-            Total:
-            <strong id="order-total">$0.00</strong>
-        </p>
-    </section>
-
-    <button type="submit">Finalizar pedido</button>
+        <button type="submit" class="finish-order-button">Finalizar pedido</button>
+    </aside>
 </form>
-
 {% endblock %}
 
 {% block extra_js %}
 <script>
     const orderType = document.querySelector("#id_order_type");
+    const orderTypeButtons = document.querySelectorAll(".order-type-option");
     const phoneFields = document.querySelector("#phone-fields");
     const eatInFields = document.querySelector("#eat-in-fields");
     const deliveryFields = document.querySelector("#delivery-fields");
 
     function updateCustomerFields() {
-        const selectedType = orderType.value;
-
+        const selectedType = orderType.value || "eat_in";
+        orderType.value = selectedType;
         eatInFields.hidden = selectedType !== "eat_in";
         deliveryFields.hidden = selectedType !== "delivery";
-
-        phoneFields.hidden = ![
-            "delivery",
-            "pickup",
-        ].includes(selectedType);
+        phoneFields.hidden = !["delivery", "pickup"].includes(selectedType);
+        orderTypeButtons.forEach((button) => {
+            button.classList.toggle("is-selected", button.dataset.orderType === selectedType);
+        });
     }
 
-    orderType.addEventListener("change", updateCustomerFields);
+    orderTypeButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+            orderType.value = button.dataset.orderType;
+            updateCustomerFields();
+        });
+    });
     updateCustomerFields();
-</script>
 
-<script>
-    const productCards = document.querySelectorAll(".product-card");
-    const currentOrderItems = document.querySelector(
-        "#current-order-items"
-    );
+    const categoryButtons = document.querySelectorAll(".category-card");
+    const categorySections = document.querySelectorAll(".category-products");
+    categoryButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+            categoryButtons.forEach((item) => item.classList.remove("is-selected"));
+            categorySections.forEach((section) => section.hidden = true);
+            button.classList.add("is-selected");
+            document.querySelector(`#${button.dataset.categoryTarget}`).hidden = false;
+        });
+    });
+
+    const productCards = document.querySelectorAll(".product-card[data-price]");
+    const currentOrderItems = document.querySelector("#current-order-items");
     const totalItemsElement = document.querySelector("#total-items");
-    const orderTotalElement = document.querySelector("#order-total");
-
+    const summaryItemsElement = document.querySelector("#summary-items");
+    const subtotalElement = document.querySelector("#order-subtotal");
+    const totalElement = document.querySelector("#order-total");
     const currencyFormatter = new Intl.NumberFormat("es-MX", {
         style: "currency",
         currency: "MXN",
         currencyDisplay: "narrowSymbol",
     });
 
+    function changeQuantity(input, difference) {
+        const currentValue = Number.parseInt(input.value, 10) || 0;
+        input.value = Math.max(0, currentValue + difference);
+        updateOrderSummary();
+    }
+
+    function createSummaryItem(card, input, quantity, subtotal) {
+        const item = document.createElement("article");
+        item.className = "current-order-item";
+
+        const information = document.createElement("div");
+        const name = document.createElement("strong");
+        const detail = document.createElement("span");
+        name.textContent = card.dataset.name;
+        detail.textContent = `${currencyFormatter.format(Number.parseFloat(card.dataset.price))} × ${quantity}`;
+        information.append(name, detail);
+
+        const controls = document.createElement("div");
+        controls.className = "summary-quantity-control";
+        const decrease = document.createElement("button");
+        const amount = document.createElement("span");
+        const increase = document.createElement("button");
+        decrease.type = "button";
+        increase.type = "button";
+        decrease.textContent = "−";
+        increase.textContent = "+";
+        amount.textContent = quantity;
+        decrease.addEventListener("click", () => changeQuantity(input, -1));
+        increase.addEventListener("click", () => changeQuantity(input, 1));
+        controls.append(decrease, amount, increase);
+
+        const price = document.createElement("strong");
+        price.textContent = currencyFormatter.format(subtotal);
+        item.append(information, controls, price);
+        return item;
+    }
+
     function updateOrderSummary() {
         currentOrderItems.innerHTML = "";
-
         let totalItems = 0;
         let orderTotal = 0;
 
@@ -189,58 +266,36 @@
             const input = card.querySelector(".quantity-input");
             const quantity = Number.parseInt(input.value, 10) || 0;
             const price = Number.parseFloat(card.dataset.price);
+            card.classList.toggle("has-quantity", quantity > 0);
 
             if (quantity > 0) {
                 const subtotal = price * quantity;
-                const item = document.createElement("p");
-
-                item.textContent =
-                    `${card.dataset.name} × ${quantity} — ` +
-                    currencyFormatter.format(subtotal);
-
-                currentOrderItems.appendChild(item);
+                currentOrderItems.appendChild(
+                    createSummaryItem(card, input, quantity, subtotal)
+                );
                 totalItems += quantity;
                 orderTotal += subtotal;
             }
         });
 
         if (totalItems === 0) {
-            currentOrderItems.innerHTML =
-                "<p>No hay productos seleccionados.</p>";
+            currentOrderItems.innerHTML = "<p>No hay productos seleccionados.</p>";
         }
-
         totalItemsElement.textContent = totalItems;
-        orderTotalElement.textContent =
-            currencyFormatter.format(orderTotal);
+        summaryItemsElement.textContent = totalItems;
+        subtotalElement.textContent = currencyFormatter.format(orderTotal);
+        totalElement.textContent = currencyFormatter.format(orderTotal);
     }
 
     productCards.forEach((card) => {
         const input = card.querySelector(".quantity-input");
-        const decreaseButton = card.querySelector(".decrease-quantity");
-        const increaseButton = card.querySelector(".increase-quantity");
-
-        decreaseButton.addEventListener("click", () => {
-            const currentValue = Number.parseInt(input.value, 10) || 0;
-            input.value = Math.max(0, currentValue - 1);
-            updateOrderSummary();
-        });
-
-        increaseButton.addEventListener("click", () => {
-            const currentValue = Number.parseInt(input.value, 10) || 0;
-            input.value = currentValue + 1;
-            updateOrderSummary();
-        });
-
+        card.querySelector(".decrease-quantity").addEventListener("click", () => changeQuantity(input, -1));
+        card.querySelector(".increase-quantity").addEventListener("click", () => changeQuantity(input, 1));
         input.addEventListener("input", () => {
-            if (Number.parseInt(input.value, 10) < 0) {
-                input.value = 0;
-            }
-
+            if ((Number.parseInt(input.value, 10) || 0) < 0) input.value = 0;
             updateOrderSummary();
         });
     });
-
     updateOrderSummary();
 </script>
-
 {% endblock %}

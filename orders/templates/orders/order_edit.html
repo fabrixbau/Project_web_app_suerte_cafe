@@ -6,12 +6,12 @@
 {% block content %}
 <h1>Editar pedido {{ order.formatted_number }}</h1>
 
-<form method="post">
+<form method="post" class="modern-form form-card detail-edit-form">
     {% csrf_token %}
     {{ form.non_field_errors }}
 
-    <p>{{ form.order_type.label_tag }} {{ form.order_type }} {{ form.order_type.errors }}</p>
-    <p>{{ form.customer_name.label_tag }} {{ form.customer_name }} {{ form.customer_name.errors }}</p>
+    <p id="order-information">{{ form.order_type.label_tag }} {{ form.order_type }} {{ form.order_type.errors }}</p>
+    <p id="customer-information">{{ form.customer_name.label_tag }} {{ form.customer_name }} {{ form.customer_name.errors }}</p>
 
     <div id="phone-fields">
         <p>{{ form.phone.label_tag }} {{ form.phone }} {{ form.phone.errors }}</p>
@@ -27,7 +27,7 @@
     </div>
     <p>{{ form.notes.label_tag }} {{ form.notes }} {{ form.notes.errors }}</p>
 
-    <h2>Productos del pedido</h2>
+    <h2 id="order-products">Productos del pedido</h2>
     <p>Usa cantidad 0 para quitar un producto.</p>
 
     {% for item in current_items %}

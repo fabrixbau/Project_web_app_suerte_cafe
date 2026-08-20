@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 600" role="img" aria-labelledby="title">
+  <title id="title">Categoría sin imagen</title>
+  <rect width="900" height="600" rx="48" fill="#eadfd5"/>
+  <circle cx="450" cy="300" r="170" fill="#fff8f1" stroke="#795548" stroke-width="20"/>
+  <path d="M315 305h270M345 245h210M370 365h160" stroke="#a34f3e" stroke-width="24" stroke-linecap="round"/>
+</svg>

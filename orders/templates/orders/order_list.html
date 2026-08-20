@@ -3,128 +3,92 @@
 {% block title %}Pedidos | Suerte Café{% endblock %}
 
 {% block content %}
+<div class="page-heading">
+    <div>
+        <p class="eyebrow">Administración</p>
+        <h1>Pedidos</h1>
+    </div>
+    <a class="action-link action-link-primary" href="{% url 'orders:create' %}">+ Nuevo pedido</a>
+</div>
 
+<section class="filter-panel">
+    <h2>Buscar pedidos</h2>
+    <form method="get" class="order-filter-form">
+        <div class="filter-grid">
+            {% for field in filter_form %}
+                <div class="filter-field">
+                    {{ field.label_tag }}
+                    {{ field }}
+                    {{ field.errors }}
+                </div>
+            {% endfor %}
+        </div>
 
-<h1>Pedidos</h1>
+        <div class="filter-actions">
+            <button type="submit">Buscar</button>
+            <a class="action-link action-link-secondary" href="{% url 'orders:list' %}">Limpiar filtros</a>
+        </div>
+    </form>
+</section>
 
-<a href="{% url 'orders:create' %}">Nuevo pedido</a>
-
-<h2>Buscar pedidos</h2>
-
-<form method="get">
-    {{ filter_form.as_p }}
-
-    <button type="submit">Buscar</button>
-    <a href="{% url 'orders:list' %}">Limpiar filtros</a>
-</form>
-
-
-<table>
-    <thead>
-        <tr>
-            <th>Número</th>
-            <th>Fecha</th>
-            <th>Hora</th>
-            <th>Cliente</th>
-            <th>Tipo</th>
-            <th>Total</th>
-            <th>Estado</th>
-            <th>Empleado</th>
-            <th>Cambiar estado</th>
-        </tr>
-    </thead>
-
-    <tbody>
-        {% for order in page %}
+<div class="table-scroll">
+    <table>
+        <thead>
             <tr>
-                <td>
-                    <a href="{% url 'orders:detail' order.id %}">
-                        {{ order.formatted_number }}
-                    </a>
-                </td>
-                <td>{{ order.operating_date|date:"d/m/Y" }}</td>
-                <td>{{ order.created_at|date:"H:i" }}</td>
-                <td>{{ order.customer_name|default:"Sin nombre" }}</td>
-                <td>{{ order.get_order_type_display }}</td>
-                <td>${{ order.total }}</td>
-                <td>{{ order.get_status_display }}</td>
-                <td>{{ order.employee_name_snapshot }}</td>
-                <td>
-                    <form
-                        method="post"
-                        action="{% url 'orders:status_update' order.id %}"
-                        class="status-update-form"
-                    >
-                        {% csrf_token %}
-                        <input
-                            type="hidden"
-                            name="next"
-                            value="{{ request.get_full_path }}"
-                        >
-
-                        <label for="status_{{ order.id }}">
-                            Nuevo estado
-                        </label>
-
-                        <select
-                            id="status_{{ order.id }}"
-                            name="status"
-                            class="status-select status-{{ order.status }}"
-                        >
-                            {% for value, label in status_choices %}
-                                <option
-                                    value="{{ value }}"
-                                    {% if value == order.status %}selected{% endif %}
-                                >
-                                    {{ label }}
-                                </option>
-                            {% endfor %}
-                        </select>
-
-                        <noscript>
-                            <button type="submit">Actualizar</button>
-                        </noscript>
-                    </form>
-                </td>
+                <th>Número</th>
+                <th>Fecha</th>
+                <th>Hora</th>
+                <th>Cliente</th>
+                <th>Tipo</th>
+                <th>Total</th>
+                <th>Estado</th>
+                <th>Empleado</th>
+                <th>Cambiar estado</th>
             </tr>
-        {% empty %}
-            <tr>
-                <td colspan="9">No existen pedidos.</td>
-            </tr>
-        {% endfor %}
-    </tbody>
-</table>
+        </thead>
 
-<nav>
+        <tbody>
+            {% for order in page %}
+                <tr>
+                    <td><a href="{% url 'orders:detail' order.id %}">{{ order.formatted_number }}</a></td>
+                    <td>{{ order.operating_date|date:"d/m/Y" }}</td>
+                    <td>{{ order.created_at|date:"H:i" }}</td>
+                    <td>{{ order.customer_name|default:"Sin nombre" }}</td>
+                    <td>{{ order.get_order_type_display }}</td>
+                    <td>${{ order.total }}</td>
+                    <td><span class="status-label status-{{ order.status }}">{{ order.get_status_display }}</span></td>
+                    <td>{{ order.employee_name_snapshot }}</td>
+                    <td>
+                        <form method="post" action="{% url 'orders:status_update' order.id %}" class="status-update-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+
+                            <input type="hidden" name="cycle" value="1">
+                            <button
+                                type="submit"
+                                class="status-cycle-button status-{{ order.status }}"
+                                title="Cambiar al siguiente estado"
+                            >
+                                {{ order.get_status_display }}
+                                <span aria-hidden="true">→</span>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="9">No existen pedidos para estos filtros.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<nav class="pagination">
     {% if page.has_previous %}
-        <a href="?{% if filter_query %}{{ filter_query }}&{% endif %}page={{ page.previous_page_number }}">
-            Anterior
-        </a>
+        <a class="action-link action-link-secondary" href="?{% if filter_query %}{{ filter_query }}&{% endif %}page={{ page.previous_page_number }}">Anterior</a>
     {% endif %}
-
-    <span>
-        Página {{ page.number }} de {{ page.paginator.num_pages }}
-    </span>
-
+    <span>Página {{ page.number }} de {{ page.paginator.num_pages }}</span>
     {% if page.has_next %}
-        <a href="?{% if filter_query %}{{ filter_query }}&{% endif %}page={{ page.next_page_number }}">
-            Siguiente
-        </a>
+        <a class="action-link action-link-secondary" href="?{% if filter_query %}{{ filter_query }}&{% endif %}page={{ page.next_page_number }}">Siguiente</a>
     {% endif %}
 </nav>
-
-{% endblock %}
-
-{% block extra_js %}
-<script>
-    document.querySelectorAll(".status-update-form").forEach((form) => {
-        const select = form.querySelector(".status-select");
-        select.addEventListener("change", () => {
-            select.className = `status-select status-${select.value}`;
-            select.classList.add("is-saving");
-            select.setAttribute("aria-busy", "true");
-            form.requestSubmit();
-        });
-    });
-</script>
 {% endblock %}

@@ -1,20 +1,47 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Mi perfil | Suerte Café{% endblock %}
 
 {% block content %}
-    <h1>Mi perfil</h1>
+<div class="form-page">
+    <div class="page-heading">
+        <div>
+            <p class="eyebrow">Mi cuenta</p>
+            <h1>Editar perfil</h1>
+        </div>
+        <a class="action-link action-link-secondary" href="{% url 'accounts:password_change' %}">Cambiar contraseña</a>
+    </div>
 
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        {{ form.as_p }}
+    <section class="form-card profile-edit-card">
+        <div class="profile-edit-intro">
+            {% if user.profile.image %}
+                <img src="{{ user.profile.image.url }}" alt="Foto de {{ user.username }}">
+            {% else %}
+                <img src="{% static 'img/ui/placeholders/profile.svg' %}" alt="Perfil sin fotografía">
+            {% endif %}
+            <div>
+                <h2>{{ user.username }}</h2>
+                <p>Actualiza tu información y fotografía de perfil.</p>
+            </div>
+        </div>
 
-        <button type="submit">Guardar cambios</button>
-    </form>
-
-    <p>
-        <a href="{% url 'accounts:password_change' %}">
-            Cambiar contraseña
-        </a>
-    </p>
+        <form method="post" enctype="multipart/form-data" class="modern-form form-grid">
+            {% csrf_token %}
+            {{ form.non_field_errors }}
+            {% for field in form %}
+                <div class="form-field {% if field.name == 'image' %}form-field-full{% endif %}">
+                    {{ field.label_tag }}
+                    {{ field }}
+                    {% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}
+                    {{ field.errors }}
+                </div>
+            {% endfor %}
+            <div class="form-actions form-field-full">
+                <button type="submit">Guardar cambios</button>
+                <a class="action-link action-link-secondary" href="{% url 'orders:create' %}">Cancelar</a>
+            </div>
+        </form>
+    </section>
+</div>
 {% endblock %}

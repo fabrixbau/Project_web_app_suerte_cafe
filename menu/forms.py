@@ -8,11 +8,9 @@ class CategoryForm(forms.ModelForm):
         model = Category
         fields = [
             "name",
-            "image",
         ]
         labels = {
             "name": "Nombre",
-            "image": "Imagen o icono",
         }
 
 

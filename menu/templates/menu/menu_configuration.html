@@ -1,122 +1,126 @@
 {% extends "base.html" %}
+{% load static menu_extras %}
 
-{% block title %}Configurar menú | Suerte Café{% endblock %}
+{% block title %}Menú | Suerte Café{% endblock %}
 
 {% block content %}
-    <h1>Configuración del menú</h1>
+<div class="page-heading menu-heading">
+    <div>
+        <p class="eyebrow">Administración</p>
+        <h1>Menú</h1>
+    </div>
 
-    {% if perms.menu.add_category %}
-        <p>
-            <a href="{% url 'menu:category_create' %}">
-                Nueva categoría
-            </a>
-        </p>
-    {% endif %}
+    <nav class="configuration-tabs" aria-label="Secciones del menú">
+        <a href="{% url 'menu:configuration' %}?tab=products" class="{% if active_tab == 'products' %}is-selected{% endif %}">Productos</a>
+        <a href="{% url 'menu:configuration' %}?tab=categories" class="{% if active_tab == 'categories' %}is-selected{% endif %}">Categorías</a>
+    </nav>
+</div>
 
-    {% if perms.menu.add_product %}
-        <p>
-            <a href="{% url 'menu:product_create' %}">
-                Nuevo producto
-            </a>
-        </p>
-    {% endif %}
+{% if active_tab == "products" %}
+    <section class="menu-toolbar">
+        <form method="get" class="menu-search-form">
+            <input type="hidden" name="tab" value="products">
+            <label class="search-control">
+                <img src="{% static 'img/ui/icons/search.svg' %}" alt="">
+                <input name="q" value="{{ search }}" placeholder="Buscar productos..." aria-label="Buscar productos">
+            </label>
 
-    <p>
-        <a href="{% url 'menu:list' %}">
-            Ver menú disponible
-        </a>
-    </p>
+            <select name="category" aria-label="Filtrar por categoría">
+                <option value="">Todas las categorías</option>
+                {% for category in categories %}
+                    <option value="{{ category.id }}" {% if selected_category == category.id|stringformat:"s" %}selected{% endif %}>{{ category.name }}</option>
+                {% endfor %}
+            </select>
 
-    {% for category in categories %}
-        <section>
-            <h2>{{ category.name }}</h2>
+            <select name="availability" aria-label="Filtrar por disponibilidad">
+                <option value="">Toda disponibilidad</option>
+                <option value="available" {% if availability == "available" %}selected{% endif %}>Disponibles</option>
+                <option value="unavailable" {% if availability == "unavailable" %}selected{% endif %}>No disponibles</option>
+            </select>
 
-            {% if category.image %}
-                <img
-                    src="{{ category.image.url }}"
-                    alt="Categoría {{ category.name }}"
-                    width="120"
-                >
+            <button type="submit">Buscar</button>
+            {% if search or selected_category or availability %}
+                <a class="action-link action-link-secondary" href="{% url 'menu:configuration' %}?tab=products">Limpiar</a>
             {% endif %}
+        </form>
 
-            {% if perms.menu.change_category %}
-                <p>
-                    <a href="{% url 'menu:category_edit' category.id %}">
-                        Editar categoría
-                    </a>
-                </p>
-            {% endif %}
+        {% if perms.menu.add_product %}
+            <a class="action-link action-link-primary" href="{% url 'menu:product_create' %}">+ Nuevo producto</a>
+        {% endif %}
+    </section>
 
-            {% if perms.menu.delete_category %}
-                <p>
-                    <a href="{% url 'menu:category_delete' category.id %}">
-                        Eliminar categoría
-                    </a>
-                </p>
-            {% endif %}
-
-            <table>
-                <thead>
+    <div class="menu-product-table">
+        <table>
+            <thead>
+                <tr><th>Producto</th><th>Categoría</th><th>Precio</th><th>Disponibilidad</th><th>Acciones</th></tr>
+            </thead>
+            <tbody>
+                {% for product in products %}
                     <tr>
-                        <th>Producto</th>
-                        <th>Precio</th>
-                        <th>Disponibilidad</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    {% for product in category.products.all %}
-                        <tr>
-                            <td>{{ product.name }}</td>
-                            <td>${{ product.price }}</td>
-                            <td>
-                                {% if product.is_available %}
-                                    Disponible
+                        <td>
+                            <div class="product-identity">
+                                {% if product.image %}
+                                    <img src="{{ product.image.url }}" alt="">
                                 {% else %}
-                                    No disponible
+                                    <img src="{% static 'img/ui/placeholders/product.svg' %}" alt="">
                                 {% endif %}
-                            </td>
-                            <td>
+                                <span><strong>{{ product.name }}</strong><small>{{ product.description|default:"Sin descripción"|truncatechars:65 }}</small></span>
+                            </div>
+                        </td>
+                        <td><span class="category-inline-icon">{{ product.category.name|category_icon }}</span> {{ product.category.name }}</td>
+                        <td><strong>${{ product.price }}</strong></td>
+                        <td>
+                            {% if perms.menu.change_product %}
+                                <form method="post" action="{% url 'menu:product_toggle_availability' product.id %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                    <button type="submit" class="availability-toggle {% if product.is_available %}is-available{% else %}is-unavailable{% endif %}">
+                                        <span class="availability-switch" aria-hidden="true"><span></span></span>
+                                        {% if product.is_available %}Disponible{% else %}No disponible{% endif %}
+                                    </button>
+                                </form>
+                            {% else %}
+                                {% if product.is_available %}Disponible{% else %}No disponible{% endif %}
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="table-actions">
                                 {% if perms.menu.change_product %}
-                                    <a href="{% url 'menu:product_edit' product.id %}">
-                                        Editar producto
-                                    </a>
-
-                                    <form
-                                        method="post"
-                                        action="{% url 'menu:product_toggle_availability' product.id %}"
-                                    >
-                                        {% csrf_token %}
-
-                                        <button type="submit">
-                                            {% if product.is_available %}
-                                                Marcar no disponible
-                                            {% else %}
-                                                Marcar disponible
-                                            {% endif %}
-                                        </button>
-                                    </form>
+                                    <a class="small-action" href="{% url 'menu:product_edit' product.id %}"><img src="{% static 'img/ui/icons/pencil.svg' %}" alt=""> Editar</a>
                                 {% endif %}
-
                                 {% if perms.menu.delete_product %}
-                                    <a href="{% url 'menu:product_delete' product.id %}">
-                                        Eliminar producto
-                                    </a>
+                                    <a class="small-action destructive" href="{% url 'menu:product_delete' product.id %}"><img src="{% static 'img/ui/icons/trash-2.svg' %}" alt=""> Eliminar</a>
                                 {% endif %}
-                            </td>
-                        </tr>
-                    {% empty %}
-                        <tr>
-                            <td colspan="4">
-                                Esta categoría no tiene productos.
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </section>
-    {% empty %}
-        <p>No existen categorías.</p>
-    {% endfor %}
+                            </div>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="5">No se encontraron productos.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <section class="category-management-grid">
+        {% for category in categories %}
+            <article class="category-management-card">
+                <span class="category-simple-icon" aria-hidden="true">{{ category.name|category_icon }}</span>
+                <h2>{{ category.name }}</h2>
+                <p>{{ category.product_count }} producto{{ category.product_count|pluralize }}</p>
+                <div class="category-card-actions">
+                    {% if perms.menu.change_category %}
+                        <a class="small-action" href="{% url 'menu:category_edit' category.id %}"><img src="{% static 'img/ui/icons/pencil.svg' %}" alt=""> Editar</a>
+                    {% endif %}
+                    {% if perms.menu.delete_category %}
+                        <a class="small-action destructive icon-only" href="{% url 'menu:category_delete' category.id %}" aria-label="Eliminar {{ category.name }}"><img src="{% static 'img/ui/icons/trash-2.svg' %}" alt=""></a>
+                    {% endif %}
+                </div>
+            </article>
+        {% endfor %}
+
+        {% if perms.menu.add_category %}
+            <a class="new-category-card" href="{% url 'menu:category_create' %}"><strong>+</strong><span>Nueva categoría</span></a>
+        {% endif %}
+    </section>
+{% endif %}
 {% endblock %}

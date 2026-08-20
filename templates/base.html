@@ -6,6 +6,15 @@
 
     {% load static %}
 
+    <script>
+        (() => {
+            const theme = localStorage.getItem("suerteCafeTheme") || "light";
+            const palette = localStorage.getItem("suerteCafePalette") || "coffee";
+            document.documentElement.dataset.theme = theme;
+            document.documentElement.dataset.palette = palette;
+        })();
+    </script>
+
     <title>
         {% block title %}Suerte Café{% endblock %}
     </title>
@@ -31,6 +40,7 @@
                     href="{% url 'orders:create' %}"
                     class="{% if request.resolver_match.namespace == 'orders' and request.resolver_match.url_name == 'create' %}active{% endif %}"
                 >
+                    <img class="nav-icon" src="{% static 'img/ui/icons/clipboard-plus.svg' %}" alt="">
                     Nuevo pedido
                 </a>
 
@@ -38,6 +48,7 @@
                     href="{% url 'orders:list' %}"
                     class="{% if request.resolver_match.namespace == 'orders' and request.resolver_match.url_name != 'create' and request.resolver_match.url_name != 'reports' %}active{% endif %}"
                 >
+                    <img class="nav-icon" src="{% static 'img/ui/icons/clipboard-list.svg' %}" alt="">
                     Pedidos
                 </a>
 
@@ -45,21 +56,34 @@
                     href="{% url 'orders:reports' %}"
                     class="{% if request.resolver_match.namespace == 'orders' and request.resolver_match.url_name == 'reports' %}active{% endif %}"
                 >
+                    <img class="nav-icon" src="{% static 'img/ui/icons/chart-no-axes-combined.svg' %}" alt="">
                     Reportes
                 </a>
+
+                <button
+                    type="button"
+                    id="calculator-open"
+                    class="sidebar-action"
+                    aria-expanded="false"
+                >
+                    <img class="nav-icon" src="{% static 'img/ui/icons/calculator.svg' %}" alt="">
+                    Calculadora
+                </button>
 
                 {% if perms.menu.view_category %}
                     <a
                         href="{% url 'menu:configuration' %}"
                         class="{% if request.resolver_match.namespace == 'menu' %}active{% endif %}"
                     >
-                        Configurar menú
+                        <img class="nav-icon" src="{% static 'img/ui/icons/utensils.svg' %}" alt="">
+                        Menú
                     </a>
                 {% else %}
                     <a
                         href="{% url 'menu:list' %}"
                         class="{% if request.resolver_match.namespace == 'menu' %}active{% endif %}"
                     >
+                        <img class="nav-icon" src="{% static 'img/ui/icons/utensils.svg' %}" alt="">
                         Menú
                     </a>
                 {% endif %}
@@ -69,6 +93,7 @@
                         href="{% url 'accounts:user_list' %}"
                         class="{% if request.resolver_match.namespace == 'accounts' and request.resolver_match.url_name == 'user_list' %}active{% endif %}"
                     >
+                        <img class="nav-icon" src="{% static 'img/ui/icons/user-round.svg' %}" alt="">
                         Empleados
                     </a>
                 {% endif %}
@@ -78,9 +103,66 @@
         <div class="page">
             <header class="topbar">
                 {% if user.is_authenticated %}
-                    <a
+                    <button
+                        type="button"
+                        id="appearance-toggle"
+                        class="appearance-toggle"
+                        aria-expanded="false"
+                        aria-controls="appearance-panel"
+                    >
+                        <img class="button-icon" src="{% static 'img/ui/icons/palette.svg' %}" alt="">
+                        Apariencia
+                    </button>
+
+                    <section
+                        id="appearance-panel"
+                        class="appearance-panel"
+                        aria-label="Configuración de apariencia"
+                        hidden
+                    >
+                        <h2>Apariencia</h2>
+                        <fieldset>
+                            <legend>Tema</legend>
+                            <div class="appearance-options appearance-theme-options">
+                                <label class="appearance-choice">
+                                    <input type="radio" name="theme" value="light">
+                                    <span class="appearance-choice-content">
+                                        <span class="theme-preview theme-preview-light"></span>
+                                        <span><strong>Claro</strong><small>Fondo luminoso</small></span>
+                                    </span>
+                                </label>
+                                <label class="appearance-choice">
+                                    <input type="radio" name="theme" value="dark">
+                                    <span class="appearance-choice-content">
+                                        <span class="theme-preview theme-preview-dark"></span>
+                                        <span><strong>Oscuro</strong><small>Menos brillo</small></span>
+                                    </span>
+                                </label>
+                            </div>
+                        </fieldset>
+                        <fieldset>
+                            <legend>Paleta</legend>
+                            <label class="palette-option">
+                                <input type="radio" name="palette" value="coffee">
+                                <span class="palette-sample palette-coffee"></span> Café
+                            </label>
+                            <label class="palette-option">
+                                <input type="radio" name="palette" value="terracotta">
+                                <span class="palette-sample palette-terracotta"></span> Terracota
+                            </label>
+                            <label class="palette-option">
+                                <input type="radio" name="palette" value="green">
+                                <span class="palette-sample palette-green"></span> Verde
+                            </label>
+                        </fieldset>
+                    </section>
+
+                    <button
+                        type="button"
+                        id="user-menu-toggle"
                         class="user-summary"
-                        href="{% url 'accounts:profile_edit' %}"
+                        aria-expanded="false"
+                        aria-controls="user-menu"
                     >
                         {% if user.profile.image %}
                             <img
@@ -97,20 +179,31 @@
                             </span>
                         {% endif %}
 
-                        <span>
-                            {{ user.username }}
+                        <span class="user-summary-text">
+                            <strong>{{ user.username }}</strong>
+                            <small>{% if user.is_staff or perms.menu.change_product %}Administrador{% else %}Usuario{% endif %}</small>
                         </span>
-                    </a>
+                        <span aria-hidden="true">⌄</span>
+                    </button>
 
-                    <form
-                        method="post"
-                        action="{% url 'logout' %}"
+                    <section
+                        id="user-menu"
+                        class="user-menu-panel"
+                        aria-label="Opciones del perfil"
+                        hidden
                     >
-                        {% csrf_token %}
-                        <button type="submit">
-                            Cerrar sesión
-                        </button>
-                    </form>
+                        <a href="{% url 'accounts:profile_edit' %}">
+                            <img src="{% static 'img/ui/icons/user-round.svg' %}" alt="">
+                            Editar perfil
+                        </a>
+                        <form method="post" action="{% url 'logout' %}">
+                            {% csrf_token %}
+                            <button type="submit">
+                                <img src="{% static 'img/ui/icons/log-out.svg' %}" alt="">
+                                Cerrar sesión
+                            </button>
+                        </form>
+                    </section>
                 {% endif %}
             </header>
 
@@ -124,6 +217,50 @@
         </div>
     </div>
 
+    <section
+        id="calculator"
+        class="calculator is-hidden"
+        aria-label="Calculadora"
+        hidden
+    >
+        <header id="calculator-handle" class="calculator-header">
+            <strong>Calculadora</strong>
+            <div class="calculator-window-actions">
+                <button type="button" data-window-action="minimize" aria-label="Minimizar">−</button>
+                <button type="button" data-window-action="expand" aria-label="Expandir">□</button>
+                <button type="button" data-window-action="close" aria-label="Cerrar">×</button>
+            </div>
+        </header>
+
+        <div class="calculator-content">
+            <output id="calculator-display" class="calculator-display">0</output>
+            <div class="calculator-keypad">
+                <button type="button" data-action="clear">C</button>
+                <button type="button" data-action="backspace">⌫</button>
+                <button type="button" data-action="percent">%</button>
+                <button type="button" data-operator="divide">÷</button>
+                <button type="button" data-value="7">7</button>
+                <button type="button" data-value="8">8</button>
+                <button type="button" data-value="9">9</button>
+                <button type="button" data-operator="multiply">×</button>
+                <button type="button" data-value="4">4</button>
+                <button type="button" data-value="5">5</button>
+                <button type="button" data-value="6">6</button>
+                <button type="button" data-operator="subtract">−</button>
+                <button type="button" data-value="1">1</button>
+                <button type="button" data-value="2">2</button>
+                <button type="button" data-value="3">3</button>
+                <button type="button" data-operator="add">+</button>
+                <button type="button" data-value="0" class="calculator-zero">0</button>
+                <button type="button" data-action="decimal">.</button>
+                <button type="button" data-action="equals">=</button>
+            </div>
+        </div>
+    </section>
+
+    <script src="{% static 'js/appearance.js' %}?v=1"></script>
+    <script src="{% static 'js/user-menu.js' %}?v=1"></script>
+    <script src="{% static 'js/calculator.js' %}?v=2"></script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>
