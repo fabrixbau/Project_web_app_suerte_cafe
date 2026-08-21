@@ -3,7 +3,10 @@
 {% block title %}Empleados | Suerte Café{% endblock %}
 
 {% block content %}
-    <h1>Empleados</h1>
+    <div class="page-heading">
+        <h1>Empleados</h1>
+        {% if perms.auth.add_user %}<a class="action-link action-link-primary" href="{% url 'accounts:signup' %}">+ Nuevo empleado</a>{% endif %}
+    </div>
 
     <table>
         <thead>

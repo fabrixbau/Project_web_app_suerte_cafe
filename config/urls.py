@@ -6,6 +6,11 @@ from accounts.views import home, login_view
 from django.conf import settings
 from django.conf.urls.static import static
 
+handler400 = "config.errors.bad_request"
+handler403 = "config.errors.permission_denied"
+handler404 = "config.errors.page_not_found"
+handler500 = "config.errors.server_error"
+
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("accounts/login/", login_view, name="login"),
@@ -17,6 +22,11 @@ urlpatterns = [
 ]
 
 if settings.DEBUG:
+    from config.errors import error_preview
+
+    urlpatterns += [
+        path("__errors__/<int:status>/", error_preview, name="error_preview"),
+    ]
     urlpatterns += static(
         settings.MEDIA_URL,
         document_root=settings.MEDIA_ROOT,

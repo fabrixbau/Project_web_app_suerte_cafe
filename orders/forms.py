@@ -1,4 +1,5 @@
 from django import forms
+from django.contrib.auth import get_user_model
 
 from .models import Order
 
@@ -28,6 +29,16 @@ class OrderCreateForm(forms.ModelForm):
             "neighborhood": "Colonia",
             "notes": "Notas adicionales",
         }
+        widgets = {
+            "customer_name": forms.TextInput(attrs={"placeholder": "Nombre del cliente"}),
+            "phone": forms.TextInput(attrs={"placeholder": "Ej. 55 1234 5678"}),
+            "table_reference": forms.TextInput(attrs={"placeholder": "Ej. Mesa 4"}),
+            "street": forms.TextInput(attrs={"placeholder": "Nombre de la calle"}),
+            "exterior_number": forms.TextInput(attrs={"placeholder": "Núm. exterior"}),
+            "interior_number": forms.TextInput(attrs={"placeholder": "Opcional"}),
+            "neighborhood": forms.TextInput(attrs={"placeholder": "Colonia"}),
+            "notes": forms.Textarea(attrs={"placeholder": "Indicaciones o notas del pedido", "rows": 3}),
+        }
 
     def clean(self):
         cleaned_data = super().clean()
@@ -41,6 +52,33 @@ class OrderCreateForm(forms.ModelForm):
                 )
 
         return cleaned_data
+
+
+class OrderInformationEditForm(OrderCreateForm):
+    created_by = forms.ModelChoiceField(
+        label="Empleado",
+        queryset=get_user_model().objects.filter(is_active=True).order_by("username"),
+    )
+
+    class Meta(OrderCreateForm.Meta):
+        fields = [
+            "created_by",
+            "order_type",
+            "status",
+            "customer_name",
+            "phone",
+            "table_reference",
+            "street",
+            "exterior_number",
+            "interior_number",
+            "neighborhood",
+            "notes",
+        ]
+        labels = {
+            **OrderCreateForm.Meta.labels,
+            "created_by": "Empleado",
+            "status": "Estado",
+        }
 
 
 class OrderFilterForm(forms.Form):

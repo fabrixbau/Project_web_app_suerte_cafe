@@ -3,6 +3,8 @@ from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.models import Group
 from django.db import transaction
 
+from config.images import optimize_uploaded_image
+
 from .models import Profile
 from .signals import ADMINISTRATOR_GROUP, REGULAR_USER_GROUP
 
@@ -108,6 +110,12 @@ class SignUpForm(forms.ModelForm):
 
         return email
 
+    def clean_image(self):
+        return optimize_uploaded_image(
+            self.cleaned_data.get("image"),
+            max_dimension=600,
+        )
+
     def clean(self):
         cleaned_data = super().clean()
 
@@ -174,6 +182,12 @@ class ProfileEditForm(forms.ModelForm):
             raise forms.ValidationError("Este nombre visible ya existe.")
 
         return username
+
+    def clean_image(self):
+        return optimize_uploaded_image(
+            self.cleaned_data.get("image"),
+            max_dimension=600,
+        )
 
     def clean_email(self):
         email = self.cleaned_data["email"].strip().lower()

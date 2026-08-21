@@ -6,6 +6,11 @@ app_name = "orders"
 
 urlpatterns = [
     path("new/", views.order_create, name="create"),
+    path(
+        "delivery-customer/",
+        views.delivery_customer_lookup,
+        name="delivery_customer_lookup",
+    ),
     path("reports/", views.sales_report, name="reports"),
     path("", views.order_list, name="list"),
     path(

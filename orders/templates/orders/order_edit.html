@@ -1,136 +1,103 @@
 {% extends "base.html" %}
-{% load l10n %}
-
+{% load l10n static menu_extras %}
 {% block title %}Editar {{ order.formatted_number }} | Suerte Café{% endblock %}
 
 {% block content %}
-<h1>Editar pedido {{ order.formatted_number }}</h1>
+<div class="edit-order-heading"><div><a class="back-link" href="{% url 'orders:detail' order.id %}">← Volver al pedido</a><p class="eyebrow">{{ order.formatted_number }}</p><h1>Editar pedido completo</h1></div></div>
 
-<form method="post" class="modern-form form-card detail-edit-form">
-    {% csrf_token %}
-    {{ form.non_field_errors }}
-
-    <p id="order-information">{{ form.order_type.label_tag }} {{ form.order_type }} {{ form.order_type.errors }}</p>
-    <p id="customer-information">{{ form.customer_name.label_tag }} {{ form.customer_name }} {{ form.customer_name.errors }}</p>
-
-    <div id="phone-fields">
-        <p>{{ form.phone.label_tag }} {{ form.phone }} {{ form.phone.errors }}</p>
-    </div>
-    <div id="eat-in-fields">
-        <p>{{ form.table_reference.label_tag }} {{ form.table_reference }} {{ form.table_reference.errors }}</p>
-    </div>
-    <div id="delivery-fields">
-        <p>{{ form.street.label_tag }} {{ form.street }} {{ form.street.errors }}</p>
-        <p>{{ form.exterior_number.label_tag }} {{ form.exterior_number }} {{ form.exterior_number.errors }}</p>
-        <p>{{ form.interior_number.label_tag }} {{ form.interior_number }} {{ form.interior_number.errors }}</p>
-        <p>{{ form.neighborhood.label_tag }} {{ form.neighborhood }} {{ form.neighborhood.errors }}</p>
-    </div>
-    <p>{{ form.notes.label_tag }} {{ form.notes }} {{ form.notes.errors }}</p>
-
-    <h2 id="order-products">Productos del pedido</h2>
-    <p>Usa cantidad 0 para quitar un producto.</p>
-
-    {% for item in current_items %}
-        <div class="editable-product" data-name="{{ item.product_name_snapshot }}" data-price="{{ item.unit_price|unlocalize }}">
-            <strong>{{ item.product_name_snapshot }}</strong>
-            <span>${{ item.unit_price }}</span>
-            <button type="button" class="decrease-quantity">−</button>
-            <input class="quantity-input" name="item_quantity_{{ item.id }}" type="number" min="0" value="{{ item.selected_quantity }}">
-            <button type="button" class="increase-quantity">+</button>
+<form method="post" class="complete-order-edit-form">
+  {% csrf_token %}
+  {% if product_errors or information_form.errors %}
+  <div class="app-notifications" aria-live="assertive">
+    <article class="app-notification notification-error" data-error-notification>
+      <div class="notification-content">
+        <strong>No se pudo guardar el pedido</strong>
+        <div class="notification-message">
+          {% for error in product_errors %}<p>{{ error }}</p>{% endfor %}
+          {% for error in information_form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+          {% for field in information_form %}{% for error in field.errors %}<p>{{ field.label }}: {{ error }}</p>{% endfor %}{% endfor %}
         </div>
-    {% endfor %}
+      </div>
+      <div class="notification-actions"><button type="button" data-copy-notification>Copiar</button><button type="button" data-close-notification aria-label="Cerrar notificación">×</button></div>
+    </article>
+  </div>
+  {% endif %}
+  <section class="form-card edit-information-card" id="order-information">
+    <header class="section-title-row"><div><p class="eyebrow">Pedido y cliente</p><h2>Información</h2></div><span class="form-hint">Todos los cambios se guardarán al final</span></header>
+    <div class="form-grid edit-primary-grid">
+      <div class="form-field">{{ information_form.created_by.label_tag }}{{ information_form.created_by }}{{ information_form.created_by.errors }}</div>
+      <div class="form-field">{{ information_form.status.label_tag }}{{ information_form.status }}{{ information_form.status.errors }}</div>
+    </div>
+    <div class="form-field form-field-full order-type-edit-field">
+      <label>Tipo de pedido</label>{{ information_form.order_type.as_hidden }}{{ information_form.order_type.errors }}
+      <div class="order-type-selector">
+        <button type="button" class="order-type-option" data-order-type="eat_in"><img src="{% static 'img/ui/icons/utensils.svg' %}" alt="">Comer aquí</button>
+        <button type="button" class="order-type-option" data-order-type="delivery"><img src="{% static 'img/ui/icons/truck.svg' %}" alt="">Entrega</button>
+        <button type="button" class="order-type-option" data-order-type="pickup"><img src="{% static 'img/ui/icons/shopping-bag.svg' %}" alt="">Recoger</button>
+      </div>
+    </div>
+    <div id="customer-information" class="form-grid edit-customer-grid">
+      <div class="form-field" data-delivery-customer-lookup="{% url 'orders:delivery_customer_lookup' %}">{{ information_form.customer_name.label_tag }}{{ information_form.customer_name }}{{ information_form.customer_name.errors }}<small class="customer-lookup-status" aria-live="polite"></small></div>
+      <div id="phone-fields" class="form-field">{{ information_form.phone.label_tag }}{{ information_form.phone }}{{ information_form.phone.errors }}</div>
+      <div id="eat-in-fields" class="form-field">{{ information_form.table_reference.label_tag }}{{ information_form.table_reference }}{{ information_form.table_reference.errors }}</div>
+      <div id="delivery-fields" class="delivery-edit-fields">
+        <div class="form-field street-field">{{ information_form.street.label_tag }}{{ information_form.street }}{{ information_form.street.errors }}</div>
+        <div class="form-field">{{ information_form.exterior_number.label_tag }}{{ information_form.exterior_number }}{{ information_form.exterior_number.errors }}</div>
+        <div class="form-field">{{ information_form.interior_number.label_tag }}{{ information_form.interior_number }}{{ information_form.interior_number.errors }}</div>
+        <div class="form-field neighborhood-field">{{ information_form.neighborhood.label_tag }}{{ information_form.neighborhood }}{{ information_form.neighborhood.errors }}</div>
+      </div>
+      <div class="form-field form-field-full">{{ information_form.notes.label_tag }}{{ information_form.notes }}{{ information_form.notes.errors }}</div>
+    </div>
+  </section>
 
-    {% if products %}
-        <h2>Agregar otros productos</h2>
-        {% regroup products by category as category_list %}
-        {% for category in category_list %}
-            <section>
-                <h3>{{ category.grouper.name }}</h3>
-                {% for product in category.list %}
-                    <div class="editable-product" data-name="{{ product.name }}" data-price="{{ product.price|unlocalize }}">
-                        <strong>{{ product.name }}</strong>
-                        <span>${{ product.price }}</span>
-                        <button type="button" class="decrease-quantity">−</button>
-                        <input class="quantity-input" name="product_quantity_{{ product.id }}" type="number" min="0" value="{{ product.selected_quantity }}">
-                        <button type="button" class="increase-quantity">+</button>
-                    </div>
-                {% endfor %}
-            </section>
+  <div class="order-workspace edit-products-workspace" id="order-products">
+    <div class="order-builder">
+      <section class="selected-products-section">
+        <div class="section-title-row"><div><p class="eyebrow">Pedido actual</p><h2>Productos seleccionados</h2></div><span class="form-hint">Cantidad 0 elimina el producto</span></div>
+        <div class="product-grid">
+        {% for item in current_items %}
+          <article class="product-card editable-order-product has-quantity" data-name="{{ item.product_name_snapshot }}" data-price="{{ item.unit_price|unlocalize }}">
+            {% if item.product and item.product.image %}<img class="product-card-image" src="{{ item.product.image.url }}" alt="{{ item.product_name_snapshot }}" loading="lazy" decoding="async">{% else %}<img class="product-card-image" src="{% static 'img/ui/placeholders/product.svg' %}" alt="" loading="lazy" decoding="async">{% endif %}
+            <strong>{{ item.product_name_snapshot }}</strong><small>${{ item.unit_price }} cada uno</small>
+            <div class="product-card-footer"><div class="quantity-control"><button type="button" class="decrease-quantity">−</button><input class="quantity-input" name="item_quantity_{{ item.id }}" type="number" min="0" value="{{ item.selected_quantity }}" aria-label="Cantidad de {{ item.product_name_snapshot }}"><button type="button" class="increase-quantity">+</button></div><button type="button" class="remove-order-product">Eliminar</button></div>
+          </article>
         {% endfor %}
-    {% endif %}
-
-    <section>
-        <h2>Pedido actualizado</h2>
-        <div id="current-order-items"></div>
-        <p>Artículos: <strong id="total-items">0</strong></p>
-        <p>Total: <strong id="order-total">$0.00</strong></p>
-    </section>
-
-    <button type="submit">Guardar cambios</button>
-    <a href="{% url 'orders:detail' order.id %}">Cancelar</a>
+        </div>
+      </section>
+      {% if categories %}
+      <section class="available-products-section">
+        <div class="section-title-row"><div><p class="eyebrow">Menú</p><h2>Agregar productos</h2></div></div>
+        <div class="category-selector">{% for category in categories %}<button type="button" class="category-card{% if forloop.first %} is-selected{% endif %}" data-category-target="edit-category-{{ category.id }}"><span class="category-order-icon">{{ category.name|category_icon }}</span><span>{{ category.name }}</span></button>{% endfor %}</div>
+        {% for category in categories %}
+        <section id="edit-category-{{ category.id }}" class="category-products" {% if not forloop.first %}hidden{% endif %}><div class="product-grid">
+        {% for product in category.available_to_add %}
+          <article class="product-card editable-order-product" data-name="{{ product.name }}" data-price="{{ product.price|unlocalize }}">
+            {% if product.image %}<img class="product-card-image" src="{{ product.image.url }}" alt="{{ product.name }}" loading="lazy" decoding="async">{% else %}<img class="product-card-image" src="{% static 'img/ui/placeholders/product.svg' %}" alt="" loading="lazy" decoding="async">{% endif %}
+            <strong>{{ product.name }}</strong>{% if product.description %}<small>{{ product.description }}</small>{% endif %}
+            <div class="product-card-footer"><strong>${{ product.price }}</strong><div class="quantity-control"><button type="button" class="decrease-quantity">−</button><input class="quantity-input" name="product_quantity_{{ product.id }}" type="number" min="0" value="{{ product.selected_quantity }}" aria-label="Cantidad de {{ product.name }}"><button type="button" class="increase-quantity">+</button></div></div>
+          </article>
+        {% empty %}<p class="empty-category-message">No hay productos disponibles en esta categoría.</p>{% endfor %}</div></section>
+        {% endfor %}
+      </section>
+      {% endif %}
+    </div>
+    <aside class="current-order-panel">
+      <div class="current-order-heading"><h2>Pedido actualizado</h2><span><strong id="total-items">0</strong> artículos</span></div>
+      <div id="current-order-items" class="current-order-items"></div>
+      <div class="current-order-totals"><p><span>Artículos</span><strong id="summary-items">0</strong></p><p class="final-total"><span>Total</span><strong id="order-total">$0.00</strong></p></div>
+      <button type="submit" class="finish-order-button">Guardar todos los cambios</button><a class="secondary-button panel-cancel-button" href="{% url 'orders:detail' order.id %}">Cancelar</a>
+    </aside>
+  </div>
 </form>
 {% endblock %}
 
-{% block extra_js %}
-<script>
-    const orderType = document.querySelector("#id_order_type");
-    const phoneFields = document.querySelector("#phone-fields");
-    const eatInFields = document.querySelector("#eat-in-fields");
-    const deliveryFields = document.querySelector("#delivery-fields");
-
-    function updateCustomerFields() {
-        eatInFields.hidden = orderType.value !== "eat_in";
-        deliveryFields.hidden = orderType.value !== "delivery";
-        phoneFields.hidden = !["delivery", "pickup"].includes(orderType.value);
-    }
-    orderType.addEventListener("change", updateCustomerFields);
-    updateCustomerFields();
-
-    const productCards = document.querySelectorAll(".editable-product");
-    const summary = document.querySelector("#current-order-items");
-    const totalItems = document.querySelector("#total-items");
-    const orderTotal = document.querySelector("#order-total");
-    const currencyFormatter = new Intl.NumberFormat("es-MX", {
-        style: "currency",
-        currency: "MXN",
-        currencyDisplay: "narrowSymbol",
-    });
-
-    function updateSummary() {
-        summary.innerHTML = "";
-        let quantityTotal = 0;
-        let priceTotal = 0;
-        productCards.forEach((card) => {
-            const quantity = Number.parseInt(card.querySelector(".quantity-input").value, 10) || 0;
-            if (quantity > 0) {
-                const subtotal = Number.parseFloat(card.dataset.price) * quantity;
-                const row = document.createElement("p");
-                row.textContent = `${card.dataset.name} × ${quantity} — ${currencyFormatter.format(subtotal)}`;
-                summary.appendChild(row);
-                quantityTotal += quantity;
-                priceTotal += subtotal;
-            }
-        });
-        if (quantityTotal === 0) summary.innerHTML = "<p>No hay productos seleccionados.</p>";
-        totalItems.textContent = quantityTotal;
-        orderTotal.textContent = currencyFormatter.format(priceTotal);
-    }
-
-    productCards.forEach((card) => {
-        const input = card.querySelector(".quantity-input");
-        card.querySelector(".decrease-quantity").addEventListener("click", () => {
-            input.value = Math.max(0, (Number.parseInt(input.value, 10) || 0) - 1);
-            updateSummary();
-        });
-        card.querySelector(".increase-quantity").addEventListener("click", () => {
-            input.value = (Number.parseInt(input.value, 10) || 0) + 1;
-            updateSummary();
-        });
-        input.addEventListener("input", () => {
-            if ((Number.parseInt(input.value, 10) || 0) < 0) input.value = 0;
-            updateSummary();
-        });
-    });
-    updateSummary();
-</script>
-{% endblock %}
+{% block extra_js %}<script>
+const orderType=document.querySelector("#id_order_type"),typeButtons=document.querySelectorAll(".order-type-option"),phone=document.querySelector("#phone-fields"),eatIn=document.querySelector("#eat-in-fields"),delivery=document.querySelector("#delivery-fields");
+function refreshFields(){const value=orderType.value||"eat_in";eatIn.hidden=value!=="eat_in";delivery.hidden=value!=="delivery";phone.hidden=!["delivery","pickup"].includes(value);typeButtons.forEach(button=>button.classList.toggle("is-selected",button.dataset.orderType===value));}
+typeButtons.forEach(button=>button.addEventListener("click",()=>{orderType.value=button.dataset.orderType;refreshFields();}));refreshFields();
+const categoryButtons=document.querySelectorAll(".category-card"),categorySections=document.querySelectorAll(".category-products");categoryButtons.forEach(button=>button.addEventListener("click",()=>{categoryButtons.forEach(item=>item.classList.remove("is-selected"));categorySections.forEach(section=>section.hidden=true);button.classList.add("is-selected");document.querySelector(`#${button.dataset.categoryTarget}`).hidden=false;}));
+const cards=document.querySelectorAll(".editable-order-product"),summary=document.querySelector("#current-order-items"),totalItems=document.querySelector("#total-items"),summaryItems=document.querySelector("#summary-items"),orderTotal=document.querySelector("#order-total"),currency=new Intl.NumberFormat("es-MX",{style:"currency",currency:"MXN",currencyDisplay:"narrowSymbol"});
+function change(input,amount){input.value=Math.max(0,(Number.parseInt(input.value,10)||0)+amount);refreshSummary();}
+function refreshSummary(){summary.innerHTML="";const combined=new Map();let count=0,total=0;cards.forEach(card=>{const input=card.querySelector(".quantity-input"),quantity=Number.parseInt(input.value,10)||0,price=Number.parseFloat(card.dataset.price),key=`${card.dataset.name}|${price}`;card.classList.toggle("has-quantity",quantity>0);if(quantity>0){const previous=combined.get(key)||{name:card.dataset.name,price,quantity:0};previous.quantity+=quantity;combined.set(key,previous);count+=quantity;total+=price*quantity;}});combined.forEach(item=>{const row=document.createElement("article"),subtotal=item.price*item.quantity;row.className="current-order-item";row.innerHTML="<div><strong></strong><span></span></div><strong></strong>";row.querySelector("div strong").textContent=item.name;row.querySelector("span").textContent=`${currency.format(item.price)} × ${item.quantity}`;row.querySelector(":scope > strong").textContent=currency.format(subtotal);summary.appendChild(row);});if(!count)summary.innerHTML="<p>No hay productos seleccionados.</p>";totalItems.textContent=count;summaryItems.textContent=count;orderTotal.textContent=currency.format(total);}
+cards.forEach(card=>{const input=card.querySelector(".quantity-input");card.querySelector(".decrease-quantity").addEventListener("click",()=>change(input,-1));card.querySelector(".increase-quantity").addEventListener("click",()=>change(input,1));card.querySelector(".remove-order-product")?.addEventListener("click",()=>{input.value=0;refreshSummary();});input.addEventListener("input",()=>{if((Number.parseInt(input.value,10)||0)<0)input.value=0;refreshSummary();});});refreshSummary();
+</script><script src="{% static 'js/delivery-customer.js' %}?v=1"></script>{% endblock %}

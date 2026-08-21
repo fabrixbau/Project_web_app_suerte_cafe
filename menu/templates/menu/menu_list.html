@@ -15,9 +15,9 @@
             {% for product in category.available_products %}
                 <article class="product-card product-display-card">
                     {% if product.image %}
-                        <img class="product-card-image" src="{{ product.image.url }}" alt="{{ product.name }}">
+                        <img class="product-card-image" src="{{ product.image.url }}" alt="{{ product.name }}" loading="lazy" decoding="async">
                     {% else %}
-                        <img class="product-card-image" src="{% static 'img/ui/placeholders/product.svg' %}" alt="">
+                        <img class="product-card-image" src="{% static 'img/ui/placeholders/product.svg' %}" alt="" loading="lazy" decoding="async">
                     {% endif %}
                     <h3>{{ product.name }}</h3>
                     {% if product.description %}<p>{{ product.description }}</p>{% endif %}

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Pedidos | Suerte Café{% endblock %}
 
@@ -41,9 +42,8 @@
                 <th>Cliente</th>
                 <th>Tipo</th>
                 <th>Total</th>
-                <th>Estado</th>
                 <th>Empleado</th>
-                <th>Cambiar estado</th>
+                <th>Estado</th>
             </tr>
         </thead>
 
@@ -56,7 +56,6 @@
                     <td>{{ order.customer_name|default:"Sin nombre" }}</td>
                     <td>{{ order.get_order_type_display }}</td>
                     <td>${{ order.total }}</td>
-                    <td><span class="status-label status-{{ order.status }}">{{ order.get_status_display }}</span></td>
                     <td>{{ order.employee_name_snapshot }}</td>
                     <td>
                         <form method="post" action="{% url 'orders:status_update' order.id %}" class="status-update-form">
@@ -76,7 +75,7 @@
                     </td>
                 </tr>
             {% empty %}
-                <tr><td colspan="9">No existen pedidos para estos filtros.</td></tr>
+                <tr><td colspan="8">No existen pedidos para estos filtros.</td></tr>
             {% endfor %}
         </tbody>
     </table>
@@ -92,3 +91,5 @@
     {% endif %}
 </nav>
 {% endblock %}
+
+{% block extra_js %}<script src="{% static 'js/order-status.js' %}?v=1"></script>{% endblock %}

@@ -208,9 +208,19 @@
             </header>
 
             <main class="content">
-                {% for message in messages %}
-                    <p>{{ message }}</p>
-                {% endfor %}
+                {% if messages %}
+                    {% for message in messages %}{% if "order-success" in message.tags %}<span data-success-feedback hidden></span>{% endif %}{% endfor %}
+                    <div class="app-notifications" aria-live="assertive">
+                        {% for message in messages %}
+                            {% if "error" in message.tags %}
+                                <article class="app-notification notification-error" data-error-notification>
+                                    <div class="notification-content"><strong>Ocurrió un error</strong><p class="notification-message">{{ message }}</p></div>
+                                    <div class="notification-actions"><button type="button" data-copy-notification>Copiar</button><button type="button" data-close-notification aria-label="Cerrar notificación">×</button></div>
+                                </article>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                {% endif %}
 
                 {% block content %}{% endblock %}
             </main>
@@ -261,6 +271,7 @@
     <script src="{% static 'js/appearance.js' %}?v=1"></script>
     <script src="{% static 'js/user-menu.js' %}?v=1"></script>
     <script src="{% static 'js/calculator.js' %}?v=2"></script>
+    <script src="{% static 'js/notifications.js' %}?v=1"></script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

@@ -60,9 +60,9 @@
                         <td>
                             <div class="product-identity">
                                 {% if product.image %}
-                                    <img src="{{ product.image.url }}" alt="">
+                                    <img src="{{ product.image.url }}" alt="" loading="lazy" decoding="async">
                                 {% else %}
-                                    <img src="{% static 'img/ui/placeholders/product.svg' %}" alt="">
+                                    <img src="{% static 'img/ui/placeholders/product.svg' %}" alt="" loading="lazy" decoding="async">
                                 {% endif %}
                                 <span><strong>{{ product.name }}</strong><small>{{ product.description|default:"Sin descripción"|truncatechars:65 }}</small></span>
                             </div>

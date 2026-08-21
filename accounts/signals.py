@@ -18,13 +18,13 @@ def create_user_profile(sender, instance, created, **kwargs):
 
 @receiver(post_migrate)
 def create_default_groups(sender, **kwargs):
-    if sender.name not in {"accounts", "auth", "menu"}:
+    if sender.name not in {"accounts", "auth", "menu", "orders"}:
         return
 
     administrator, _ = Group.objects.get_or_create(
         name=ADMINISTRATOR_GROUP,
     )
-    Group.objects.get_or_create(name=REGULAR_USER_GROUP)
+    regular_user, _ = Group.objects.get_or_create(name=REGULAR_USER_GROUP)
 
     permission_map = {
         "menu": [
@@ -38,8 +38,16 @@ def create_default_groups(sender, **kwargs):
             "delete_product",
         ],
         "auth": [
+            "add_user",
+            "change_user",
             "view_user",
             "delete_user",
+        ],
+        "orders": [
+            "view_order",
+            "add_order",
+            "change_order",
+            "view_deliverycustomer",
         ],
     }
 
@@ -49,3 +57,9 @@ def create_default_groups(sender, **kwargs):
             codename__in=codenames,
         )
         administrator.permissions.add(*permissions)
+
+    regular_permissions = Permission.objects.filter(
+        content_type__app_label="orders",
+        codename__in=["view_order", "add_order", "change_order"],
+    )
+    regular_user.permissions.add(*regular_permissions)

@@ -7,6 +7,34 @@ from django.utils import timezone
 
 from menu.models import Product
 
+
+def normalize_customer_name(value):
+    return " ".join((value or "").split()).casefold()
+
+
+class DeliveryCustomer(models.Model):
+    name = models.CharField(max_length=150)
+    normalized_name = models.CharField(max_length=150, unique=True, editable=False)
+    phone = models.CharField(max_length=30, blank=True)
+    street = models.CharField(max_length=150, blank=True)
+    exterior_number = models.CharField(max_length=20, blank=True)
+    interior_number = models.CharField(max_length=20, blank=True)
+    neighborhood = models.CharField(max_length=150, blank=True)
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["name"]
+
+    def save(self, *args, **kwargs):
+        self.name = " ".join(self.name.split())
+        self.normalized_name = normalize_customer_name(self.name)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
+
 class DailyOrderCounter(models.Model):
     operating_date = models.DateField(primary_key=True)
     last_number = models.PositiveIntegerField(default=0)

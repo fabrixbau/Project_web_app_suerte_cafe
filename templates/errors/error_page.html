@@ -1,0 +1,22 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ error_code }} | Suerte Café</title>
+    <link rel="stylesheet" href="{% static 'css/app.css' %}">
+</head>
+<body class="error-page">
+    <main class="error-card">
+        <img class="error-logo" src="{% static 'img/logoSuerteCafe.png' %}" alt="Suerte Café">
+        <p class="error-code">{{ error_code }}</p>
+        <h1>{{ error_title }}</h1>
+        <p>{{ error_description }}</p>
+        <div class="error-actions">
+            <a class="action-link action-link-primary" href="/">Volver al inicio</a>
+            <button type="button" class="secondary-button" onclick="history.back()">Regresar</button>
+        </div>
+    </main>
+</body>
+</html>

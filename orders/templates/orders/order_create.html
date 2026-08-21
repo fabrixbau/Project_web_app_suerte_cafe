@@ -6,6 +6,20 @@
 {% block content %}
 <form method="post" class="order-workspace">
     {% csrf_token %}
+    {% if form.errors %}
+        <div class="app-notifications" aria-live="assertive">
+            <article class="app-notification notification-error" data-error-notification>
+                <div class="notification-content">
+                    <strong>No se pudo crear el pedido</strong>
+                    <div class="notification-message">
+                        {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+                        {% for field in form %}{% for error in field.errors %}<p>{{ field.label }}: {{ error }}</p>{% endfor %}{% endfor %}
+                    </div>
+                </div>
+                <div class="notification-actions"><button type="button" data-copy-notification>Copiar</button><button type="button" data-close-notification aria-label="Cerrar notificación">×</button></div>
+            </article>
+        </div>
+    {% endif %}
 
     <div class="order-builder">
         <div class="order-heading">
@@ -31,15 +45,19 @@
             </div>
         </div>
 
-        {{ form.non_field_errors }}
         {{ form.order_type.errors }}
 
         <section class="customer-panel">
+            <header class="customer-panel-heading">
+                <span class="customer-panel-icon"><img src="{% static 'img/ui/icons/user-round.svg' %}" alt=""></span>
+                <div><h2>Datos del pedido</h2><p>Identifica al cliente y agrega solamente la información necesaria.</p></div>
+            </header>
             <div class="customer-fields-grid">
-                <div class="field-group customer-name-field">
+                <div class="field-group customer-name-field" data-delivery-customer-lookup="{% url 'orders:delivery_customer_lookup' %}">
                     {{ form.customer_name.label_tag }}
                     {{ form.customer_name }}
                     {{ form.customer_name.errors }}
+                    <small class="customer-lookup-status" aria-live="polite"></small>
                 </div>
 
                 <div id="phone-fields" class="field-group phone-field">
@@ -54,26 +72,27 @@
                     {{ form.table_reference.errors }}
                 </div>
 
-                <div id="delivery-fields" class="delivery-fields">
+                <div id="delivery-fields" class="delivery-fields delivery-address-card">
+                    <div class="delivery-address-heading"><strong>Dirección de entrega</strong><span>Todos estos campos son opcionales</span></div>
                     <div class="field-group street-field">
                         {{ form.street.label_tag }}
                         {{ form.street }}
                         {{ form.street.errors }}
                     </div>
-                    <div class="field-group">
-                        {{ form.exterior_number.label_tag }}
-                        {{ form.exterior_number }}
-                        {{ form.exterior_number.errors }}
-                    </div>
-                    <div class="field-group">
-                        {{ form.interior_number.label_tag }}
-                        {{ form.interior_number }}
-                        {{ form.interior_number.errors }}
-                    </div>
                     <div class="field-group neighborhood-field">
                         {{ form.neighborhood.label_tag }}
                         {{ form.neighborhood }}
                         {{ form.neighborhood.errors }}
+                    </div>
+                    <div class="field-group exterior-number-field">
+                        {{ form.exterior_number.label_tag }}
+                        {{ form.exterior_number }}
+                        {{ form.exterior_number.errors }}
+                    </div>
+                    <div class="field-group interior-number-field">
+                        {{ form.interior_number.label_tag }}
+                        {{ form.interior_number }}
+                        {{ form.interior_number.errors }}
                     </div>
                 </div>
 
@@ -116,9 +135,9 @@
                             data-price="{{ product.price|unlocalize }}"
                         >
                             {% if product.image %}
-                                <img class="product-card-image" src="{{ product.image.url }}" alt="{{ product.name }}">
+                                <img class="product-card-image" src="{{ product.image.url }}" alt="{{ product.name }}" loading="lazy" decoding="async">
                             {% else %}
-                                <img class="product-card-image" src="{% static 'img/ui/placeholders/product.svg' %}" alt="">
+                                <img class="product-card-image" src="{% static 'img/ui/placeholders/product.svg' %}" alt="" loading="lazy" decoding="async">
                             {% endif %}
 
                             <strong>{{ product.name }}</strong>
@@ -298,4 +317,5 @@
     });
     updateOrderSummary();
 </script>
+<script src="{% static 'js/delivery-customer.js' %}?v=1"></script>
 {% endblock %}

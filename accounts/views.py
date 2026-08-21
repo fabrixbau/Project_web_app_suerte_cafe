@@ -52,10 +52,9 @@ def login_view(request):
     )
 
 
+@login_required
+@permission_required("auth.add_user", raise_exception=True)
 def signup(request):
-    if request.user.is_authenticated:
-        return redirect("home")
-
     form = SignUpForm(
         request.POST or None,
         request.FILES or None,
@@ -63,9 +62,8 @@ def signup(request):
 
     if request.method == "POST" and form.is_valid():
         user = form.save()
-        login(request, user)
         messages.success(request, "Tu cuenta fue creada correctamente.")
-        return redirect("home")
+        return redirect("accounts:user_list")
 
     return render(
         request,

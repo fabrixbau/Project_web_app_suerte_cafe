@@ -1,5 +1,7 @@
 from django import forms
 
+from config.images import optimize_uploaded_image
+
 from .models import Category, Product
 
 
@@ -12,6 +14,15 @@ class CategoryForm(forms.ModelForm):
         labels = {
             "name": "Nombre",
         }
+
+    def clean_name(self):
+        name = " ".join(self.cleaned_data["name"].split())
+        duplicate = Category.objects.filter(name__iexact=name).exclude(
+            pk=self.instance.pk
+        )
+        if duplicate.exists():
+            raise forms.ValidationError("Ya existe una categoría con este nombre.")
+        return name
 
 
 class ProductForm(forms.ModelForm):
@@ -38,3 +49,23 @@ class ProductForm(forms.ModelForm):
                 attrs={"rows": 3},
             ),
         }
+
+    def clean_image(self):
+        return optimize_uploaded_image(
+            self.cleaned_data.get("image"),
+            max_dimension=1200,
+        )
+
+    def clean_name(self):
+        name = " ".join(self.cleaned_data["name"].split())
+        category = self.cleaned_data.get("category")
+        if category:
+            duplicate = Product.objects.filter(
+                category=category,
+                name__iexact=name,
+            ).exclude(pk=self.instance.pk)
+            if duplicate.exists():
+                raise forms.ValidationError(
+                    "Ya existe un producto con este nombre en la categoría."
+                )
+        return name

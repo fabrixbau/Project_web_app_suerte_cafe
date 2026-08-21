@@ -1,6 +1,13 @@
 from django.contrib import admin
 
-from .models import Order, OrderItem
+from .models import DeliveryCustomer, Order, OrderItem
+
+
+@admin.register(DeliveryCustomer)
+class DeliveryCustomerAdmin(admin.ModelAdmin):
+    list_display = ("name", "phone", "neighborhood", "updated_at")
+    search_fields = ("name", "phone", "street", "neighborhood")
+    readonly_fields = ("normalized_name", "created_at", "updated_at")
 
 
 class OrderItemInline(admin.TabularInline):
