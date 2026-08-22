@@ -37,10 +37,10 @@
         <thead>
             <tr>
                 <th>Número</th>
-                <th>Fecha</th>
-                <th>Hora</th>
+                <th>Fecha y hora</th>
                 <th>Cliente</th>
                 <th>Tipo</th>
+                <th>Mesa / entrega</th>
                 <th>Total</th>
                 <th>Empleado</th>
                 <th>Estado</th>
@@ -49,12 +49,20 @@
 
         <tbody>
             {% for order in page %}
-                <tr>
-                    <td><a href="{% url 'orders:detail' order.id %}">{{ order.formatted_number }}</a></td>
-                    <td>{{ order.operating_date|date:"d/m/Y" }}</td>
-                    <td>{{ order.created_at|date:"H:i" }}</td>
+                <tr class="order-row order-row-{{ order.order_type }}" data-detail-url="{% url 'orders:detail' order.id %}" tabindex="0" aria-label="Abrir detalle del pedido {{ order.formatted_number }}">
+                    <td><a class="order-detail-trigger" href="{% url 'orders:detail' order.id %}">{{ order.formatted_number }}</a></td>
+                    <td><span class="order-datetime">{{ order.operating_date|date:"d M" }} <b>{{ order.created_at|date:"H:i" }}</b></span></td>
                     <td>{{ order.customer_name|default:"Sin nombre" }}</td>
                     <td>{{ order.get_order_type_display }}</td>
+                    <td>
+                        {% if order.order_type == "eat_in" %}
+                            <span class="order-reference"><small>Mesa</small>{{ order.table_reference|default:"Sin referencia" }}</span>
+                        {% elif order.order_type == "delivery" %}
+                            <span class="order-reference"><small>Entrega</small>{{ order.street|default:"Sin calle" }}{% if order.exterior_number %} {{ order.exterior_number }}{% endif %}</span>
+                        {% else %}
+                            <span class="order-reference"><small>Recoger</small>En sucursal</span>
+                        {% endif %}
+                    </td>
                     <td>${{ order.total }}</td>
                     <td>{{ order.employee_name_snapshot }}</td>
                     <td>
@@ -90,6 +98,18 @@
         <a class="action-link action-link-secondary" href="?{% if filter_query %}{{ filter_query }}&{% endif %}page={{ page.next_page_number }}">Siguiente</a>
     {% endif %}
 </nav>
+
+<dialog class="order-detail-modal" id="order-detail-modal" aria-labelledby="order-detail-modal-title">
+    <div class="order-detail-modal-shell">
+        <header class="order-detail-modal-header">
+            <div><p class="eyebrow">Detalle del pedido</p><h2 id="order-detail-modal-title">Cargando…</h2></div>
+            <button type="button" class="order-detail-modal-close" data-close-order-detail aria-label="Cerrar detalle">×</button>
+        </header>
+        <div class="order-detail-modal-body" data-order-detail-content>
+            <div class="order-detail-loading"><span></span><p>Cargando pedido…</p></div>
+        </div>
+    </div>
+</dialog>
 {% endblock %}
 
-{% block extra_js %}<script src="{% static 'js/order-status.js' %}?v=1"></script>{% endblock %}
+{% block extra_js %}<script src="{% static 'js/order-status.js' %}?v=2"></script><script src="{% static 'js/order-detail-modal.js' %}?v=1"></script>{% endblock %}

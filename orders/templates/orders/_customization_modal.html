@@ -1,0 +1,11 @@
+{{ product_customizations|json_script:"product-customizations" }}
+<input id="custom-items-input" type="hidden" name="custom_items" value="{{ custom_items_value|default:'[]' }}">
+<dialog id="product-customization-dialog" class="customization-dialog">
+    <div class="customization-dialog-header"><div><p class="eyebrow">Personalizar producto</p><h2 id="customization-product-name"></h2></div><button type="button" class="dialog-close" data-customization-close aria-label="Cerrar">×</button></div>
+    <div id="customization-groups" class="order-customization-groups"></div>
+    <div class="customization-dialog-footer">
+        <div class="dialog-quantity"><span>Cantidad</span><div class="quantity-control"><button type="button" data-dialog-decrease>−</button><strong id="dialog-quantity">1</strong><button type="button" data-dialog-increase>+</button></div></div>
+        <div class="dialog-price"><span>Precio unitario</span><strong id="dialog-unit-price">$0.00</strong></div>
+        <button type="button" id="add-customized-product">Agregar personalizado</button>
+    </div>
+</dialog>

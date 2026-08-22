@@ -74,11 +74,16 @@
         <div class="detail-product-list">
             {% for item in order.items.all %}
                 <article>
-                    <div><strong>{{ item.product_name_snapshot }}</strong><span>${{ item.unit_price }} cada uno</span></div>
+                    <div>
+                        <strong>{{ item.product_name_snapshot }}{% if item.is_customized %}<span class="customized-warning">Modificado</span>{% endif %}</strong>
+                        {% for group in item.configuration_snapshot %}<span class="item-configuration"><b>{{ group.group }}:</b> {% for option in group.options %}{{ option.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</span>{% endfor %}
+                        <span>${{ item.unit_price }} cada uno</span>
+                    </div>
                     <span class="detail-quantity">× {{ item.quantity }}</span>
                     <strong>${{ item.subtotal }}</strong>
                 </article>
             {% endfor %}
+            {% for packaging in order.packaging_items.all %}<article class="detail-packaging-item"><div><strong>{{ packaging.name_snapshot }}</strong><span>${{ packaging.unit_price }} por pieza</span></div><span class="detail-quantity">× {{ packaging.quantity }}</span><strong>${{ packaging.subtotal }}</strong></article>{% endfor %}
         </div>
 
         <div class="detail-total">

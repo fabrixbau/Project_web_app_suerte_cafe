@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required, permission_required
 from django.core.exceptions import ValidationError
 from datetime import timedelta
 from decimal import Decimal
+import json
 
 from django.core.paginator import Paginator
 from django.db import transaction
@@ -14,7 +15,7 @@ from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
-from menu.models import Category, Product
+from menu.models import BusinessSettings, Category, PackagingType, Product, ProductOption
 
 from .forms import (
     OrderCreateForm,
@@ -24,6 +25,118 @@ from .forms import (
 )
 from .models import DeliveryCustomer, Order, OrderItem, normalize_customer_name
 from .services import create_order, update_complete_order
+
+
+def packaging_context(order=None, posted_value=None):
+    types = list(PackagingType.objects.filter(is_active=True).order_by("sort_order", "name"))
+    catalog = [{"id": item.id, "name": item.name, "price": str(item.price)} for item in types]
+    if posted_value is not None:
+        selected = posted_value
+    elif order:
+        selected = json.dumps([
+            {"packaging_type_id": item.packaging_type_id, "quantity": item.quantity}
+            for item in order.packaging_items.all() if item.packaging_type_id
+        ])
+    else:
+        selected = "[]"
+    return {
+        "packaging_catalog": catalog,
+        "packaging_items_value": selected,
+        "automatic_packaging": BusinessSettings.load().automatic_packaging_fee,
+        "packaging_selection_initialized": order is not None or posted_value is not None,
+    }
+
+
+def parse_packaging_items(request, errors):
+    try:
+        payload = json.loads(request.POST.get("packaging_items", "[]"))
+    except (TypeError, ValueError, json.JSONDecodeError):
+        errors.append("No fue posible leer los envases del pedido.")
+        return []
+    if not isinstance(payload, list) or len(payload) > 30:
+        errors.append("La selección de envases no es válida.")
+        return []
+    items = []
+    for item in payload:
+        try:
+            packaging_type_id = int(item["packaging_type_id"])
+            quantity = int(item["quantity"])
+        except (KeyError, TypeError, ValueError):
+            errors.append("Un envase contiene datos inválidos.")
+            continue
+        if quantity < 1 or quantity > 99:
+            errors.append("La cantidad de un envase no es válida.")
+            continue
+        items.append({"packaging_type_id": packaging_type_id, "quantity": quantity})
+    return items
+
+
+def prepare_product_customizations(products):
+    payload = {}
+    for product in products:
+        groups_payload = []
+        standard_adjustment = Decimal("0.00")
+        for group in product.option_groups.all():
+            options_payload = []
+            for option in group.available_options:
+                options_payload.append(
+                    {
+                        "id": option.id,
+                        "name": option.name,
+                        "price_adjustment": str(option.price_adjustment),
+                        "is_default": option.is_default,
+                    }
+                )
+                if option.is_default:
+                    standard_adjustment += option.price_adjustment
+            groups_payload.append(
+                {
+                    "id": group.id,
+                    "name": group.name,
+                    "selection_type": group.selection_type,
+                    "is_required": group.is_required,
+                    "options": options_payload,
+                }
+            )
+        product.standard_price = product.price + standard_adjustment
+        product.has_options = bool(groups_payload)
+        payload[str(product.id)] = {
+            "id": product.id,
+            "name": product.name,
+            "base_price": str(product.price),
+            "standard_price": str(product.standard_price),
+            "groups": groups_payload,
+        }
+    return payload
+
+
+def parse_custom_items(request, errors):
+    raw_payload = request.POST.get("custom_items", "[]")
+    try:
+        payload = json.loads(raw_payload)
+    except (TypeError, ValueError, json.JSONDecodeError):
+        errors.append("No fue posible leer los productos personalizados.")
+        return []
+    if not isinstance(payload, list) or len(payload) > 100:
+        errors.append("La cantidad de productos personalizados no es válida.")
+        return []
+
+    items = []
+    for item in payload:
+        try:
+            product_id = int(item["product_id"])
+            quantity = int(item["quantity"])
+            option_ids = [int(value) for value in item.get("option_ids", [])]
+        except (KeyError, TypeError, ValueError):
+            errors.append("Un producto personalizado contiene datos inválidos.")
+            continue
+        if quantity < 1 or quantity > 99 or len(option_ids) > 50:
+            errors.append("Una cantidad o selección personalizada no es válida.")
+            continue
+        items.append(
+            {"product_id": product_id, "quantity": quantity, "option_ids": option_ids}
+        )
+    return items
 
 
 @login_required
@@ -63,6 +176,7 @@ def order_detail(request, order_id):
             "created_by",
         ).prefetch_related(
             "items__product",
+            "packaging_items",
         ),
         id=order_id,
     )
@@ -79,15 +193,28 @@ def order_detail(request, order_id):
 @permission_required("orders.change_order", raise_exception=True)
 def order_edit(request, order_id):
     order = get_object_or_404(
-        Order.objects.prefetch_related("items__product"), id=order_id
+        Order.objects.prefetch_related("items__product", "packaging_items"), id=order_id
     )
     information_form = OrderInformationEditForm(
         request.POST or None,
         instance=order,
+        initial={"packaging_items": json.dumps([
+            {"packaging_type_id": item.packaging_type_id, "quantity": item.quantity}
+            for item in order.packaging_items.all() if item.packaging_type_id
+        ])},
     )
 
     current_items = list(order.items.all())
-    addable_products = Product.objects.filter(is_available=True).order_by("name")
+    available_options = ProductOption.objects.filter(is_available=True).order_by(
+        "sort_order", "id"
+    )
+    addable_products = Product.objects.filter(is_available=True).select_related("packaging_type").prefetch_related(
+        Prefetch(
+            "option_groups__options",
+            queryset=available_options,
+            to_attr="available_options",
+        )
+    ).order_by("name")
     categories = list(
         Category.objects.prefetch_related(
             Prefetch(
@@ -102,6 +229,7 @@ def order_edit(request, order_id):
         for category in categories
         for product in category.available_to_add
     ]
+    product_customizations = prepare_product_customizations(products)
     product_errors = []
 
     for item in current_items:
@@ -118,7 +246,7 @@ def order_edit(request, order_id):
                 f"item_quantity_{item.id}", str(item.quantity)
             )
             try:
-                quantity = int(raw_quantity)
+                quantity = int(raw_quantity) if str(raw_quantity).strip() else 0
             except (TypeError, ValueError):
                 quantity = item.quantity
                 product_errors.append(
@@ -148,6 +276,9 @@ def order_edit(request, order_id):
             if quantity > 0:
                 new_items.append({"product_id": product.id, "quantity": quantity})
 
+        new_items.extend(parse_custom_items(request, product_errors))
+        packaging_items = parse_packaging_items(request, product_errors)
+
         if information_form.is_valid() and not product_errors:
             try:
                 update_complete_order(
@@ -155,6 +286,7 @@ def order_edit(request, order_id):
                     cleaned_data=information_form.cleaned_data,
                     item_quantities=item_quantities,
                     new_items=new_items,
+                    packaging_items=packaging_items,
                 )
             except ValidationError as error:
                 product_errors.extend(error.messages)
@@ -176,6 +308,9 @@ def order_edit(request, order_id):
             "products": products,
             "categories": categories,
             "product_errors": product_errors,
+            "product_customizations": product_customizations,
+            "custom_items_value": request.POST.get("custom_items", "[]"),
+            **packaging_context(order, request.POST.get("packaging_items") if request.method == "POST" else None),
         },
     )
 
@@ -233,12 +368,23 @@ def order_status_update(request, order_id):
 @login_required
 @permission_required("orders.add_order", raise_exception=True)
 def order_create(request):
+    available_options = ProductOption.objects.filter(is_available=True).order_by(
+        "sort_order", "id"
+    )
     products = Product.objects.filter(
         is_available=True,
-    ).select_related("category").order_by(
+    ).select_related("category", "packaging_type").prefetch_related(
+        Prefetch(
+            "option_groups__options",
+            queryset=available_options,
+            to_attr="available_options",
+        )
+    ).order_by(
         "category__name",
         "name",
     )
+    products = list(products)
+    product_customizations = prepare_product_customizations(products)
 
     form = OrderCreateForm(
         request.POST or None,
@@ -256,8 +402,8 @@ def order_create(request):
             )
 
             try:
-                quantity = int(raw_quantity)
-            except ValueError:
+                quantity = int(raw_quantity) if str(raw_quantity).strip() else 0
+            except (TypeError, ValueError):
                 quantity = 0
                 form.add_error(
                     None,
@@ -281,6 +427,12 @@ def order_create(request):
                     }
                 )
 
+        custom_item_errors = []
+        items.extend(parse_custom_items(request, custom_item_errors))
+        packaging_items = parse_packaging_items(request, custom_item_errors)
+        for error in custom_item_errors:
+            form.add_error(None, error)
+
         if not items:
             form.add_error(
                 None,
@@ -290,6 +442,7 @@ def order_create(request):
         if form_is_valid and not form.errors:
             customer_data = form.cleaned_data.copy()
             order_type = customer_data.pop("order_type")
+            customer_data.pop("packaging_items", None)
 
             try:
                 order = create_order(
@@ -297,6 +450,7 @@ def order_create(request):
                     order_type=order_type,
                     items=items,
                     customer_data=customer_data,
+                    packaging_items=packaging_items,
                 )
             except ValidationError as error:
                 for message in error.messages:
@@ -318,6 +472,9 @@ def order_create(request):
         {
             "form": form,
             "products": products,
+            "product_customizations": product_customizations,
+            "custom_items_value": request.POST.get("custom_items", "[]"),
+            **packaging_context(posted_value=request.POST.get("packaging_items") if request.method == "POST" else None),
         },
     )
 

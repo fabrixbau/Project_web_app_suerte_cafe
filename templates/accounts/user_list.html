@@ -35,7 +35,10 @@
                     </td>
                     <td>
                         {% if perms.auth.delete_user and employee != user %}
-                            <a href="{% url 'accounts:user_delete' employee.id %}">
+                            <a
+                                class="action-link action-link-danger"
+                                href="{% url 'accounts:user_delete' employee.id %}"
+                            >
                                 Eliminar usuario
                             </a>
                         {% endif %}

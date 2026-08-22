@@ -1,9 +1,10 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}{{ title }} | Suerte Café{% endblock %}
 {% block content %}
 <div class="form-page">
-    <div class="page-heading"><div><p class="eyebrow">Menú</p><h1>{{ title }}</h1></div></div>
-    <form method="post" enctype="multipart/form-data" class="modern-form form-card">
+    <div class="page-heading"><div><p class="eyebrow">Menú</p><h1>{{ title }}</h1></div>{% if product %}<a class="action-link action-link-secondary" href="{% url 'menu:option_group_copy' product.id %}">Pegar grupo</a>{% endif %}</div>
+    <form method="post" enctype="multipart/form-data" class="modern-form form-card modern-select-form" novalidate>
         {% csrf_token %} {{ form.non_field_errors }}
         {% for field in form %}
             <div class="form-field">{{ field.label_tag }} {{ field }}{% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}{{ field.errors }}</div>
@@ -12,3 +13,4 @@
     </form>
 </div>
 {% endblock %}
+{% block extra_js %}<script src="{% static 'js/modern-select.js' %}?v=2"></script>{% endblock %}

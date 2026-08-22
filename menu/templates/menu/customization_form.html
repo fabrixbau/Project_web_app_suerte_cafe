@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ title }} | Suerte Café{% endblock %}
+{% block content %}
+<div class="form-page customization-form-page">
+    <a class="back-link" href="{% url 'menu:product_configuration' product.id %}">← Volver a opciones</a>
+    <div class="form-card customization-form-card">
+        <header class="customization-form-header">
+            <span class="customization-form-icon" aria-hidden="true">✦</span>
+            <div><p class="eyebrow">{{ product.name }}</p><h1>{{ title }}</h1><p>Define cómo aparecerá esta configuración al tomar un pedido.</p></div>
+        </header>
+        <form method="post" class="modern-form customization-modern-form modern-select-form" novalidate>
+            {% csrf_token %}{{ form.non_field_errors }}
+            <div class="customization-fields-grid">
+            {% for field in form %}
+                {% if field.field.widget.input_type == 'checkbox' %}
+                    <div class="form-field switch-field">
+                        <div>
+                            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            <small>{% if field.name == 'is_default' %}Se seleccionará automáticamente en el producto normal.{% elif field.name == 'is_available' %}Permite usar esta opción en pedidos nuevos.{% elif field.name == 'is_required' %}Se deberá elegir al menos una opción.{% else %}{{ field.help_text }}{% endif %}</small>
+                        </div>
+                        <label class="modern-switch" for="{{ field.id_for_label }}">{{ field }}<span aria-hidden="true"></span></label>
+                        {{ field.errors }}
+                    </div>
+                {% else %}
+                    <div class="form-field {% if field.name == 'name' or field.name == 'selection_type' or field.name == 'source_group' %}form-field-wide{% endif %}">
+                        {{ field.label_tag }}<div class="modern-input-shell">{{ field }}</div>{{ field.errors }}
+                        {% if field.name == 'price_adjustment' %}<small>Usa 0 si no tiene costo adicional.</small>{% elif field.name == 'sort_order' %}<small>Los números menores aparecen primero.</small>{% elif field.help_text %}<small>{{ field.help_text }}</small>{% endif %}
+                    </div>
+                {% endif %}
+            {% endfor %}
+            </div>
+            <div class="form-actions customization-form-actions"><a class="secondary-button" href="{% url 'menu:product_configuration' product.id %}">Cancelar</a><button class="primary-save-button" type="submit">Guardar cambios</button></div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}<script src="{% static 'js/modern-select.js' %}?v=2"></script>{% endblock %}

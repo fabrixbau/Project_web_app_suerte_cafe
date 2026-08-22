@@ -7,6 +7,8 @@
 
 <form method="post" class="complete-order-edit-form">
   {% csrf_token %}
+  {{ information_form.packaging_items }}
+  {% include "orders/_customization_modal.html" %}
   {% if product_errors or information_form.errors %}
   <div class="app-notifications" aria-live="assertive">
     <article class="app-notification notification-error" data-error-notification>
@@ -56,9 +58,10 @@
         <div class="section-title-row"><div><p class="eyebrow">Pedido actual</p><h2>Productos seleccionados</h2></div><span class="form-hint">Cantidad 0 elimina el producto</span></div>
         <div class="product-grid">
         {% for item in current_items %}
-          <article class="product-card editable-order-product has-quantity" data-name="{{ item.product_name_snapshot }}" data-price="{{ item.unit_price|unlocalize }}">
+          <article class="product-card editable-order-product has-quantity" data-name="{{ item.product_name_snapshot }}" data-price="{{ item.unit_price|unlocalize }}" data-product-id="{{ item.product_id|default:'' }}" data-packaging-type="{{ item.product.packaging_type_id|default:'' }}">
             {% if item.product and item.product.image %}<img class="product-card-image" src="{{ item.product.image.url }}" alt="{{ item.product_name_snapshot }}" loading="lazy" decoding="async">{% else %}<img class="product-card-image" src="{% static 'img/ui/placeholders/product.svg' %}" alt="" loading="lazy" decoding="async">{% endif %}
-            <strong>{{ item.product_name_snapshot }}</strong><small>${{ item.unit_price }} cada uno</small>
+            <strong>{{ item.product_name_snapshot }}{% if item.is_customized %}<span class="customized-warning">Modificado</span>{% endif %}</strong><small>${{ item.unit_price }} cada uno</small>
+            {% for group in item.configuration_snapshot %}<small class="item-configuration"><b>{{ group.group }}:</b> {% for option in group.options %}{{ option.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</small>{% endfor %}
             <div class="product-card-footer"><div class="quantity-control"><button type="button" class="decrease-quantity">−</button><input class="quantity-input" name="item_quantity_{{ item.id }}" type="number" min="0" value="{{ item.selected_quantity }}" aria-label="Cantidad de {{ item.product_name_snapshot }}"><button type="button" class="increase-quantity">+</button></div><button type="button" class="remove-order-product">Eliminar</button></div>
           </article>
         {% endfor %}
@@ -71,10 +74,11 @@
         {% for category in categories %}
         <section id="edit-category-{{ category.id }}" class="category-products" {% if not forloop.first %}hidden{% endif %}><div class="product-grid">
         {% for product in category.available_to_add %}
-          <article class="product-card editable-order-product" data-name="{{ product.name }}" data-price="{{ product.price|unlocalize }}">
+          <article class="product-card editable-order-product" data-name="{{ product.name }}" data-price="{{ product.standard_price|unlocalize }}" data-product-id="{{ product.id }}" data-packaging-type="{{ product.packaging_type_id|default:'' }}">
             {% if product.image %}<img class="product-card-image" src="{{ product.image.url }}" alt="{{ product.name }}" loading="lazy" decoding="async">{% else %}<img class="product-card-image" src="{% static 'img/ui/placeholders/product.svg' %}" alt="" loading="lazy" decoding="async">{% endif %}
             <strong>{{ product.name }}</strong>{% if product.description %}<small>{{ product.description }}</small>{% endif %}
-            <div class="product-card-footer"><strong>${{ product.price }}</strong><div class="quantity-control"><button type="button" class="decrease-quantity">−</button><input class="quantity-input" name="product_quantity_{{ product.id }}" type="number" min="0" value="{{ product.selected_quantity }}" aria-label="Cantidad de {{ product.name }}"><button type="button" class="increase-quantity">+</button></div></div>
+            <div class="product-card-footer"><strong>${{ product.standard_price }}</strong><div class="quantity-control"><button type="button" class="decrease-quantity">−</button><input class="quantity-input" name="product_quantity_{{ product.id }}" type="number" min="0" value="{{ product.selected_quantity }}" aria-label="Cantidad de {{ product.name }}"><button type="button" class="increase-quantity">+</button></div></div>
+            {% if product.has_options %}<button type="button" class="customize-product-button" data-customize-product="{{ product.id }}">Personalizar</button>{% endif %}
           </article>
         {% empty %}<p class="empty-category-message">No hay productos disponibles en esta categoría.</p>{% endfor %}</div></section>
         {% endfor %}
@@ -84,7 +88,7 @@
     <aside class="current-order-panel">
       <div class="current-order-heading"><h2>Pedido actualizado</h2><span><strong id="total-items">0</strong> artículos</span></div>
       <div id="current-order-items" class="current-order-items"></div>
-      <div class="current-order-totals"><p><span>Artículos</span><strong id="summary-items">0</strong></p><p class="final-total"><span>Total</span><strong id="order-total">$0.00</strong></p></div>
+      <div class="current-order-totals"><p><span>Artículos</span><strong id="summary-items">0</strong></p>{% include "orders/_packaging_charge.html" %}<p class="final-total"><span>Total</span><strong id="order-total">$0.00</strong></p></div>
       <button type="submit" class="finish-order-button">Guardar todos los cambios</button><a class="secondary-button panel-cancel-button" href="{% url 'orders:detail' order.id %}">Cancelar</a>
     </aside>
   </div>
@@ -98,6 +102,6 @@ typeButtons.forEach(button=>button.addEventListener("click",()=>{orderType.value
 const categoryButtons=document.querySelectorAll(".category-card"),categorySections=document.querySelectorAll(".category-products");categoryButtons.forEach(button=>button.addEventListener("click",()=>{categoryButtons.forEach(item=>item.classList.remove("is-selected"));categorySections.forEach(section=>section.hidden=true);button.classList.add("is-selected");document.querySelector(`#${button.dataset.categoryTarget}`).hidden=false;}));
 const cards=document.querySelectorAll(".editable-order-product"),summary=document.querySelector("#current-order-items"),totalItems=document.querySelector("#total-items"),summaryItems=document.querySelector("#summary-items"),orderTotal=document.querySelector("#order-total"),currency=new Intl.NumberFormat("es-MX",{style:"currency",currency:"MXN",currencyDisplay:"narrowSymbol"});
 function change(input,amount){input.value=Math.max(0,(Number.parseInt(input.value,10)||0)+amount);refreshSummary();}
-function refreshSummary(){summary.innerHTML="";const combined=new Map();let count=0,total=0;cards.forEach(card=>{const input=card.querySelector(".quantity-input"),quantity=Number.parseInt(input.value,10)||0,price=Number.parseFloat(card.dataset.price),key=`${card.dataset.name}|${price}`;card.classList.toggle("has-quantity",quantity>0);if(quantity>0){const previous=combined.get(key)||{name:card.dataset.name,price,quantity:0};previous.quantity+=quantity;combined.set(key,previous);count+=quantity;total+=price*quantity;}});combined.forEach(item=>{const row=document.createElement("article"),subtotal=item.price*item.quantity;row.className="current-order-item";row.innerHTML="<div><strong></strong><span></span></div><strong></strong>";row.querySelector("div strong").textContent=item.name;row.querySelector("span").textContent=`${currency.format(item.price)} × ${item.quantity}`;row.querySelector(":scope > strong").textContent=currency.format(subtotal);summary.appendChild(row);});if(!count)summary.innerHTML="<p>No hay productos seleccionados.</p>";totalItems.textContent=count;summaryItems.textContent=count;orderTotal.textContent=currency.format(total);}
-cards.forEach(card=>{const input=card.querySelector(".quantity-input");card.querySelector(".decrease-quantity").addEventListener("click",()=>change(input,-1));card.querySelector(".increase-quantity").addEventListener("click",()=>change(input,1));card.querySelector(".remove-order-product")?.addEventListener("click",()=>{input.value=0;refreshSummary();});input.addEventListener("input",()=>{if((Number.parseInt(input.value,10)||0)<0)input.value=0;refreshSummary();});});refreshSummary();
-</script><script src="{% static 'js/delivery-customer.js' %}?v=1"></script>{% endblock %}
+function refreshSummary(){summary.innerHTML="";const combined=new Map();let count=0,total=0;cards.forEach(card=>{const input=card.querySelector(".quantity-input"),quantity=Number.parseInt(input.value,10)||0,price=Number.parseFloat(card.dataset.price),key=`${card.dataset.name}|${price}`;card.classList.toggle("has-quantity",quantity>0);if(quantity>0){const previous=combined.get(key)||{name:card.dataset.name,price,quantity:0};previous.quantity+=quantity;combined.set(key,previous);count+=quantity;total+=price*quantity;}});combined.forEach(item=>{const row=document.createElement("article"),subtotal=item.price*item.quantity;row.className="current-order-item";row.innerHTML="<div><strong></strong><span></span></div><strong></strong>";row.querySelector("div strong").textContent=item.name;row.querySelector("span").textContent=`${currency.format(item.price)} × ${item.quantity}`;row.querySelector(":scope > strong").textContent=currency.format(subtotal);summary.appendChild(row);});if(!count)summary.innerHTML="<p>No hay productos seleccionados.</p>";totalItems.textContent=count;summaryItems.textContent=count;orderTotal.textContent=currency.format(total);document.dispatchEvent(new CustomEvent("base-order-summary-rendered",{detail:{count,total}}));}
+cards.forEach(card=>{const input=card.querySelector(".quantity-input");card.querySelector(".decrease-quantity").addEventListener("click",()=>change(input,-1));card.querySelector(".increase-quantity").addEventListener("click",()=>change(input,1));card.querySelector(".remove-order-product")?.addEventListener("click",()=>{input.value=0;refreshSummary();});input.addEventListener("input",()=>{if((Number.parseInt(input.value,10)||0)<0)input.value=0;refreshSummary();});});window.refreshBaseOrderSummary=refreshSummary;refreshSummary();
+</script><script src="{% static 'js/delivery-customer.js' %}?v=1"></script><script src="{% static 'js/product-customizer.js' %}?v=1"></script><script src="{% static 'js/packaging-charge.js' %}?v=2"></script>{% endblock %}

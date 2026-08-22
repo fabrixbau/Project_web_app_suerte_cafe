@@ -13,6 +13,7 @@
     <nav class="configuration-tabs" aria-label="Secciones del menú">
         <a href="{% url 'menu:configuration' %}?tab=products" class="{% if active_tab == 'products' %}is-selected{% endif %}">Productos</a>
         <a href="{% url 'menu:configuration' %}?tab=categories" class="{% if active_tab == 'categories' %}is-selected{% endif %}">Categorías</a>
+        {% if perms.menu.change_product %}<a href="{% url 'menu:configuration' %}?tab=settings" class="{% if active_tab == 'settings' %}is-selected{% endif %}">Ajustes</a>{% endif %}
     </nav>
 </div>
 
@@ -86,6 +87,7 @@
                         <td>
                             <div class="table-actions">
                                 {% if perms.menu.change_product %}
+                                    <a class="small-action" href="{% url 'menu:product_configuration' product.id %}">Opciones</a>
                                     <a class="small-action" href="{% url 'menu:product_edit' product.id %}"><img src="{% static 'img/ui/icons/pencil.svg' %}" alt=""> Editar</a>
                                 {% endif %}
                                 {% if perms.menu.delete_product %}
@@ -100,7 +102,7 @@
             </tbody>
         </table>
     </div>
-{% else %}
+{% elif active_tab == "categories" %}
     <section class="category-management-grid">
         {% for category in categories %}
             <article class="category-management-card">
@@ -121,6 +123,16 @@
         {% if perms.menu.add_category %}
             <a class="new-category-card" href="{% url 'menu:category_create' %}"><strong>+</strong><span>Nueva categoría</span></a>
         {% endif %}
+    </section>
+{% else %}
+    <section class="packaging-settings-page">
+        <div class="packaging-settings-heading"><div><p class="eyebrow">Pedidos para llevar</p><h2>Tipos de envase</h2><p>Crea envases con distintos precios y asígnalos a cada producto desde su formulario de edición.</p></div><a class="action-link action-link-primary" href="{% url 'menu:packaging_type_create' %}">+ Nuevo envase</a></div>
+        <form method="post" action="{% url 'menu:business_settings_update' %}" class="packaging-auto-setting">{% csrf_token %}<div><strong>{{ business_settings_form.automatic_packaging_fee.label }}</strong><small>Calcula inicialmente un envase por cada producto en pedidos de Entrega y Recoger.</small></div><label class="modern-switch" for="{{ business_settings_form.automatic_packaging_fee.id_for_label }}">{{ business_settings_form.automatic_packaging_fee }}<span></span></label><button type="submit" class="small-action">Guardar</button></form>
+        <div class="packaging-type-grid">
+        {% for packaging in packaging_types %}
+            <article class="packaging-type-card {% if not packaging.is_active %}is-inactive{% endif %}"><div class="packaging-type-icon">♻</div><div class="packaging-type-data"><h3>{{ packaging.name }}</h3><strong>${{ packaging.price }} <small>por pieza</small></strong><span>{{ packaging.product_count }} producto{{ packaging.product_count|pluralize }} asignado{{ packaging.product_count|pluralize }}</span></div><div class="packaging-type-actions"><a class="small-action" href="{% url 'menu:packaging_type_edit' packaging.id %}">Editar</a><form method="post" action="{% url 'menu:packaging_type_delete' packaging.id %}" onsubmit="return confirm('¿Eliminar este tipo de envase? Los pedidos anteriores conservarán su información.')">{% csrf_token %}<button class="small-action destructive" type="submit">Eliminar</button></form></div>{% if not packaging.is_active %}<span class="unavailable-badge">No disponible</span>{% endif %}</article>
+        {% empty %}<div class="empty-customization"><strong>No hay tipos de envase</strong><p>Crea el primero para comenzar a asignarlo a productos.</p></div>{% endfor %}
+        </div>
     </section>
 {% endif %}
 {% endblock %}

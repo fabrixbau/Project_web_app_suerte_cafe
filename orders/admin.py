@@ -1,6 +1,8 @@
 from django.contrib import admin
 
-from .models import DeliveryCustomer, Order, OrderItem
+from .models import DeliveryCustomer, Order, OrderItem, OrderPackagingItem
+
+admin.site.register(OrderPackagingItem)
 
 
 @admin.register(DeliveryCustomer)
@@ -17,9 +19,12 @@ class OrderItemInline(admin.TabularInline):
     readonly_fields = (
         "product",
         "product_name_snapshot",
+        "base_unit_price",
         "unit_price",
         "quantity",
         "subtotal",
+        "configuration_snapshot",
+        "is_customized",
     )
 
     def has_add_permission(self, request, obj=None):
@@ -33,6 +38,7 @@ class OrderAdmin(admin.ModelAdmin):
         "operating_date",
         "customer_name",
         "order_type",
+        "packaging_fee",
         "total",
         "status",
         "employee_name_snapshot",

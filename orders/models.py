@@ -5,7 +5,7 @@ from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils import timezone
 
-from menu.models import Product
+from menu.models import PackagingType, Product
 
 
 def normalize_customer_name(value):
@@ -93,6 +93,12 @@ class Order(models.Model):
         decimal_places=2,
         default=Decimal("0.00"),
     )
+    packaging_fee = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=Decimal("0.00"),
+        validators=[MinValueValidator(Decimal("0.00"))],
+    )
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -114,6 +120,26 @@ class Order(models.Model):
         return f"#{self.daily_number:03d}"
 
 
+class OrderPackagingItem(models.Model):
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="packaging_items")
+    packaging_type = models.ForeignKey(
+        PackagingType,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="order_packaging_items",
+    )
+    name_snapshot = models.CharField(max_length=100)
+    unit_price = models.DecimalField(max_digits=10, decimal_places=2)
+    quantity = models.PositiveIntegerField(validators=[MinValueValidator(1)])
+    subtotal = models.DecimalField(max_digits=10, decimal_places=2)
+
+    class Meta:
+        ordering = ["id"]
+
+    def __str__(self):
+        return f"{self.name_snapshot} × {self.quantity}"
+
+
 class OrderItem(models.Model):
     order = models.ForeignKey(
         Order,
@@ -133,6 +159,14 @@ class OrderItem(models.Model):
         decimal_places=2,
         validators=[MinValueValidator(Decimal("0.00"))],
     )
+    base_unit_price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=Decimal("0.00"),
+    )
+    configuration_snapshot = models.JSONField(default=list, blank=True)
+    configuration_signature = models.CharField(max_length=500, blank=True)
+    is_customized = models.BooleanField(default=False)
     quantity = models.PositiveIntegerField(
         validators=[MinValueValidator(1)],
     )

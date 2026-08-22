@@ -1,0 +1,5 @@
+{{ packaging_catalog|json_script:"packaging-catalog" }}
+<section class="packaging-editor" id="packaging-editor" data-automatic="{% if automatic_packaging %}true{% else %}false{% endif %}" data-selection-initialized="{% if packaging_selection_initialized %}true{% else %}false{% endif %}" hidden>
+    <header><div><strong>Envases para llevar</strong><small>Se calculan por producto y puedes ajustar las cantidades.</small></div><span aria-hidden="true">♻</span></header>
+    <div id="packaging-editor-items" class="packaging-editor-items"></div>
+</section>

@@ -1,34 +1,26 @@
 {% extends "auth_base.html" %}
-
 {% block title %}Iniciar sesión | Suerte Café{% endblock %}
-
 {% block content %}
+<header class="login-heading">
+    <p class="eyebrow">Bienvenido</p>
     <h1>Iniciar sesión</h1>
-
-    {{ form.non_field_errors }}
-
-    <form method="post">
-        {% csrf_token %}
-
-        <p>
-            {{ form.user.label_tag }}
-            {{ form.user }}
-            {{ form.user.errors }}
-        </p>
-
-        <p>
-            {{ form.password.label_tag }}
-            {{ form.password }}
-            {{ form.password.errors }}
-        </p>
-
-        {% if next %}
-            <input type="hidden" name="next" value="{{ next }}">
-        {% endif %}
-
-        <button type="submit">
-            Entrar
-        </button>
-    </form>
-
+    <p>Selecciona tu perfil para comenzar.</p>
+</header>
+{{ form.non_field_errors }}
+<form method="post" class="login-form">
+    {% csrf_token %}
+    <div class="login-field">
+        {{ form.user.label_tag }}
+        <div class="login-control"><span class="login-control-icon login-user-icon" aria-hidden="true"></span>{{ form.user }}</div>
+        {{ form.user.errors }}
+    </div>
+    <div class="login-field">
+        {{ form.password.label_tag }}
+        <div class="login-control"><span class="login-control-icon login-password-icon" aria-hidden="true"></span>{{ form.password }}</div>
+        <small>Solo algunos perfiles requieren contraseña.</small>
+        {{ form.password.errors }}
+    </div>
+    {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+    <button type="submit" class="login-submit">Entrar</button>
+</form>
 {% endblock %}

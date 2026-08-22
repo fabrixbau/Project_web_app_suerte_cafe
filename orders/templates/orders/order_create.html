@@ -6,6 +6,8 @@
 {% block content %}
 <form method="post" class="order-workspace">
     {% csrf_token %}
+    {{ form.packaging_items }}
+    {% include "orders/_customization_modal.html" %}
     {% if form.errors %}
         <div class="app-notifications" aria-live="assertive">
             <article class="app-notification notification-error" data-error-notification>
@@ -132,7 +134,9 @@
                         <article
                             class="product-card"
                             data-name="{{ product.name }}"
-                            data-price="{{ product.price|unlocalize }}"
+                            data-price="{{ product.standard_price|unlocalize }}"
+                            data-product-id="{{ product.id }}"
+                            data-packaging-type="{{ product.packaging_type_id|default:'' }}"
                         >
                             {% if product.image %}
                                 <img class="product-card-image" src="{{ product.image.url }}" alt="{{ product.name }}" loading="lazy" decoding="async">
@@ -144,7 +148,7 @@
                             {% if product.description %}<small>{{ product.description }}</small>{% endif %}
 
                             <div class="product-card-footer">
-                                <strong>${{ product.price }}</strong>
+                                <strong>${{ product.standard_price }}</strong>
                                 <div class="quantity-control">
                                     <button type="button" class="decrease-quantity" aria-label="Quitar uno">−</button>
                                     <input
@@ -159,6 +163,7 @@
                                     <button type="button" class="increase-quantity" aria-label="Agregar uno">+</button>
                                 </div>
                             </div>
+                            {% if product.has_options %}<button type="button" class="customize-product-button" data-customize-product="{{ product.id }}">Personalizar</button>{% endif %}
                         </article>
                     {% endfor %}
                 </div>
@@ -181,6 +186,7 @@
         <div class="current-order-totals">
             <p><span>Artículos</span><strong id="summary-items">0</strong></p>
             <p><span>Subtotal</span><strong id="order-subtotal">$0.00</strong></p>
+            {% include "orders/_packaging_charge.html" %}
             <p class="final-total"><span>Total</span><strong id="order-total">$0.00</strong></p>
         </div>
 
@@ -304,6 +310,7 @@
         summaryItemsElement.textContent = totalItems;
         subtotalElement.textContent = currencyFormatter.format(orderTotal);
         totalElement.textContent = currencyFormatter.format(orderTotal);
+        document.dispatchEvent(new CustomEvent("base-order-summary-rendered", {detail: {count: totalItems, total: orderTotal}}));
     }
 
     productCards.forEach((card) => {
@@ -315,7 +322,10 @@
             updateOrderSummary();
         });
     });
+    window.refreshBaseOrderSummary = updateOrderSummary;
     updateOrderSummary();
 </script>
 <script src="{% static 'js/delivery-customer.js' %}?v=1"></script>
+<script src="{% static 'js/product-customizer.js' %}?v=1"></script>
+<script src="{% static 'js/packaging-charge.js' %}?v=2"></script>
 {% endblock %}

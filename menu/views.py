@@ -3,13 +3,157 @@ from django.contrib.auth.decorators import (
     login_required,
     permission_required,
 )
+from django.db import transaction
 from django.db.models import Count, Prefetch, Q
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
-from .forms import CategoryForm, ProductForm
-from .models import Category, Product
+from .forms import (
+    BusinessSettingsForm,
+    PackagingTypeForm,
+    CategoryForm,
+    ProductForm,
+    ProductOptionForm,
+    ProductOptionGroupForm,
+    ProductOptionGroupCopyForm,
+)
+from .models import BusinessSettings, Category, PackagingType, Product, ProductOption, ProductOptionGroup
+
+
+@login_required
+@permission_required("menu.change_product", raise_exception=True)
+def product_configuration(request, product_id):
+    product = get_object_or_404(
+        Product.objects.prefetch_related("option_groups__options"),
+        id=product_id,
+    )
+    return render(request, "menu/product_configuration.html", {"product": product})
+
+
+@login_required
+@permission_required("menu.change_product", raise_exception=True)
+def option_group_form(request, product_id, group_id=None):
+    product = get_object_or_404(Product, id=product_id)
+    group = (
+        get_object_or_404(ProductOptionGroup, id=group_id, product=product)
+        if group_id
+        else ProductOptionGroup(product=product)
+    )
+    form = ProductOptionGroupForm(request.POST or None, instance=group)
+    if request.method == "POST" and form.is_valid():
+        duplicate = ProductOptionGroup.objects.filter(
+            product=product,
+            name__iexact=form.cleaned_data["name"],
+        ).exclude(id=group.id)
+        if duplicate.exists():
+            form.add_error("name", "Ya existe un grupo con este nombre.")
+    if request.method == "POST" and form.is_valid():
+        group = form.save(commit=False)
+        group.product = product
+        group.save()
+        messages.success(request, "El grupo de opciones fue guardado.")
+        return redirect("menu:product_configuration", product_id=product.id)
+    return render(
+        request,
+        "menu/customization_form.html",
+        {"form": form, "product": product, "title": "Grupo de opciones"},
+    )
+
+
+@login_required
+@permission_required("menu.change_product", raise_exception=True)
+def option_group_copy(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+    form = ProductOptionGroupCopyForm(request.POST or None, target_product=product)
+    if request.method == "POST" and form.is_valid():
+        source = form.cleaned_data["source_group"]
+        if ProductOptionGroup.objects.filter(product=product, name__iexact=source.name).exists():
+            form.add_error("source_group", f"{product.name} ya tiene un grupo llamado {source.name}.")
+        else:
+            with transaction.atomic():
+                copied_group = ProductOptionGroup.objects.create(
+                    product=product,
+                    name=source.name,
+                    selection_type=source.selection_type,
+                    is_required=source.is_required,
+                    sort_order=source.sort_order,
+                )
+                ProductOption.objects.bulk_create([
+                    ProductOption(
+                        group=copied_group,
+                        name=option.name,
+                        price_adjustment=option.price_adjustment,
+                        is_default=option.is_default,
+                        is_available=option.is_available,
+                        sort_order=option.sort_order,
+                    )
+                    for option in source.options.all()
+                ])
+            messages.success(request, f"El grupo {source.name} fue copiado desde {source.product.name}.")
+            return redirect("menu:product_configuration", product_id=product.id)
+    return render(
+        request,
+        "menu/customization_form.html",
+        {"form": form, "product": product, "title": "Pegar grupo existente"},
+    )
+
+
+@login_required
+@permission_required("menu.change_product", raise_exception=True)
+def product_option_form(request, product_id, group_id, option_id=None):
+    product = get_object_or_404(Product, id=product_id)
+    group = get_object_or_404(ProductOptionGroup, id=group_id, product=product)
+    option = (
+        get_object_or_404(ProductOption, id=option_id, group=group)
+        if option_id
+        else ProductOption(group=group)
+    )
+    form = ProductOptionForm(request.POST or None, instance=option)
+    if request.method == "POST" and form.is_valid():
+        duplicate = ProductOption.objects.filter(
+            group=group,
+            name__iexact=form.cleaned_data["name"],
+        ).exclude(id=option.id)
+        if duplicate.exists():
+            form.add_error("name", "Ya existe una opción con este nombre.")
+    if request.method == "POST" and form.is_valid():
+        option = form.save(commit=False)
+        option.group = group
+        option.save()
+        if option.is_default and group.selection_type == ProductOptionGroup.SelectionType.SINGLE:
+            group.options.exclude(id=option.id).update(is_default=False)
+        messages.success(request, "La opción fue guardada.")
+        return redirect("menu:product_configuration", product_id=product.id)
+    return render(
+        request,
+        "menu/customization_form.html",
+        {"form": form, "product": product, "title": f"Opción de {group.name}"},
+    )
+
+
+@login_required
+@permission_required("menu.change_product", raise_exception=True)
+@require_POST
+def option_group_delete(request, product_id, group_id):
+    group = get_object_or_404(ProductOptionGroup, id=group_id, product_id=product_id)
+    group.delete()
+    return redirect("menu:product_configuration", product_id=product_id)
+
+
+@login_required
+@permission_required("menu.change_product", raise_exception=True)
+@require_POST
+def product_option_delete(request, product_id, group_id, option_id):
+    option = get_object_or_404(
+        ProductOption,
+        id=option_id,
+        group_id=group_id,
+        group__product_id=product_id,
+    )
+    option.delete()
+    return redirect("menu:product_configuration", product_id=product_id)
 
 
 @login_required
@@ -69,7 +213,9 @@ def menu_list(request):
 @permission_required("menu.view_category", raise_exception=True)
 def menu_configuration(request):
     active_tab = request.GET.get("tab", "products")
-    if active_tab not in {"products", "categories"}:
+    if active_tab not in {"products", "categories", "settings"}:
+        active_tab = "products"
+    if active_tab == "settings" and not request.user.has_perm("menu.change_product"):
         active_tab = "products"
 
     categories = Category.objects.annotate(
@@ -105,8 +251,48 @@ def menu_configuration(request):
             "search": search,
             "selected_category": category_id,
             "availability": availability,
+            "business_settings_form": BusinessSettingsForm(instance=BusinessSettings.load()) if request.user.has_perm("menu.change_product") else None,
+            "packaging_types": PackagingType.objects.annotate(product_count=Count("products")) if request.user.has_perm("menu.change_product") else (),
         },
     )
+
+
+@login_required
+@permission_required("menu.change_product", raise_exception=True)
+@require_POST
+def business_settings_update(request):
+    settings_object = BusinessSettings.load()
+    form = BusinessSettingsForm(request.POST, instance=settings_object)
+    if form.is_valid():
+        form.save()
+        messages.success(request, "La configuración de envases fue actualizada.")
+    else:
+        for field_errors in form.errors.values():
+            for error in field_errors:
+                messages.error(request, error)
+    return redirect(f"{reverse('menu:configuration')}?tab=settings")
+
+
+@login_required
+@permission_required("menu.change_product", raise_exception=True)
+def packaging_type_form(request, packaging_type_id=None):
+    packaging_type = get_object_or_404(PackagingType, id=packaging_type_id) if packaging_type_id else None
+    form = PackagingTypeForm(request.POST or None, instance=packaging_type)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "El tipo de envase fue guardado.")
+        return redirect(f"{reverse('menu:configuration')}?tab=settings")
+    return render(request, "menu/packaging_type_form.html", {"form": form, "packaging_type": packaging_type})
+
+
+@login_required
+@permission_required("menu.change_product", raise_exception=True)
+@require_POST
+def packaging_type_delete(request, packaging_type_id):
+    packaging_type = get_object_or_404(PackagingType, id=packaging_type_id)
+    packaging_type.delete()
+    messages.success(request, "El tipo de envase fue eliminado.")
+    return redirect(f"{reverse('menu:configuration')}?tab=settings")
 
 
 @login_required
@@ -189,7 +375,7 @@ def product_create(request):
             f"El producto {product.name} fue creado.",
         )
 
-        return redirect("menu:configuration")
+        return redirect("menu:product_configuration", product_id=product.id)
 
     return render(
         request,
@@ -231,6 +417,7 @@ def product_edit(request, product_id):
         {
             "form": form,
             "title": f"Editar producto: {product.name}",
+            "product": product,
         },
     )
 

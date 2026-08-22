@@ -21,8 +21,12 @@
         {{ filter_form.customer.as_field_group }}
         {{ filter_form.order_number.as_field_group }}
     </details>
-    <button type="submit">Aplicar</button>
-    <a href="{% url 'orders:reports' %}">Limpiar</a>
+    <div class="form-actions">
+        <button type="submit">Aplicar</button>
+        <a class="action-link action-link-secondary" href="{% url 'orders:reports' %}">
+            Limpiar
+        </a>
+    </div>
 </form>
 
 <section class="report-cards">

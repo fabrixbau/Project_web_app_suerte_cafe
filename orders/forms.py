@@ -5,6 +5,12 @@ from .models import Order
 
 
 class OrderCreateForm(forms.ModelForm):
+    packaging_items = forms.CharField(
+        required=False,
+        initial="[]",
+        widget=forms.HiddenInput(),
+    )
+
     class Meta:
         model = Order
         fields = [

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Category, Product
+from .models import BusinessSettings, Category, PackagingType, Product, ProductOption, ProductOptionGroup
 
 
 @admin.register(Category)
@@ -14,3 +14,9 @@ class ProductAdmin(admin.ModelAdmin):
     list_filter = ("category", "is_available")
     search_fields = ("name", "description")
     list_editable = ("is_available",)
+
+
+admin.site.register(ProductOptionGroup)
+admin.site.register(ProductOption)
+admin.site.register(BusinessSettings)
+admin.site.register(PackagingType)

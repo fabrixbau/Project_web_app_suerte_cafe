@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Opciones de {{ product.name }} | Suerte Café{% endblock %}
+{% block content %}
+<div class="page-heading customization-heading">
+    <div>
+        <a class="back-link" href="{% url 'menu:configuration' %}">← Volver al menú</a>
+        <p class="eyebrow">Producto configurable</p>
+        <h1>{{ product.name }}</h1>
+        <p>Configura su presentación estándar, variantes y cargos adicionales.</p>
+    </div>
+    <div class="customization-heading-actions">
+        <a class="action-link action-link-secondary" href="{% url 'menu:option_group_copy' product.id %}">Pegar grupo</a>
+        <a class="action-link action-link-primary customization-new-group" href="{% url 'menu:option_group_create' product.id %}">+ Nuevo grupo</a>
+    </div>
+</div>
+
+<aside class="customization-guide" aria-label="Ayuda para configurar el producto">
+    <div class="customization-guide-icon" aria-hidden="true">i</div>
+    <div>
+        <strong>Guía rápida</strong>
+        <p><b>Una opción</b> para salsa, proteína o tamaño. <b>Varias opciones</b> para ingredientes y extras. Marca como <b>Estándar</b> lo que normalmente incluye el producto.</p>
+    </div>
+</aside>
+
+<div class="customization-groups">
+{% for group in product.option_groups.all %}
+    <section class="customization-group-card">
+        <header class="customization-group-header">
+            <div class="customization-group-title">
+                <span class="customization-group-order">{{ forloop.counter|stringformat:"02d" }}</span>
+                <div>
+                    <h2>{{ group.name }}</h2>
+                    <p>{{ group.get_selection_type_display }} · {% if group.is_required %}Obligatorio{% else %}Opcional{% endif %}</p>
+                </div>
+            </div>
+            <div class="customization-group-actions">
+                <a class="icon-action" href="{% url 'menu:option_group_edit' product.id group.id %}" title="Editar grupo">✎ <span>Editar</span></a>
+                <form method="post" action="{% url 'menu:option_group_delete' product.id group.id %}" onsubmit="return confirm('¿Eliminar este grupo y todas sus opciones?')">
+                    {% csrf_token %}<button class="icon-action destructive" type="submit" title="Eliminar grupo">⌫</button>
+                </form>
+            </div>
+        </header>
+        {% if not group.has_valid_default %}<p class="configuration-warning"><span aria-hidden="true">!</span> Selecciona una opción estándar para agregar este producto rápidamente.</p>{% endif %}
+        <div class="customization-options-list">
+        {% for option in group.options.all %}
+            <article class="customization-option-row {% if option.is_default %}is-default{% endif %}">
+                <div class="customization-option-data"><strong>{{ option.name }}</strong><span>{% if option.price_adjustment > 0 %}+${{ option.price_adjustment }}{% elif option.price_adjustment < 0 %}${{ option.price_adjustment }}{% else %}Sin cargo{% endif %}</span></div>
+                <div class="option-badges">{% if option.is_default %}<span class="default-badge">Estándar</span>{% endif %}{% if not option.is_available %}<span class="unavailable-badge">No disponible</span>{% endif %}</div>
+                <div class="customization-option-actions">
+                    <a class="icon-action" href="{% url 'menu:product_option_edit' product.id group.id option.id %}" title="Editar {{ option.name }}">✎</a>
+                    <form method="post" action="{% url 'menu:product_option_delete' product.id group.id option.id %}" onsubmit="return confirm('¿Eliminar esta opción?')">{% csrf_token %}<button class="icon-action destructive" type="submit" title="Eliminar {{ option.name }}">⌫</button></form>
+                </div>
+            </article>
+        {% empty %}<p class="empty-category-message">Este grupo todavía no tiene opciones.</p>{% endfor %}
+        </div>
+        <a class="add-option-link" href="{% url 'menu:product_option_create' product.id group.id %}">+ Agregar opción</a>
+    </section>
+{% empty %}
+    <section class="empty-customization"><span class="empty-customization-icon">+</span><strong>Este producto todavía no tiene variantes</strong><p>Crea el primer grupo para agregar tamaños, ingredientes o extras.</p><a class="action-link action-link-primary" href="{% url 'menu:option_group_create' product.id %}">Crear primer grupo</a></section>
+{% endfor %}
+</div>
+{% endblock %}
