@@ -7,7 +7,21 @@
     <form method="post" enctype="multipart/form-data" class="modern-form form-card modern-select-form" novalidate>
         {% csrf_token %} {{ form.non_field_errors }}
         {% for field in form %}
-            <div class="form-field">{{ field.label_tag }} {{ field }}{% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}{{ field.errors }}</div>
+            {% if field.field.widget.input_type == "checkbox" %}
+                <div class="form-field switch-field">
+                    <div>
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        <small>Permite agregar este producto a pedidos nuevos.</small>
+                    </div>
+                    <label class="modern-switch" for="{{ field.id_for_label }}">
+                        {{ field }}
+                        <span aria-hidden="true"></span>
+                    </label>
+                    {{ field.errors }}
+                </div>
+            {% else %}
+                <div class="form-field">{{ field.label_tag }} {{ field }}{% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}{{ field.errors }}</div>
+            {% endif %}
         {% endfor %}
         <div class="form-actions"><button type="submit">Guardar producto</button><a class="action-link action-link-secondary" href="{% url 'menu:configuration' %}">Cancelar</a></div>
     </form>

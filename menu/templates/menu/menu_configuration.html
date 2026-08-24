@@ -21,28 +21,32 @@
     <section class="menu-toolbar">
         <form method="get" class="menu-search-form">
             <input type="hidden" name="tab" value="products">
-            <label class="search-control">
-                <img src="{% static 'img/ui/icons/search.svg' %}" alt="">
-                <input name="q" value="{{ search }}" placeholder="Buscar productos..." aria-label="Buscar productos">
-            </label>
+            <div class="menu-filter-fields">
+                <label class="search-control">
+                    <img src="{% static 'img/ui/icons/search.svg' %}" alt="">
+                    <input name="q" value="{{ search }}" placeholder="Buscar productos..." aria-label="Buscar productos">
+                </label>
 
-            <select name="category" aria-label="Filtrar por categoría">
-                <option value="">Todas las categorías</option>
-                {% for category in categories %}
-                    <option value="{{ category.id }}" {% if selected_category == category.id|stringformat:"s" %}selected{% endif %}>{{ category.name }}</option>
-                {% endfor %}
-            </select>
+                <select name="category" aria-label="Filtrar por categoría">
+                    <option value="">Todas las categorías</option>
+                    {% for category in categories %}
+                        <option value="{{ category.id }}" {% if selected_category == category.id|stringformat:"s" %}selected{% endif %}>{{ category.name }}</option>
+                    {% endfor %}
+                </select>
 
-            <select name="availability" aria-label="Filtrar por disponibilidad">
-                <option value="">Toda disponibilidad</option>
-                <option value="available" {% if availability == "available" %}selected{% endif %}>Disponibles</option>
-                <option value="unavailable" {% if availability == "unavailable" %}selected{% endif %}>No disponibles</option>
-            </select>
+                <select name="availability" aria-label="Filtrar por disponibilidad">
+                    <option value="">Disponibilidad</option>
+                    <option value="available" {% if availability == "available" %}selected{% endif %}>Disponibles</option>
+                    <option value="unavailable" {% if availability == "unavailable" %}selected{% endif %}>No disponibles</option>
+                </select>
+            </div>
 
-            <button type="submit">Buscar</button>
-            {% if search or selected_category or availability %}
-                <a class="action-link action-link-secondary" href="{% url 'menu:configuration' %}?tab=products">Limpiar</a>
-            {% endif %}
+            <div class="menu-filter-actions">
+                <button type="submit">Buscar</button>
+                {% if search or selected_category or availability %}
+                    <a class="action-link action-link-secondary" href="{% url 'menu:configuration' %}?tab=products">Limpiar</a>
+                {% endif %}
+            </div>
         </form>
 
         {% if perms.menu.add_product %}

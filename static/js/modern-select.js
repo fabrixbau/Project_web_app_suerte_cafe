@@ -10,7 +10,9 @@
         });
     }
 
-    document.querySelectorAll(".modern-select-form select").forEach((select, index) => {
+    document.querySelectorAll("select:not([data-native-select])").forEach((select, index) => {
+        if (select.dataset.modernSelectReady === "true") return;
+        select.dataset.modernSelectReady = "true";
         const shell = select.closest(".modern-input-shell");
         shell?.classList.add("has-app-select");
         select.classList.add("native-enhanced-select");
@@ -89,6 +91,7 @@
         select.parentNode.insertBefore(root, select);
         root.append(select, trigger, list);
         enhanced.push({ root, list, trigger });
+        select.addEventListener("change", syncValue);
         syncValue();
     });
 

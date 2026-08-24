@@ -26,6 +26,43 @@
         });
     });
 
+    document.querySelectorAll("[data-order-created-toast]").forEach((toast) => {
+        const lifetime = 4000;
+        let remaining = lifetime;
+        let startedAt = performance.now();
+        let dismissTimer;
+        let isRunning = false;
+
+        const dismiss = () => {
+            if (toast.classList.contains("is-leaving")) return;
+            isRunning = false;
+            toast.classList.add("is-leaving");
+            toast.addEventListener("animationend", (event) => {
+                if (event.animationName === "notification-leave") toast.remove();
+            });
+        };
+        const startTimer = () => {
+            if (isRunning || toast.classList.contains("is-leaving")) return;
+            isRunning = true;
+            startedAt = performance.now();
+            dismissTimer = window.setTimeout(dismiss, remaining);
+            toast.classList.remove("is-paused");
+        };
+        const pauseTimer = () => {
+            if (!isRunning) return;
+            window.clearTimeout(dismissTimer);
+            remaining = Math.max(0, remaining - (performance.now() - startedAt));
+            isRunning = false;
+            toast.classList.add("is-paused");
+        };
+
+        toast.addEventListener("pointerenter", pauseTimer);
+        toast.addEventListener("pointerleave", startTimer);
+        toast.addEventListener("focus", pauseTimer);
+        toast.addEventListener("blur", startTimer);
+        startTimer();
+    });
+
     const feedbackType = document.querySelector("[data-error-notification]")
         ? "error"
         : document.querySelector("[data-success-feedback]")

@@ -62,6 +62,18 @@
         window.refreshBaseOrderSummary?.();
     }
 
+    function addStandardQuantity(productId, quantity) {
+        const cards = [...document.querySelectorAll(`.product-card[data-product-id="${productId}"]`)];
+        const standardCard = cards.find((card) =>
+            card.dataset.isCustomized !== "true" && card.classList.contains("has-quantity")
+        ) || cards.find((card) => card.dataset.isCustomized !== "true");
+        const input = standardCard?.querySelector(".quantity-input");
+        if (!input) return false;
+        input.value = (Number.parseInt(input.value, 10) || 0) + quantity;
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+        return true;
+    }
+
     function changeCustomQuantity(key, difference) {
         const item = customItems.find((candidate) => candidate.key === key);
         if (!item) return;
@@ -94,9 +106,12 @@
                 badge.textContent = "Modificado";
                 name.append(" ", badge);
             }
-            const details = document.createElement("span");
-            details.textContent = item.labels.join(" · ") || "Configuración estándar";
-            information.append(name, details);
+            information.append(name);
+            if (item.is_customized) {
+                const details = document.createElement("span");
+                details.textContent = item.labels.join(" · ");
+                information.append(details);
+            }
 
             const controls = document.createElement("div");
             controls.className = "summary-quantity-control";
@@ -193,6 +208,10 @@
             return;
         }
         const item = buildItem(activeProduct, selectedOptionIds(), dialogQuantity);
+        if (!item.is_customized && addStandardQuantity(item.product_id, item.quantity)) {
+            dialog.close();
+            return;
+        }
         const existing = customItems.find((candidate) => candidate.key === item.key);
         if (existing) existing.quantity += item.quantity;
         else customItems.push(item);
@@ -206,7 +225,10 @@
         const savedItems = JSON.parse(hiddenInput.value || "[]");
         customItems = savedItems.map((item) => {
             const product = products[String(item.product_id)];
-            return product ? buildItem(product, item.option_ids || [], item.quantity) : null;
+            if (!product) return null;
+            const restored = buildItem(product, item.option_ids || [], item.quantity);
+            if (!restored.is_customized && addStandardQuantity(restored.product_id, restored.quantity)) return null;
+            return restored;
         }).filter(Boolean);
     } catch {
         customItems = [];

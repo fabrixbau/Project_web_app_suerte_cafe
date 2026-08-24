@@ -11,6 +11,7 @@ from django.db.models import Avg, Count, DecimalField, IntegerField, Prefetch, S
 from django.db.models.functions import Coalesce
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
@@ -461,7 +462,8 @@ def order_create(request):
                     f"Pedido #{order.daily_number:03d} guardado.",
                     extra_tags="order-success",
                 )
-                return redirect("orders:create")
+                create_url = reverse("orders:create")
+                return redirect(f"{create_url}?created_order={order.id}")
     else:
         for product in products:
             product.selected_quantity = 0

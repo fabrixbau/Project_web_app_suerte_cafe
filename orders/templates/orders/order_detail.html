@@ -76,7 +76,7 @@
                 <article>
                     <div>
                         <strong>{{ item.product_name_snapshot }}{% if item.is_customized %}<span class="customized-warning">Modificado</span>{% endif %}</strong>
-                        {% for group in item.configuration_snapshot %}<span class="item-configuration"><b>{{ group.group }}:</b> {% for option in group.options %}{{ option.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</span>{% endfor %}
+                        {% if item.is_customized %}{% for group in item.configuration_snapshot %}<span class="item-configuration"><b>{{ group.group }}:</b> {% for option in group.options %}{{ option.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</span>{% endfor %}{% endif %}
                         <span>${{ item.unit_price }} cada uno</span>
                     </div>
                     <span class="detail-quantity">× {{ item.quantity }}</span>
