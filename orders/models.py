@@ -54,6 +54,11 @@ class Order(models.Model):
         COMPLETED = "completed", "Completado"
         CANCELED = "canceled", "Cancelado"
 
+    class PaymentMethod(models.TextChoices):
+        CASH = "cash", "Efectivo"
+        CARD = "card", "Tarjeta"
+        TRANSFER = "transfer", "Transferencia"
+
     daily_number = models.PositiveIntegerField(editable=False)
     operating_date = models.DateField(default=timezone.localdate)
 
@@ -102,6 +107,18 @@ class Order(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    payment_method = models.CharField(
+        max_length=20,
+        choices=PaymentMethod.choices,
+        default=PaymentMethod.CASH,
+    )
+    cash_received = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    tip_amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=Decimal("0.00"),
+        validators=[MinValueValidator(Decimal("0.00"))],
+    )
 
     class Meta:
         ordering = ["-created_at"]
@@ -119,6 +136,16 @@ class Order(models.Model):
     def formatted_number(self):
         return f"#{self.daily_number:03d}"
 
+
+    @property
+    def charged_total(self):
+        return self.total + self.tip_amount
+
+    @property
+    def change_due(self):
+        if self.payment_method != self.PaymentMethod.CASH or self.cash_received is None:
+            return Decimal("0.00")
+        return max(self.cash_received - self.charged_total, Decimal("0.00"))
 
 class OrderPackagingItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="packaging_items")

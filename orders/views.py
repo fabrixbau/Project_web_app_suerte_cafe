@@ -7,10 +7,11 @@ import json
 
 from django.core.paginator import Paginator
 from django.db import transaction
-from django.db.models import Avg, Count, DecimalField, IntegerField, Prefetch, Sum
+from django.db.models import Avg, Count, DecimalField, IntegerField, Prefetch, Q, Sum
 from django.db.models.functions import Coalesce
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
@@ -170,7 +171,6 @@ def delivery_customer_lookup(request):
 
 
 @login_required
-@permission_required("orders.view_order", raise_exception=True)
 def order_detail(request, order_id):
     order = get_object_or_404(
         Order.objects.select_related(
@@ -209,7 +209,9 @@ def order_edit(request, order_id):
     available_options = ProductOption.objects.filter(is_available=True).order_by(
         "sort_order", "id"
     )
-    addable_products = Product.objects.filter(is_available=True).select_related("packaging_type").prefetch_related(
+    addable_products = Product.objects.filter(is_available=True).select_related(
+        "category", "category__default_packaging_type", "packaging_type"
+    ).prefetch_related(
         Prefetch(
             "option_groups__options",
             queryset=available_options,
@@ -316,7 +318,6 @@ def order_edit(request, order_id):
     )
 
 @login_required
-@permission_required("orders.change_order", raise_exception=True)
 @require_POST
 def order_status_update(request, order_id):
     is_async = request.headers.get("x-requested-with") == "XMLHttpRequest"
@@ -374,7 +375,7 @@ def order_create(request):
     )
     products = Product.objects.filter(
         is_available=True,
-    ).select_related("category", "packaging_type").prefetch_related(
+    ).select_related("category", "category__default_packaging_type", "packaging_type").prefetch_related(
         Prefetch(
             "option_groups__options",
             queryset=available_options,
@@ -482,7 +483,6 @@ def order_create(request):
 
 
 @login_required
-@permission_required("orders.view_order", raise_exception=True)
 def order_list(request):
     orders = Order.objects.select_related(
         "created_by",
@@ -552,6 +552,30 @@ def order_list(request):
 
 
 @login_required
+def orders_live(request):
+    orders = Order.objects.select_related("created_by").order_by("-created_at")
+    filter_form = OrderFilterForm(request.GET)
+    if filter_form.is_valid():
+        filters = filter_form.cleaned_data
+        date_from, date_to = filters["date"], filters["date_to"]
+        if date_from and date_to:
+            orders = orders.filter(operating_date__range=(date_from, date_to))
+        elif date_from or date_to:
+            orders = orders.filter(operating_date=date_from or date_to)
+        else:
+            orders = orders.filter(operating_date=timezone.localdate())
+        if filters["order_number"]: orders = orders.filter(daily_number=filters["order_number"])
+        if filters["customer"]: orders = orders.filter(customer_name__icontains=filters["customer"])
+        if filters["status"]: orders = orders.filter(status=filters["status"])
+        if filters["order_type"]: orders = orders.filter(order_type=filters["order_type"])
+        if filters["employee"]: orders = orders.filter(employee_name_snapshot__icontains=filters["employee"])
+    else:
+        orders = orders.filter(operating_date=timezone.localdate())
+    page = Paginator(orders, 20).get_page(request.GET.get("page"))
+    return JsonResponse({"html": render_to_string("orders/_order_rows.html", {"page": page}, request=request)})
+
+
+@login_required
 @permission_required("orders.view_order", raise_exception=True)
 def sales_report(request):
     filter_form = SalesReportFilterForm(request.GET or None)
@@ -591,6 +615,17 @@ def sales_report(request):
     summary["canceled_count"] = period_orders.filter(
         status=Order.Status.CANCELED
     ).count()
+    tip_summary = completed_orders.aggregate(
+        electronic_tips=Coalesce(
+            Sum("tip_amount", filter=Q(payment_method__in=[Order.PaymentMethod.CARD, Order.PaymentMethod.TRANSFER])),
+            Decimal("0.00"), output_field=money_field,
+        ),
+        cash_tips=Coalesce(
+            Sum("tip_amount", filter=Q(payment_method=Order.PaymentMethod.CASH)),
+            Decimal("0.00"), output_field=money_field,
+        ),
+        total_tips=Coalesce(Sum("tip_amount"), Decimal("0.00"), output_field=money_field),
+    )
 
     totals_by_type = {
         row["order_type"]: row
@@ -625,7 +660,7 @@ def sales_report(request):
             }
         )
 
-    best_selling_products = (
+    best_selling_products = list(
         OrderItem.objects.filter(
             order__operating_date__range=(date_from, date_to),
             order__status=Order.Status.COMPLETED,
@@ -637,6 +672,10 @@ def sales_report(request):
         )
         .order_by("-units_sold", "product_name_snapshot")[:10]
     )
+    maximum_units = max((item["units_sold"] for item in best_selling_products), default=0)
+    for rank, product in enumerate(best_selling_products, start=1):
+        product["rank"] = rank
+        product["bar_width"] = round(product["units_sold"] / maximum_units * 100, 2) if maximum_units else 0
 
     detail_orders = period_orders.select_related("created_by").annotate(
         item_count=Coalesce(
@@ -677,6 +716,7 @@ def sales_report(request):
             "date_from": date_from,
             "date_to": date_to,
             "summary": summary,
+            "tip_summary": tip_summary,
             "sales_by_type": sales_by_type,
             "best_selling_products": best_selling_products,
             "page": page,

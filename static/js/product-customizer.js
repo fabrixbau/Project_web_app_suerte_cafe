@@ -13,6 +13,8 @@
     let activeProduct = null;
     let dialogQuantity = 1;
     let customItems = [];
+    let editingCustomKey = null;
+    let editingStandardInput = null;
 
     function selectedOptionIds() {
         return [...dialog.querySelectorAll(".customization-choice-input:checked")]
@@ -96,7 +98,8 @@
 
         customItems.forEach((item) => {
             const row = document.createElement("article");
-            row.className = `current-order-item customized-order-item${item.is_customized ? " is-customized" : ""}`;
+            row.className = `current-order-item customized-order-item is-editable${item.is_customized ? " is-customized" : ""}`;
+            row.title = "Editar esta personalización";
             const information = document.createElement("div");
             const name = document.createElement("strong");
             name.textContent = item.name;
@@ -129,6 +132,10 @@
             const subtotal = document.createElement("strong");
             subtotal.textContent = currency.format(item.unit_price * item.quantity);
             row.append(information, controls, subtotal);
+            row.addEventListener("click", (clickEvent) => {
+                if (clickEvent.target.closest("button, input")) return;
+                openDialog(item.product_id, item.option_ids, item.quantity, {customKey: item.key});
+            });
             summary.appendChild(row);
             count += item.quantity;
             total += item.unit_price * item.quantity;
@@ -137,7 +144,10 @@
         totalItems.textContent = count;
         summaryItems.textContent = count;
         totalElement.textContent = currency.format(total);
-        if (subtotalElement) subtotalElement.textContent = currency.format(total);
+        if (subtotalElement) {
+            subtotalElement.textContent = currency.format(total);
+            subtotalElement.dataset.subtotal = total;
+        }
     }
 
     function updateDialogPrice() {
@@ -147,10 +157,13 @@
         dialog.querySelector("#dialog-unit-price").textContent = currency.format(item.unit_price);
     }
 
-    function openDialog(productId) {
+    function openDialog(productId, optionIds = null, quantity = 1, editContext = {}) {
         activeProduct = products[String(productId)];
         if (!activeProduct) return;
-        dialogQuantity = 1;
+        dialogQuantity = quantity;
+        editingCustomKey = editContext.customKey || null;
+        editingStandardInput = editContext.standardInput || null;
+        const selectedIds = optionIds ? new Set(optionIds.map(Number)) : null;
         dialog.querySelector("#customization-product-name").textContent = activeProduct.name;
         const groupsContainer = dialog.querySelector("#customization-groups");
         groupsContainer.innerHTML = "";
@@ -175,7 +188,7 @@
                 input.type = group.selection_type === "single" ? "radio" : "checkbox";
                 input.name = `custom-group-${group.id}`;
                 input.value = option.id;
-                input.checked = option.is_default;
+                input.checked = selectedIds ? selectedIds.has(option.id) : option.is_default;
                 const text = document.createElement("span");
                 const adjustment = Number.parseFloat(option.price_adjustment);
                 text.innerHTML = `<strong></strong><small></small>`;
@@ -194,7 +207,21 @@
     }
 
     document.querySelectorAll("[data-customize-product]").forEach((button) => {
-        button.addEventListener("click", () => openDialog(button.dataset.customizeProduct));
+        button.addEventListener("click", () => {
+            document.dispatchEvent(new CustomEvent("order-menu-focus"));
+            openDialog(button.dataset.customizeProduct);
+        });
+    });
+    document.addEventListener("edit-order-item", (event) => {
+        const product = products[String(event.detail.productId)];
+        if (!product) return;
+        document.dispatchEvent(new CustomEvent("order-menu-focus"));
+        const defaultIds = product.groups.flatMap((group) =>
+            group.options.filter((option) => option.is_default).map((option) => option.id)
+        );
+        openDialog(event.detail.productId, defaultIds, event.detail.quantity, {
+            standardInput: event.detail.standardInput,
+        });
     });
     dialog.querySelector("[data-customization-close]").addEventListener("click", () => dialog.close());
     dialog.querySelector("[data-dialog-decrease]").addEventListener("click", () => { dialogQuantity = Math.max(1, dialogQuantity - 1); updateDialogPrice(); });
@@ -208,13 +235,20 @@
             return;
         }
         const item = buildItem(activeProduct, selectedOptionIds(), dialogQuantity);
+        document.dispatchEvent(new CustomEvent("order-menu-focus"));
+        if (editingCustomKey) customItems = customItems.filter((candidate) => candidate.key !== editingCustomKey);
+        if (editingStandardInput) editingStandardInput.value = 0;
         if (!item.is_customized && addStandardQuantity(item.product_id, item.quantity)) {
+            editingCustomKey = null;
+            editingStandardInput = null;
             dialog.close();
             return;
         }
         const existing = customItems.find((candidate) => candidate.key === item.key);
         if (existing) existing.quantity += item.quantity;
         else customItems.push(item);
+        editingCustomKey = null;
+        editingStandardInput = null;
         dialog.close();
         refreshEverything();
     });

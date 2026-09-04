@@ -12,6 +12,7 @@ from django.utils.http import url_has_allowed_host_and_scheme
 
 from .forms import EmployeeLoginForm, ProfileEditForm, SignUpForm
 from .models import Profile
+from .signals import ADMINISTRATOR_GROUP
 
 
 @login_required
@@ -45,10 +46,37 @@ def login_view(request):
 
         return redirect("home")
 
+    login_profiles = []
+    users = get_user_model().objects.filter(is_active=True).select_related(
+        "profile"
+    ).prefetch_related("groups").order_by("username")
+    for user in users:
+        is_administrator = user.is_superuser or any(
+            group.name == ADMINISTRATOR_GROUP for group in user.groups.all()
+        )
+        initials_source = [user.first_name, user.last_name]
+        initials = "".join(part[:1] for part in initials_source if part).upper()
+        try:
+            profile_image = user.profile.image
+        except Profile.DoesNotExist:
+            profile_image = None
+        login_profiles.append({
+            "user": user,
+            "image": profile_image,
+            "initials": initials or user.username[:2].upper(),
+            "is_administrator": is_administrator,
+            "requires_password": is_administrator or user.has_usable_password(),
+        })
+
     return render(
         request,
         "registration/login.html",
-        {"form": form, "next": request.GET.get("next", "")},
+        {
+            "form": form,
+            "next": request.GET.get("next", ""),
+            "login_profiles": login_profiles,
+            "selected_user_id": request.POST.get("user", ""),
+        },
     )
 
 

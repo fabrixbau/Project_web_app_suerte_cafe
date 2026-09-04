@@ -13,6 +13,7 @@ urlpatterns = [
     ),
     path("reports/", views.sales_report, name="reports"),
     path("", views.order_list, name="list"),
+    path("live/", views.orders_live, name="live"),
     path(
         "<int:order_id>/status/",
         views.order_status_update,

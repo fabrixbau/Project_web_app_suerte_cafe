@@ -36,6 +36,12 @@
     <article><span>Pedidos cancelados</span><strong>{{ summary.canceled_count }}</strong></article>
 </section>
 
+<section class="tip-report-cards" aria-label="Resumen de propinas">
+    <article><span>Propinas tarjeta + transferencia</span><strong>${{ tip_summary.electronic_tips|floatformat:2 }}</strong><small>Pagos electrónicos</small></article>
+    <article><span>Propinas en efectivo</span><strong>${{ tip_summary.cash_tips|floatformat:2 }}</strong><small>Efectivo registrado</small></article>
+    <article class="tip-total-card"><span>Total de propinas</span><strong>${{ tip_summary.total_tips|floatformat:2 }}</strong><small>{{ date_from|date:"d/m/Y" }}{% if date_to != date_from %} – {{ date_to|date:"d/m/Y" }}{% endif %}</small></article>
+</section>
+
 <div class="report-grid">
     <section>
         <h2>Ventas por tipo</h2>
@@ -47,13 +53,19 @@
         {% endfor %}
     </section>
 
-    <section>
+    <section class="best-products-panel">
         <h2>Productos más vendidos</h2>
-        <ol>
+        <ol class="best-products-list">
             {% for product in best_selling_products %}
-                <li>{{ product.product_name_snapshot }} — {{ product.units_sold }} vendidos — ${{ product.sales|floatformat:2 }}</li>
+                <li>
+                    <span class="product-rank">{{ product.rank }}</span>
+                    <div class="best-product-data">
+                        <div><strong>{{ product.product_name_snapshot }}</strong><span>{{ product.units_sold }} vendidos · ${{ product.sales|floatformat:2 }}</span></div>
+                        <div class="best-product-track"><i style="width: {{ product.bar_width }}%"></i></div>
+                    </div>
+                </li>
             {% empty %}
-                <li>No hay ventas completadas en este periodo.</li>
+                <li class="empty-ranking">No hay ventas completadas en este periodo.</li>
             {% endfor %}
         </ol>
     </section>

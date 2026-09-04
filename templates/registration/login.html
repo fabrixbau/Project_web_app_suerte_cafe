@@ -1,26 +1,40 @@
 {% extends "auth_base.html" %}
+{% load static %}
 {% block title %}Iniciar sesión | Suerte Café{% endblock %}
 {% block content %}
 <header class="login-heading">
-    <p class="eyebrow">Bienvenido</p>
-    <h1>Iniciar sesión</h1>
-    <p>Selecciona tu perfil para comenzar.</p>
+    <h1>¿Quién trabaja hoy?</h1>
+    <p>Selecciona tu perfil para continuar</p>
 </header>
-{{ form.non_field_errors }}
+{% if form.non_field_errors %}<div class="login-errors">{{ form.non_field_errors }}</div>{% endif %}
 <form method="post" class="login-form">
     {% csrf_token %}
-    <div class="login-field">
-        {{ form.user.label_tag }}
-        <div class="login-control"><span class="login-control-icon login-user-icon" aria-hidden="true"></span>{{ form.user }}</div>
-        {{ form.user.errors }}
+    <div class="login-native-select" aria-hidden="true">{{ form.user }}</div>
+    {{ form.user.errors }}
+    <div class="login-profile-grid" role="listbox" aria-label="Perfiles disponibles">
+        {% for profile in login_profiles %}
+            <button type="button" class="login-profile-card profile-tone-{{ forloop.counter|add:'-1' }}{% if selected_user_id == profile.user.id|stringformat:'s' %} is-selected{% endif %}" data-login-profile="{{ profile.user.id }}" data-requires-password="{% if profile.requires_password %}true{% else %}false{% endif %}" role="option">
+                <span class="login-profile-avatar">
+                    {% if profile.image %}<img src="{{ profile.image.url }}" alt="">{% else %}{{ profile.initials }}{% endif %}
+                </span>
+                <strong>{{ profile.user.username }}</strong>
+                <small>{% if profile.is_administrator %}Administrador{% else %}Empleado{% endif %}</small>
+            </button>
+        {% empty %}
+            <p>No hay perfiles activos.</p>
+        {% endfor %}
     </div>
-    <div class="login-field">
-        {{ form.password.label_tag }}
-        <div class="login-control"><span class="login-control-icon login-password-icon" aria-hidden="true"></span>{{ form.password }}</div>
-        <small>Solo algunos perfiles requieren contraseña.</small>
-        {{ form.password.errors }}
+    <div class="login-access-panel" data-login-access {% if not selected_user_id %}hidden{% endif %}>
+        <div class="login-field">
+            {{ form.password.label_tag }}
+            <div class="login-control"><span class="login-control-icon login-password-icon" aria-hidden="true"></span>{{ form.password }}</div>
+            <small data-password-help>Ingresa la contraseña del perfil.</small>
+            {{ form.password.errors }}
+        </div>
+        <button type="submit" class="login-submit">Entrar</button>
     </div>
     {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
-    <button type="submit" class="login-submit">Entrar</button>
 </form>
 {% endblock %}
+
+{% block extra_js %}<script src="{% static 'js/login-profiles.js' %}?v=1"></script>{% endblock %}

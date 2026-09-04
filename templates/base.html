@@ -23,6 +23,7 @@
         rel="stylesheet"
         href="{% static 'css/app.css' %}?v=20260822-8"
     >
+    <link rel="stylesheet" href="{% static 'css/workflow-2026.css' %}?v=1">
 </head>
 
 <body>
@@ -127,15 +128,13 @@
                                 <label class="appearance-choice">
                                     <input type="radio" name="theme" value="light">
                                     <span class="appearance-choice-content">
-                                        <span class="theme-preview theme-preview-light"></span>
-                                        <span><strong>Claro</strong><small>Fondo luminoso</small></span>
+                                        <span class="theme-symbol" aria-hidden="true">☀</span><span class="sr-only">Tema claro</span>
                                     </span>
                                 </label>
                                 <label class="appearance-choice">
                                     <input type="radio" name="theme" value="dark">
                                     <span class="appearance-choice-content">
-                                        <span class="theme-preview theme-preview-dark"></span>
-                                        <span><strong>Oscuro</strong><small>Menos brillo</small></span>
+                                        <span class="theme-symbol" aria-hidden="true">☾</span><span class="sr-only">Tema oscuro</span>
                                     </span>
                                 </label>
                             </div>

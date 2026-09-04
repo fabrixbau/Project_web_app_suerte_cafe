@@ -31,13 +31,19 @@ class PackagingTypeForm(forms.ModelForm):
 
 
 class CategoryForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._original_packaging_type_id = self.instance.default_packaging_type_id
+
     class Meta:
         model = Category
         fields = [
             "name",
+            "default_packaging_type",
         ]
         labels = {
             "name": "Nombre",
+            "default_packaging_type": "Envase automático de la categoría",
         }
 
     def clean_name(self):
@@ -48,6 +54,16 @@ class CategoryForm(forms.ModelForm):
         if duplicate.exists():
             raise forms.ValidationError("Ya existe una categoría con este nombre.")
         return name
+
+    def save(self, commit=True):
+        category = super().save(commit=commit)
+        if (
+            commit
+            and category.default_packaging_type_id
+            and category.default_packaging_type_id != self._original_packaging_type_id
+        ):
+            category.products.update(packaging_type=None)
+        return category
 
 
 class ProductForm(forms.ModelForm):
@@ -69,7 +85,7 @@ class ProductForm(forms.ModelForm):
             "image": "Imagen",
             "description": "Descripción",
             "is_available": "Disponible",
-            "packaging_type": "Envase predeterminado",
+            "packaging_type": "Envase específico (opcional)",
         }
         widgets = {
             "description": forms.Textarea(

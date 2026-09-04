@@ -7,6 +7,9 @@
 <form method="post" class="order-workspace">
     {% csrf_token %}
     {{ form.packaging_items }}
+    {{ form.payment_method }}
+    {{ form.cash_received }}
+    {{ form.tip_amount }}
     {% include "orders/_customization_modal.html" %}
     {% if form.errors %}
         <div class="app-notifications" aria-live="assertive">
@@ -136,7 +139,8 @@
                             data-name="{{ product.name }}"
                             data-price="{{ product.standard_price|unlocalize }}"
                             data-product-id="{{ product.id }}"
-                            data-packaging-type="{{ product.packaging_type_id|default:'' }}"
+                            data-has-options="{% if product.has_options %}true{% else %}false{% endif %}"
+                            data-packaging-type="{{ product.effective_packaging_type_id|default:'' }}"
                         >
                             {% if product.image %}
                                 <img class="product-card-image" src="{{ product.image.url }}" alt="{{ product.name }}" loading="lazy" decoding="async">
@@ -174,6 +178,28 @@
     </div>
 
     <aside class="current-order-panel">
+        <section class="payment-panel" aria-labelledby="payment-title">
+            <div class="payment-heading"><strong id="payment-title">Método de pago</strong><span>Obligatorio</span></div>
+            <div class="payment-methods" role="group" aria-label="Método de pago">
+                <button type="button" data-payment-method="cash">Efectivo</button>
+                <button type="button" data-payment-method="card">Tarjeta</button>
+                <button type="button" data-payment-method="transfer">Transferencia</button>
+            </div>
+        </section>
+        <section class="cash-payment-fields checkout-detail" data-cash-payment hidden>
+            <div class="checkout-detail-heading"><strong>¿Con cuánto paga?</strong><span>Selecciona un importe</span></div>
+            <button type="button" class="cash-exact-button" data-cash-exact>Cantidad exacta</button>
+            <div class="cash-quick-buttons">
+                <button type="button" data-cash-amount="20">$20</button><button type="button" data-cash-amount="50">$50</button><button type="button" data-cash-amount="100">$100</button><button type="button" data-cash-amount="200">$200</button><button type="button" data-cash-amount="500">$500</button>
+            </div>
+            <label class="cash-custom-field">Otra cantidad<input type="number" min="0" step="0.50" data-cash-custom placeholder="0.00"></label>
+            <button type="button" class="cash-confirm-button" data-cash-confirm>Confirmar cantidad</button>
+            <p class="cash-warning" data-cash-warning hidden>El importe seleccionado es menor al total a cobrar.</p>
+        </section>
+        <section class="tip-payment-fields checkout-detail" data-tip-payment hidden>
+            <label>Propina (opcional)<input type="number" min="0" step="0.50" data-tip-custom value="0"></label>
+            <p><span>Total a cobrar</span><strong data-charged-total>$0.00</strong></p>
+        </section>
         <div class="current-order-heading">
             <h2>Pedido actual</h2>
             <span><strong id="total-items">0</strong> artículos</span>
@@ -185,7 +211,7 @@
 
         <div class="current-order-totals">
             <p><span>Artículos</span><strong id="summary-items">0</strong></p>
-            <p><span>Subtotal</span><strong id="order-subtotal">$0.00</strong></p>
+            <p><span id="subtotal-change-label">Subtotal</span><strong id="order-subtotal">$0.00</strong></p>
             {% include "orders/_packaging_charge.html" %}
             <p class="final-total"><span>Total</span><strong id="order-total">$0.00</strong></p>
         </div>
@@ -253,7 +279,7 @@
 
     function createSummaryItem(card, input, quantity, subtotal) {
         const item = document.createElement("article");
-        item.className = "current-order-item";
+        item.className = `current-order-item${card.dataset.hasOptions === "true" ? " is-editable" : ""}`;
 
         const information = document.createElement("div");
         const name = document.createElement("strong");
@@ -279,6 +305,17 @@
         const price = document.createElement("strong");
         price.textContent = currencyFormatter.format(subtotal);
         item.append(information, controls, price);
+        if (card.dataset.hasOptions === "true") {
+            item.title = "Editar o personalizar este producto";
+            item.addEventListener("click", (event) => {
+                if (event.target.closest("button, input")) return;
+                document.dispatchEvent(new CustomEvent("edit-order-item", {detail: {
+                    productId: card.dataset.productId,
+                    quantity,
+                    standardInput: input,
+                }}));
+            });
+        }
         return item;
     }
 
@@ -309,6 +346,7 @@
         totalItemsElement.textContent = totalItems;
         summaryItemsElement.textContent = totalItems;
         subtotalElement.textContent = currencyFormatter.format(orderTotal);
+        subtotalElement.dataset.subtotal = orderTotal;
         totalElement.textContent = currencyFormatter.format(orderTotal);
         document.dispatchEvent(new CustomEvent("base-order-summary-rendered", {detail: {count: totalItems, total: orderTotal}}));
     }
@@ -328,4 +366,5 @@
 <script src="{% static 'js/delivery-customer.js' %}?v=1"></script>
 <script src="{% static 'js/product-customizer.js' %}?v=2"></script>
 <script src="{% static 'js/packaging-charge.js' %}?v=2"></script>
+<script src="{% static 'js/payment.js' %}?v=1"></script>
 {% endblock %}

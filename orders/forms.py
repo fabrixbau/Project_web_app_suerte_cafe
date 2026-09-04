@@ -10,6 +10,18 @@ class OrderCreateForm(forms.ModelForm):
         initial="[]",
         widget=forms.HiddenInput(),
     )
+    payment_method = forms.ChoiceField(
+        choices=Order.PaymentMethod.choices,
+        required=True,
+        widget=forms.HiddenInput(),
+    )
+    cash_received = forms.DecimalField(
+        required=False, min_value=0, decimal_places=2, widget=forms.HiddenInput()
+    )
+    tip_amount = forms.DecimalField(
+        required=False, min_value=0, decimal_places=2,
+        initial=0, widget=forms.HiddenInput(),
+    )
 
     class Meta:
         model = Order
@@ -44,6 +56,9 @@ class OrderCreateForm(forms.ModelForm):
             "interior_number": forms.TextInput(attrs={"placeholder": "Opcional"}),
             "neighborhood": forms.TextInput(attrs={"placeholder": "Colonia"}),
             "notes": forms.Textarea(attrs={"placeholder": "Indicaciones o notas del pedido", "rows": 3}),
+            "payment_method": forms.HiddenInput(),
+            "cash_received": forms.HiddenInput(),
+            "tip_amount": forms.HiddenInput(),
         }
 
     def clean(self):
@@ -61,6 +76,10 @@ class OrderCreateForm(forms.ModelForm):
 
 
 class OrderInformationEditForm(OrderCreateForm):
+    payment_method = None
+    cash_received = None
+    tip_amount = None
+
     created_by = forms.ModelChoiceField(
         label="Empleado",
         queryset=get_user_model().objects.filter(is_active=True).order_by("username"),

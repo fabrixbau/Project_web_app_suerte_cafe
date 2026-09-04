@@ -6,6 +6,13 @@ from django.db import models
 
 class Category(models.Model):
     name = models.CharField(max_length=100, unique=True)
+    default_packaging_type = models.ForeignKey(
+        "PackagingType",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="categories",
+    )
     image = models.ImageField(
         upload_to="categories/",
         blank=True,
@@ -68,6 +75,10 @@ class Product(models.Model):
     def __str__(self):
         return self.name
 
+
+    @property
+    def effective_packaging_type_id(self):
+        return self.packaging_type_id or self.category.default_packaging_type_id
 
 class ProductOptionGroup(models.Model):
     class SelectionType(models.TextChoices):

@@ -14,23 +14,32 @@
         rel="stylesheet"
         href="{% static 'css/app.css' %}?v=20260822-8"
     >
+    <link rel="stylesheet" href="{% static 'css/workflow-2026.css' %}?v=2">
 </head>
 
 <body class="auth-page">
-    <main class="auth-card">
+    <div class="auth-shell">
+        <header class="auth-brand">
         <img
             class="auth-logo"
             src="{% static 'img/logoSuerteCafe.png' %}"
             alt="Suerte Café"
         >
+            <h1>Suerte Café</h1>
+            <p>Sistema de punto de venta</p>
+        </header>
+
+        <main class="auth-card">
 
         {% for message in messages %}
             <p>{{ message }}</p>
         {% endfor %}
 
-        {% block content %}{% endblock %}
-    </main>
+            {% block content %}{% endblock %}
+        </main>
+    </div>
     <script src="{% static 'js/modern-select.js' %}?v=3"></script>
     <script src="{% static 'js/number-input.js' %}?v=1"></script>
+    {% block extra_js %}{% endblock %}
 </body>
 </html>

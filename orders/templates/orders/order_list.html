@@ -7,7 +7,7 @@
 <div class="page-heading">
     <div>
         <p class="eyebrow">Administración</p>
-        <h1>Pedidos</h1>
+        <h1>Pedidos <span class="live-orders-indicator"><i></i> En vivo</span></h1>
     </div>
     <a class="action-link action-link-primary" href="{% url 'orders:create' %}">+ Nuevo pedido</a>
 </div>
@@ -47,7 +47,7 @@
             </tr>
         </thead>
 
-        <tbody>
+        <tbody id="orders-table-body" data-live-orders-url="{% url 'orders:live' %}">
             {% for order in page %}
                 <tr class="order-row order-row-{{ order.order_type }}" data-detail-url="{% url 'orders:detail' order.id %}" tabindex="0" aria-label="Abrir detalle del pedido {{ order.formatted_number }}">
                     <td><a class="order-detail-trigger" href="{% url 'orders:detail' order.id %}">{{ order.formatted_number }}</a></td>
@@ -112,4 +112,4 @@
 </dialog>
 {% endblock %}
 
-{% block extra_js %}<script src="{% static 'js/order-status.js' %}?v=2"></script><script src="{% static 'js/order-detail-modal.js' %}?v=1"></script>{% endblock %}
+{% block extra_js %}<script src="{% static 'js/order-status.js' %}?v=2"></script><script src="{% static 'js/order-detail-modal.js' %}?v=2"></script><script src="{% static 'js/orders-live.js' %}?v=1"></script>{% endblock %}

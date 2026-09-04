@@ -179,6 +179,7 @@ def create_order(*, user, order_type, items, customer_data=None, packaging_items
         raise ValidationError("El tipo de pedido no es válido.")
 
     customer_data = customer_data or {}
+    payment_was_supplied = bool(customer_data.get("payment_method"))
     allowed_fields = {
         "customer_name",
         "phone",
@@ -188,6 +189,9 @@ def create_order(*, user, order_type, items, customer_data=None, packaging_items
         "interior_number",
         "neighborhood",
         "notes",
+        "payment_method",
+        "cash_received",
+        "tip_amount",
     }
 
     clean_customer_data = {
@@ -254,7 +258,19 @@ def create_order(*, user, order_type, items, customer_data=None, packaging_items
 
     order.packaging_fee = replace_packaging_items(order, packaging_items or [])
     order.total = total + order.packaging_fee
-    order.save(update_fields=["packaging_fee", "total"])
+    if not payment_was_supplied:
+        order.payment_method = Order.PaymentMethod.CASH
+        order.cash_received = order.total
+    if order.payment_method == Order.PaymentMethod.CASH:
+        if order.cash_received is None:
+            raise ValidationError("Indica con cuánto efectivo paga el cliente.")
+        if order.cash_received < order.charged_total:
+            raise ValidationError("El efectivo recibido no alcanza para cubrir el pedido.")
+    else:
+        order.cash_received = None
+    order.save(update_fields=[
+        "packaging_fee", "total", "payment_method", "cash_received", "tip_amount"
+    ])
     save_delivery_customer(order)
 
     return order
@@ -388,7 +404,6 @@ def update_order(
         ]
     )
     return order
-
 
 @transaction.atomic
 def update_order_information(*, order, cleaned_data):

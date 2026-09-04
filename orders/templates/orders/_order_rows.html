@@ -1,0 +1,10 @@
+{% for order in page %}
+<tr class="order-row order-row-{{ order.order_type }}" data-order-id="{{ order.id }}" data-detail-url="{% url 'orders:detail' order.id %}" tabindex="0">
+  <td><a class="order-detail-trigger" href="{% url 'orders:detail' order.id %}">{{ order.formatted_number }}</a></td>
+  <td><span class="order-datetime">{{ order.operating_date|date:"d M" }} <b>{{ order.created_at|date:"H:i" }}</b></span></td>
+  <td>{{ order.customer_name|default:"Sin nombre" }}</td><td>{{ order.get_order_type_display }}</td>
+  <td>{% if order.order_type == "eat_in" %}<span class="order-reference"><small>Mesa</small>{{ order.table_reference|default:"Sin referencia" }}</span>{% elif order.order_type == "delivery" %}<span class="order-reference"><small>Entrega</small>{{ order.street|default:"Sin calle" }}{% if order.exterior_number %} {{ order.exterior_number }}{% endif %}</span>{% else %}<span class="order-reference"><small>Recoger</small>En sucursal</span>{% endif %}</td>
+  <td>${{ order.total }}</td><td>{{ order.employee_name_snapshot }}</td>
+  <td><form method="post" action="{% url 'orders:status_update' order.id %}" class="status-update-form">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><input type="hidden" name="cycle" value="1"><button type="submit" class="status-cycle-button status-{{ order.status }}" title="Cambiar al siguiente estado">{{ order.get_status_display }} <span aria-hidden="true">→</span></button></form></td>
+</tr>
+{% empty %}<tr><td colspan="8">No existen pedidos para estos filtros.</td></tr>{% endfor %}

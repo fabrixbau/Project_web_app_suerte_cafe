@@ -11,6 +11,14 @@
 </div>
 
 <div class="order-detail-layout">
+    <section class="kitchen-destination kitchen-destination-{{ order.order_type }}">
+        <div>
+            <span>{% if order.order_type == "eat_in" %}Mesa{% elif order.order_type == "delivery" %}Dirección de entrega{% else %}Recoger en sucursal{% endif %}</span>
+            <strong>{% if order.order_type == "eat_in" %}{{ order.table_reference|default:"Sin referencia" }}{% elif order.order_type == "delivery" %}{{ order.street|default:"Sin calle" }} {{ order.exterior_number }}{% if order.interior_number %}, int. {{ order.interior_number }}{% endif %}{% else %}Pedido para recoger{% endif %}</strong>
+            {% if order.order_type == "delivery" and order.neighborhood %}<small>Col. {{ order.neighborhood }}</small>{% endif %}
+        </div>
+        <div><span>Cliente</span><strong>{{ order.customer_name|default:"Sin nombre" }}</strong>{% if order.phone %}<small>{{ order.phone }}</small>{% endif %}</div>
+    </section>
     <div class="order-detail-information">
         <section class="detail-card">
             <header class="detail-card-heading">
@@ -89,6 +97,10 @@
         <div class="detail-total">
             <span>Total</span>
             <strong>${{ order.total }}</strong>
+        </div>
+        <div class="detail-payment">
+            <p><span>Pago</span><strong>{{ order.get_payment_method_display }}</strong></p>
+            {% if order.payment_method == "cash" %}<p><span>Recibido</span><strong>{% if order.cash_received %}${{ order.cash_received }}{% else %}No registrado{% endif %}</strong></p><p><span>Propina</span><strong>${{ order.tip_amount }}</strong></p><p><span>Cambio</span><strong>${{ order.change_due }}</strong></p><p><span>Total cobrado</span><strong>${{ order.charged_total }}</strong></p>{% else %}<p><span>Propina</span><strong>${{ order.tip_amount }}</strong></p><p><span>Total cobrado</span><strong>${{ order.charged_total }}</strong></p>{% endif %}
         </div>
     </section>
 </div>

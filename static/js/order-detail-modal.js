@@ -6,6 +6,7 @@
     const title = modal.querySelector("#order-detail-modal-title");
     const loadingMarkup = '<div class="order-detail-loading"><span></span><p>Cargando pedido…</p></div>';
     let activeRequest = null;
+    let activeDetail = null;
 
     function closeModal() {
         if (activeRequest) activeRequest.abort();
@@ -16,6 +17,7 @@
         if (activeRequest) activeRequest.abort();
         activeRequest = new AbortController();
         title.textContent = `Pedido ${link.textContent.trim()}`;
+        activeDetail = {href: link.href, textContent: link.textContent};
         content.innerHTML = loadingMarkup;
         modal.showModal();
 
@@ -67,5 +69,8 @@
 
     modal.addEventListener("click", (event) => {
         if (event.target === modal) closeModal();
+    });
+    document.addEventListener("orders-live-updated", () => {
+        if (modal.open && activeDetail && !activeRequest) openDetail(activeDetail);
     });
 })();

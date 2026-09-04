@@ -5,7 +5,13 @@
     <div class="page-heading"><div><p class="eyebrow">Menú</p><h1>{{ title }}</h1></div></div>
     <form method="post" enctype="multipart/form-data" class="modern-form form-card">
         {% csrf_token %} {{ form.non_field_errors }}
-        {% for field in form %}<div class="form-field">{{ field.label_tag }} {{ field }} {{ field.errors }}</div>{% endfor %}
+        {% for field in form %}
+            <div class="form-field">{{ field.label_tag }} {{ field }} {{ field.errors }}
+                {% if field.name == "default_packaging_type" %}
+                    <small>Todos los productos de esta categoría usarán este envase, salvo que el producto tenga uno específico.</small>
+                {% endif %}
+            </div>
+        {% endfor %}
         <div class="form-actions"><button type="submit">Guardar categoría</button><a class="action-link action-link-secondary" href="{% url 'menu:configuration' %}?tab=categories">Cancelar</a></div>
     </form>
 </div>
