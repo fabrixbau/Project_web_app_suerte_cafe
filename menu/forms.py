@@ -39,10 +39,12 @@ class CategoryForm(forms.ModelForm):
         model = Category
         fields = [
             "name",
+            "preparation_station",
             "default_packaging_type",
         ]
         labels = {
             "name": "Nombre",
+            "preparation_station": "Barra de preparación",
             "default_packaging_type": "Envase automático de la categoría",
         }
 
@@ -76,6 +78,7 @@ class ProductForm(forms.ModelForm):
             "image",
             "description",
             "is_available",
+            "preparation_station",
             "packaging_type",
         ]
         labels = {
@@ -85,6 +88,7 @@ class ProductForm(forms.ModelForm):
             "image": "Imagen",
             "description": "Descripción",
             "is_available": "Disponible",
+            "preparation_station": "Barra de preparación (opcional)",
             "packaging_type": "Envase específico (opcional)",
         }
         widgets = {

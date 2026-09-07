@@ -3,6 +3,7 @@
 {% block title %}Reportes | Suerte Café{% endblock %}
 
 {% block content %}
+<nav class="report-section-tabs"><a class="is-active" href="{% url 'orders:reports' %}">Ventas</a><a href="{% url 'orders:reconciliation' %}">Caja y conciliación</a></nav>
 <h1>Reportes de ventas</h1>
 <p>Periodo: {{ date_from|date:"d/m/Y" }} al {{ date_to|date:"d/m/Y" }}</p>
 
@@ -72,7 +73,7 @@
 </div>
 
 <h2>Detalle de pedidos</h2>
-<table>
+<table class="report-detail-table">
     <thead>
         <tr><th>Fecha</th><th>Hora</th><th>Pedido</th><th>Cliente</th><th>Tipo</th><th>Artículos</th><th>Total</th><th>Estado</th><th>Empleado</th></tr>
     </thead>

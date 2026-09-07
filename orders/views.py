@@ -14,18 +14,23 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.dateparse import parse_date
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
 from menu.models import BusinessSettings, Category, PackagingType, Product, ProductOption
+from accounts.permissions import administrator_required
 
 from .forms import (
     OrderCreateForm,
+    DeliveryCustomerForm,
+    DailyReconciliationForm,
+    ExpenseForm,
     OrderFilterForm,
     OrderInformationEditForm,
     SalesReportFilterForm,
 )
-from .models import DeliveryCustomer, Order, OrderItem, normalize_customer_name
+from .models import DailyReconciliation, DeliveryCustomer, Expense, Order, OrderItem, normalize_customer_name
 from .services import create_order, update_complete_order
 
 
@@ -340,7 +345,22 @@ def order_status_update(request, order_id):
             messages.error(request, error_message)
         else:
             order.status = new_status
-            order.save(update_fields=["status", "updated_at"])
+            update_fields = ["status", "updated_at"]
+            if new_status in {Order.Status.COMPLETED, Order.Status.IN_PROGRESS}:
+                bar_status = (
+                    Order.BarStatus.COMPLETED
+                    if new_status == Order.Status.COMPLETED
+                    else Order.BarStatus.PENDING
+                )
+                stations = set(order.items.values_list("preparation_station_snapshot", flat=True))
+                if Category.PreparationStation.COLD in stations:
+                    order.cold_bar_status = bar_status
+                    update_fields.append("cold_bar_status")
+                if Category.PreparationStation.HOT in stations:
+                    order.hot_bar_status = bar_status
+                    update_fields.append("hot_bar_status")
+                order.items.update(preparation_status=bar_status)
+            order.save(update_fields=update_fields)
 
     if new_status in Order.Status.values:
         if is_async:
@@ -576,7 +596,234 @@ def orders_live(request):
 
 
 @login_required
-@permission_required("orders.view_order", raise_exception=True)
+def kitchen_view(request):
+    context = build_kitchen_context(request.GET.get("filter"))
+    return render(request, "orders/kitchen_view.html", context)
+
+
+def build_kitchen_context(filter_mode=None):
+    filter_mode = filter_mode if filter_mode in {"cold", "hot", "two_players"} else "two_players"
+    orders = list(
+        Order.objects.prefetch_related("items").filter(
+            operating_date=timezone.localdate(),
+            status__in=[Order.Status.IN_PROGRESS, Order.Status.COMPLETED],
+        ).order_by("-created_at")
+    )
+    orders.sort(key=lambda order: order.status == Order.Status.COMPLETED)
+    rows = []
+    for order in orders:
+        items = list(order.items.all())
+        cold_items = [item for item in items if item.preparation_station_snapshot == Category.PreparationStation.COLD]
+        hot_items = [item for item in items if item.preparation_station_snapshot == Category.PreparationStation.HOT]
+        rows.append({
+            "order": order,
+            "cold_items": cold_items,
+            "hot_items": hot_items,
+            "cold_quantity": sum(item.quantity for item in cold_items),
+            "hot_quantity": sum(item.quantity for item in hot_items),
+        })
+    return {
+        "filter_mode": filter_mode,
+        "order_rows": rows,
+        "cold_rows": [row for row in rows if row["cold_items"]],
+        "hot_rows": [row for row in rows if row["hot_items"]],
+        "cold_count": sum(bool(row["cold_items"]) for row in rows),
+        "hot_count": sum(bool(row["hot_items"]) for row in rows),
+    }
+
+
+@login_required
+def kitchen_live(request):
+    context = build_kitchen_context(request.GET.get("filter"))
+    return JsonResponse({
+        "html": render_to_string("orders/_kitchen_board.html", context, request=request)
+    })
+
+
+@login_required
+@require_POST
+def update_bar_status(request, order_id):
+    """Update the status of a specific bar (cold or hot) for an order."""
+    try:
+        data = json.loads(request.body)
+        bar = data.get("bar")  # "cold" or "hot"
+        status = data.get("status")  # "pending" or "completed"
+        
+        if bar not in ["cold", "hot"]:
+            return JsonResponse({"success": False, "error": "Barra no válida"}, status=400)
+        
+        if status not in Order.BarStatus.values:
+            return JsonResponse({"success": False, "error": "Estado no válido"}, status=400)
+        
+        with transaction.atomic():
+            order = get_object_or_404(Order.objects.select_for_update(), id=order_id)
+            station_items = order.items.filter(preparation_station_snapshot=bar)
+            if not station_items.exists():
+                return JsonResponse(
+                    {"success": False, "error": "Esta orden no tiene productos para esa barra."},
+                    status=400,
+                )
+            
+            if bar == "cold":
+                order.cold_bar_status = status
+            else:
+                order.hot_bar_status = status
+
+            order.save(update_fields=["cold_bar_status", "hot_bar_status", "updated_at"])
+            station_items.update(preparation_status=status)
+            
+            # Update overall status based on bar statuses
+            order.update_overall_status()
+        
+        return JsonResponse({
+            "success": True,
+            "cold_bar_status": order.get_cold_bar_status_display(),
+            "hot_bar_status": order.get_hot_bar_status_display(),
+            "overall_status": order.get_status_display(),
+        })
+    
+    except json.JSONDecodeError:
+        return JsonResponse({"success": False, "error": "Datos inválidos"}, status=400)
+    except Exception:
+        return JsonResponse({"success": False, "error": "No fue posible actualizar la barra."}, status=500)
+
+
+@administrator_required
+def customer_list(request):
+    search = request.GET.get("q", "").strip()
+    customers = DeliveryCustomer.objects.all()
+    if search:
+        customers = customers.filter(
+            Q(name__icontains=search)
+            | Q(phone__icontains=search)
+            | Q(street__icontains=search)
+            | Q(neighborhood__icontains=search)
+        )
+    page = Paginator(customers.order_by("name"), 24).get_page(request.GET.get("page"))
+    return render(request, "orders/customer_list.html", {"page": page, "search": search})
+
+
+@administrator_required
+def customer_form(request, customer_id=None):
+    customer = get_object_or_404(DeliveryCustomer, id=customer_id) if customer_id else None
+    form = DeliveryCustomerForm(request.POST or None, instance=customer)
+    if request.method == "POST" and form.is_valid():
+        saved_customer = form.save()
+        messages.success(request, f"El registro de {saved_customer.name} fue guardado.")
+        return redirect("orders:customer_list")
+    return render(
+        request,
+        "orders/customer_form.html",
+        {"form": form, "customer": customer},
+    )
+
+
+@administrator_required
+def customer_delete(request, customer_id):
+    customer = get_object_or_404(DeliveryCustomer, id=customer_id)
+    if request.method == "POST":
+        name = customer.name
+        customer.delete()
+        messages.success(request, f"El registro de {name} fue eliminado.")
+        return redirect("orders:customer_list")
+    return render(request, "orders/customer_confirm_delete.html", {"customer": customer})
+
+
+@administrator_required
+def reconciliation_report(request):
+    selected_date = parse_date(request.GET.get("date", "")) or timezone.localdate()
+    reconciliation, _ = DailyReconciliation.objects.get_or_create(operating_date=selected_date)
+
+    reconciliation_form = DailyReconciliationForm(instance=reconciliation)
+    expense_form = ExpenseForm(initial={"operating_date": selected_date})
+    form_type = request.POST.get("form_type")
+    if request.method == "POST" and form_type == "reconciliation":
+        reconciliation_form = DailyReconciliationForm(request.POST, instance=reconciliation)
+        if reconciliation_form.is_valid():
+            saved = reconciliation_form.save(commit=False)
+            saved.operating_date = selected_date
+            saved.updated_by = request.user
+            saved.save()
+            messages.success(request, "La apertura y el cierre fueron guardados.")
+            return redirect(f"{reverse('orders:reconciliation')}?date={selected_date.isoformat()}")
+    elif request.method == "POST" and form_type == "expense":
+        expense_form = ExpenseForm(request.POST)
+        if expense_form.is_valid():
+            expense = expense_form.save(commit=False)
+            expense.operating_date = selected_date
+            expense.created_by = request.user
+            expense.save()
+            messages.success(request, "El gasto fue registrado.")
+            return redirect(f"{reverse('orders:reconciliation')}?date={selected_date.isoformat()}")
+
+    completed_orders = Order.objects.filter(
+        operating_date=selected_date,
+        status=Order.Status.COMPLETED,
+    )
+    expenses = Expense.objects.filter(operating_date=selected_date).select_related("created_by")
+    zero = Decimal("0.00")
+    money_field = DecimalField(max_digits=14, decimal_places=2)
+
+    def order_totals(method):
+        return completed_orders.filter(payment_method=method).aggregate(
+            sales=Coalesce(Sum("total"), zero, output_field=money_field),
+            tips=Coalesce(Sum("tip_amount"), zero, output_field=money_field),
+        )
+
+    def expense_total(method):
+        return expenses.filter(payment_method=method).aggregate(
+            total=Coalesce(Sum("amount"), zero, output_field=money_field)
+        )["total"]
+
+    cash = order_totals(Order.PaymentMethod.CASH)
+    card = order_totals(Order.PaymentMethod.CARD)
+    transfer = order_totals(Order.PaymentMethod.TRANSFER)
+    cash_expenses = expense_total(Expense.PaymentMethod.CASH)
+    card_expenses = expense_total(Expense.PaymentMethod.CARD)
+    transfer_expenses = expense_total(Expense.PaymentMethod.TRANSFER)
+    total_sales = cash["sales"] + card["sales"] + transfer["sales"]
+    total_tips = cash["tips"] + card["tips"] + transfer["tips"]
+    total_expenses = cash_expenses + card_expenses + transfer_expenses
+    expected = {
+        "cash": reconciliation.opening_cash + cash["sales"] + cash["tips"] - cash_expenses,
+        "card": card["sales"] + card["tips"] - card_expenses,
+        "transfer": transfer["sales"] + transfer["tips"] - transfer_expenses,
+    }
+    declared = {
+        "cash": reconciliation.closing_cash,
+        "card": reconciliation.closing_card,
+        "transfer": reconciliation.closing_transfer,
+    }
+    differences = {
+        key: (declared[key] - expected[key]) if declared[key] is not None else None
+        for key in expected
+    }
+    return render(request, "orders/reconciliation_report.html", {
+        "selected_date": selected_date,
+        "reconciliation": reconciliation,
+        "reconciliation_form": reconciliation_form,
+        "expense_form": expense_form,
+        "expenses": expenses,
+        "cash": cash, "card": card, "transfer": transfer,
+        "cash_expenses": cash_expenses, "card_expenses": card_expenses,
+        "transfer_expenses": transfer_expenses,
+        "total_sales": total_sales, "total_tips": total_tips,
+        "total_expenses": total_expenses, "net_profit": total_sales - total_expenses,
+        "expected": expected, "differences": differences,
+    })
+
+
+@administrator_required
+@require_POST
+def expense_delete(request, expense_id):
+    expense = get_object_or_404(Expense, id=expense_id)
+    selected_date = expense.operating_date
+    expense.delete()
+    messages.success(request, "El gasto fue eliminado.")
+    return redirect(f"{reverse('orders:reconciliation')}?date={selected_date.isoformat()}")
+
+
+@administrator_required
 def sales_report(request):
     filter_form = SalesReportFilterForm(request.GET or None)
     today = timezone.localdate()

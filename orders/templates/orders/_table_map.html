@@ -1,0 +1,23 @@
+<div class="table-map-control" data-table-map>
+    {{ table_field.as_hidden }}
+    <div class="table-map-heading">
+        <div><strong>Selecciona una mesa</strong><span>Ubícala en el mapa del café</span></div>
+        <button type="button" class="table-map-clear" data-table-clear>Sin mesa</button>
+    </div>
+    <div class="cafe-table-map" role="group" aria-label="Mapa de mesas">
+        <span class="table-map-zone">Distribución del café</span>
+        <button type="button" class="cafe-table table-A2" data-table-number="A2">A2</button>
+        <button type="button" class="cafe-table table-A1" data-table-number="A1">A1</button>
+        <button type="button" class="cafe-table table-A3" data-table-number="A3">A3</button>
+        <button type="button" class="cafe-table table-21" data-table-number="21">21</button>
+        <button type="button" class="cafe-table table-22" data-table-number="22">22</button>
+        <button type="button" class="cafe-table table-23" data-table-number="23">23</button>
+        <button type="button" class="cafe-table table-24" data-table-number="24">24</button>
+        <button type="button" class="cafe-table cafe-table-large table-6" data-table-number="6">6</button>
+        <button type="button" class="cafe-table cafe-table-round table-0" data-table-number="0">0</button>
+        <button type="button" class="cafe-table table-42" data-table-number="42">42</button>
+        <button type="button" class="cafe-table table-41" data-table-number="41">41</button>
+    </div>
+    <p class="table-map-selection" aria-live="polite">Mesa seleccionada: <strong data-selected-table>Ninguna</strong></p>
+    {{ table_field.errors }}
+</div>

@@ -5,7 +5,16 @@ from django.db import models
 
 
 class Category(models.Model):
+    class PreparationStation(models.TextChoices):
+        COLD = "cold", "Barra fría"
+        HOT = "hot", "Barra caliente"
+
     name = models.CharField(max_length=100, unique=True)
+    preparation_station = models.CharField(
+        max_length=10,
+        choices=PreparationStation.choices,
+        default=PreparationStation.HOT,
+    )
     default_packaging_type = models.ForeignKey(
         "PackagingType",
         on_delete=models.SET_NULL,
@@ -61,6 +70,13 @@ class Product(models.Model):
     )
     description = models.TextField(blank=True)
     is_available = models.BooleanField(default=True)
+    preparation_station = models.CharField(
+        max_length=10,
+        choices=Category.PreparationStation.choices,
+        blank=True,
+        default="",
+        help_text="Déjalo vacío para utilizar la barra configurada en la categoría.",
+    )
     packaging_type = models.ForeignKey(
         PackagingType,
         on_delete=models.SET_NULL,
@@ -79,6 +95,10 @@ class Product(models.Model):
     @property
     def effective_packaging_type_id(self):
         return self.packaging_type_id or self.category.default_packaging_type_id
+
+    @property
+    def effective_preparation_station(self):
+        return self.preparation_station or self.category.preparation_station
 
 class ProductOptionGroup(models.Model):
     class SelectionType(models.TextChoices):

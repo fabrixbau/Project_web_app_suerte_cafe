@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}{% if customer %}Editar cliente{% else %}Nuevo cliente{% endif %} | Suerte Café{% endblock %}
+{% block content %}
+<div class="form-page customer-form-page">
+    <div class="page-heading"><div><p class="eyebrow">Clientes</p><h1>{% if customer %}Editar {{ customer.name }}{% else %}Nuevo cliente{% endif %}</h1><p>Todos los campos excepto el nombre son opcionales.</p></div></div>
+    <form method="post" class="modern-form form-card customer-modern-form" novalidate>{% csrf_token %}{{ form.non_field_errors }}
+        {% for field in form %}<div class="form-field field-{{ field.name }}">{{ field.label_tag }}{{ field }}{{ field.errors }}</div>{% endfor %}
+        <div class="form-actions"><button type="submit">Guardar cliente</button><a class="action-link action-link-secondary" href="{% url 'orders:customer_list' %}">Cancelar</a></div>
+    </form>
+</div>
+{% endblock %}

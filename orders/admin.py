@@ -1,8 +1,30 @@
 from django.contrib import admin
 
-from .models import DeliveryCustomer, Order, OrderItem, OrderPackagingItem
+from .models import (
+    DailyReconciliation,
+    DeliveryCustomer,
+    Expense,
+    Order,
+    OrderItem,
+    OrderPackagingItem,
+)
 
 admin.site.register(OrderPackagingItem)
+
+
+@admin.register(DailyReconciliation)
+class DailyReconciliationAdmin(admin.ModelAdmin):
+    list_display = ("operating_date", "opening_cash", "closing_cash", "closing_card", "closing_transfer", "updated_by")
+    list_filter = ("operating_date",)
+    readonly_fields = ("created_at", "updated_at")
+
+
+@admin.register(Expense)
+class ExpenseAdmin(admin.ModelAdmin):
+    list_display = ("operating_date", "concept", "amount", "payment_method", "created_by", "created_at")
+    list_filter = ("operating_date", "payment_method")
+    search_fields = ("concept",)
+    readonly_fields = ("created_at",)
 
 
 @admin.register(DeliveryCustomer)

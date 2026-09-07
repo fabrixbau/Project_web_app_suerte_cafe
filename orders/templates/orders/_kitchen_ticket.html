@@ -1,0 +1,14 @@
+<article class="kitchen-ticket status-{{ station_status }}" data-kitchen-ticket>
+    <header><div><strong>{{ order.formatted_number }}</strong><time>{{ order.created_at|date:"H:i" }}</time></div><span class="kitchen-status">{{ station_status_label }}</span></header>
+    <div class="kitchen-destination-line">
+        {% if order.order_type == "eat_in" %}<small>Mesa</small><strong>{{ order.table_reference|default:"Sin mesa" }}</strong>
+        {% elif order.order_type == "delivery" %}<small>Entrega</small><strong>{{ order.street|default:"Dirección pendiente" }}{% if order.exterior_number %} {{ order.exterior_number }}{% endif %}</strong>
+        {% else %}<small>Recoger</small><strong>En sucursal</strong>{% endif %}
+    </div>
+    <div class="kitchen-ticket-meta"><span>{{ order.customer_name|default:"Sin nombre" }}</span><span>{{ quantity }} producto{{ quantity|pluralize }}</span></div>
+    <div class="kitchen-items">
+        {% for item in items %}<section class="kitchen-item {% if item.is_customized %}is-customized{% endif %}"><b>{{ item.quantity }}</b><div><strong>{{ item.product_name_snapshot }}</strong>{% if item.is_customized %}<span class="modified-label">Modificado</span>{% for group in item.configuration_snapshot %}<small><b>{{ group.group }}:</b> {% for option in group.options %}{{ option.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</small>{% endfor %}{% endif %}</div></section>{% endfor %}
+    </div>
+    {% if order.notes %}<p class="kitchen-notes"><strong>Nota:</strong> {{ order.notes }}</p>{% endif %}
+    <footer><span>Total de mesa <strong>${{ order.total }}</strong></span><button type="button" data-bar-status-url="{% url 'orders:update_bar_status' order.id %}" data-station="{{ station }}" data-next-status="{% if station_status == 'completed' %}pending{% else %}completed{% endif %}">{% if station_status == "completed" %}Reabrir barra{% else %}Marcar terminada{% endif %}</button></footer>
+</article>

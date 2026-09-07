@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Clientes | Suerte Café{% endblock %}
+{% block content %}
+<div class="page-heading customer-page-heading">
+    <div><p class="eyebrow">Administración</p><h1>Clientes</h1><p>Datos guardados para entregas y pedidos para recoger.</p></div>
+    <a class="action-link action-link-primary" href="{% url 'orders:customer_create' %}">+ Nuevo cliente</a>
+</div>
+<form method="get" class="customer-search-panel">
+    <label for="customer-search">Buscar cliente</label>
+    <div><input id="customer-search" name="q" value="{{ search }}" placeholder="Nombre, teléfono, calle o colonia"><button type="submit">Buscar</button>{% if search %}<a href="{% url 'orders:customer_list' %}">Limpiar</a>{% endif %}</div>
+</form>
+<section class="customer-record-grid">
+    {% for customer in page %}
+    <article class="customer-record-card">
+        <header><span>{{ customer.name|slice:":1"|upper }}</span><div><h2>{{ customer.name }}</h2><small>Actualizado {{ customer.updated_at|date:"d M, H:i" }}</small></div></header>
+        <dl>
+            <div><dt>Teléfono</dt><dd>{{ customer.phone|default:"Sin teléfono" }}</dd></div>
+            <div class="customer-address"><dt>Dirección</dt><dd>{% if customer.street %}{{ customer.street }}{% if customer.exterior_number %} {{ customer.exterior_number }}{% endif %}{% if customer.interior_number %}, Int. {{ customer.interior_number }}{% endif %}{% else %}Sin dirección{% endif %}</dd></div>
+            <div><dt>Colonia</dt><dd>{{ customer.neighborhood|default:"Sin colonia" }}</dd></div>
+            {% if customer.notes %}<div class="customer-notes"><dt>Notas</dt><dd>{{ customer.notes }}</dd></div>{% endif %}
+        </dl>
+        <footer><a class="small-action" href="{% url 'orders:customer_edit' customer.id %}">Editar</a><a class="small-action destructive" href="{% url 'orders:customer_delete' customer.id %}">Eliminar</a></footer>
+    </article>
+    {% empty %}<div class="customer-empty"><strong>No encontramos clientes</strong><span>Los clientes de entrega se guardarán automáticamente o puedes crear uno.</span></div>{% endfor %}
+</section>
+{% if page.paginator.num_pages > 1 %}<nav class="pagination">{% if page.has_previous %}<a href="?q={{ search|urlencode }}&page={{ page.previous_page_number }}">Anterior</a>{% endif %}<span>Página {{ page.number }} de {{ page.paginator.num_pages }}</span>{% if page.has_next %}<a href="?q={{ search|urlencode }}&page={{ page.next_page_number }}">Siguiente</a>{% endif %}</nav>{% endif %}
+{% endblock %}

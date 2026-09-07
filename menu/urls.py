@@ -1,5 +1,7 @@
 from django.urls import path
 
+from accounts.permissions import administrator_required
+
 from . import views
 
 app_name = "menu"
@@ -59,3 +61,7 @@ urlpatterns = [
         name="product_delete",
     ),
 ]
+
+# Todo el módulo de menú es exclusivo para administradores, incluso por URL directa.
+for pattern in urlpatterns:
+    pattern._callback = administrator_required(pattern.callback)

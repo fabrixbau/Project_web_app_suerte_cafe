@@ -113,7 +113,11 @@
     customCash?.addEventListener("input", () => { focusCheckout(false); refreshPayment(); });
     customTip?.addEventListener("input", () => { focusCheckout(cashEditorCollapsed); refreshPayment(); });
     document.addEventListener("click", (event) => {
-        if (event.target.closest(".order-builder .category-card, .order-builder .product-card button, .order-builder .product-card input, .order-type-option, .current-order-items button, #packaging-editor button")) {
+        const clickedPaymentArea = event.target.closest(".payment-panel, [data-cash-payment], [data-tip-payment]");
+        if (form.classList.contains("is-checkout-focus") && !clickedPaymentArea) {
+            focusMenu();
+        }
+        if (event.target.closest(".order-builder .category-card, .order-builder .product-card, .order-type-option, [data-table-map] [data-table-number], [data-table-clear], .current-order-items button, #packaging-editor button")) {
             focusMenu();
         }
     }, true);

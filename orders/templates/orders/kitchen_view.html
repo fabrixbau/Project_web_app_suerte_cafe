@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% load static %}
+{% block body_class %}kitchen-page{% endblock %}
+{% block title %}Cocina | Suerte Café{% endblock %}
+{% block content %}
+<main class="kitchen-screen">
+    <header class="kitchen-header">
+        <div><p class="eyebrow">Preparación en vivo</p><h1>Cocina <span class="kitchen-live"><i></i> Actualización automática</span></h1></div>
+        <nav class="kitchen-modes" aria-label="Vista de cocina">
+            <a href="?filter=cold" class="{% if filter_mode == 'cold' %}is-active{% endif %}"><span class="mode-mark mode-cold"></span><strong>Barra fría</strong><small>{{ cold_count }} pedidos</small></a>
+            <a href="?filter=hot" class="{% if filter_mode == 'hot' %}is-active{% endif %}"><span class="mode-mark mode-hot"></span><strong>Barra caliente</strong><small>{{ hot_count }} pedidos</small></a>
+            <a href="?filter=two_players" class="{% if filter_mode == 'two_players' %}is-active{% endif %}"><span class="mode-mark mode-pair"></span><strong>2 players</strong><small>Ambas barras</small></a>
+        </nav>
+    </header>
+    <section id="kitchen-board" data-live-url="{% url 'orders:kitchen_live' %}">{% include "orders/_kitchen_board.html" %}</section>
+</main>
+{% endblock %}
+{% block extra_js %}<script src="{% static 'js/kitchen-board.js' %}?v=1"></script>{% endblock %}

@@ -71,10 +71,8 @@
                     {{ form.phone.errors }}
                 </div>
 
-                <div id="eat-in-fields" class="field-group table-field">
-                    {{ form.table_reference.label_tag }}
-                    {{ form.table_reference }}
-                    {{ form.table_reference.errors }}
+                <div id="eat-in-fields" class="field-group table-field table-map-field">
+                    {% include "orders/_table_map.html" with table_field=form.table_reference %}
                 </div>
 
                 <div id="delivery-fields" class="delivery-fields delivery-address-card">
@@ -109,7 +107,7 @@
             </div>
         </section>
 
-        <h2>Selecciona productos</h2>
+        <h2 id="product-selection">Selecciona productos</h2>
         {% regroup products by category as category_list %}
 
         <div class="category-selector" aria-label="Categorías del menú">
@@ -135,12 +133,13 @@
                 <div class="product-grid">
                     {% for product in category.list %}
                         <article
-                            class="product-card"
+                            class="product-card quick-add-card"
                             data-name="{{ product.name }}"
                             data-price="{{ product.standard_price|unlocalize }}"
                             data-product-id="{{ product.id }}"
                             data-has-options="{% if product.has_options %}true{% else %}false{% endif %}"
                             data-packaging-type="{{ product.effective_packaging_type_id|default:'' }}"
+                            title="Haz clic en la tarjeta para agregar una unidad"
                         >
                             {% if product.image %}
                                 <img class="product-card-image" src="{{ product.image.url }}" alt="{{ product.name }}" loading="lazy" decoding="async">
@@ -202,8 +201,33 @@
         </section>
         <div class="current-order-heading">
             <h2>Pedido actual</h2>
-            <span><strong id="total-items">0</strong> artículos</span>
+            <div class="current-order-heading-actions">
+                <button type="button" class="order-comment-button" data-order-comment-toggle>
+                    <span aria-hidden="true">+</span>
+                    <strong data-order-comment-label>Agregar nota</strong>
+                </button>
+                <button
+                    type="button"
+                    class="clear-order-draft-button"
+                    data-clear-order-draft
+                    title="Elimina productos y datos de este borrador"
+                >
+                    <span aria-hidden="true">&times;</span>
+                    <strong>Vaciar pedido</strong>
+                </button>
+                <span class="current-order-count"><strong id="total-items">0</strong> artículos</span>
+            </div>
         </div>
+
+        <section class="order-comment-panel" data-order-comment-panel hidden>
+            <div>
+                <strong>Nota general del pedido</strong>
+                <button type="button" data-order-comment-close aria-label="Cerrar">&times;</button>
+            </div>
+            <textarea data-order-comment-text rows="3" maxlength="1000" placeholder="Ej. Entregar todo junto o preparar sin prisa"></textarea>
+            <small>Esta nota será visible en la comanda de cocina.</small>
+            <button type="button" data-order-comment-save>Guardar nota</button>
+        </section>
 
         <div id="current-order-items" class="current-order-items">
             <p>No hay productos seleccionados.</p>
@@ -222,6 +246,7 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="{% static 'js/order-draft.js' %}?v=1"></script>
 <script>
     const orderType = document.querySelector("#id_order_type");
     const orderTypeButtons = document.querySelectorAll(".order-type-option");
@@ -275,6 +300,7 @@
         const currentValue = Number.parseInt(input.value, 10) || 0;
         input.value = Math.max(0, currentValue + difference);
         updateOrderSummary();
+        document.dispatchEvent(new CustomEvent("order-menu-focus"));
     }
 
     function createSummaryItem(card, input, quantity, subtotal) {
@@ -359,6 +385,13 @@
             if ((Number.parseInt(input.value, 10) || 0) < 0) input.value = 0;
             updateOrderSummary();
         });
+        card.addEventListener("click", (event) => {
+            if (event.target.closest("button, input, a")) return;
+            changeQuantity(input, 1);
+            card.classList.remove("was-added");
+            window.requestAnimationFrame(() => card.classList.add("was-added"));
+            window.setTimeout(() => card.classList.remove("was-added"), 280);
+        });
     });
     window.refreshBaseOrderSummary = updateOrderSummary;
     updateOrderSummary();
@@ -366,5 +399,8 @@
 <script src="{% static 'js/delivery-customer.js' %}?v=1"></script>
 <script src="{% static 'js/product-customizer.js' %}?v=2"></script>
 <script src="{% static 'js/packaging-charge.js' %}?v=2"></script>
-<script src="{% static 'js/payment.js' %}?v=1"></script>
+<script src="{% static 'js/payment.js' %}?v=3"></script>
+<script src="{% static 'js/table-map.js' %}?v=2"></script>
+<script src="{% static 'js/order-flow-focus.js' %}?v=2"></script>
+<script src="{% static 'js/order-comment.js' %}?v=1"></script>
 {% endblock %}

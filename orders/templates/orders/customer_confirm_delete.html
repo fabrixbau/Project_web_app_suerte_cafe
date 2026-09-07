@@ -1,0 +1,3 @@
+{% extends "base.html" %}
+{% block title %}Eliminar cliente | Suerte Café{% endblock %}
+{% block content %}<div class="confirm-card"><p class="eyebrow">Clientes</p><h1>Eliminar {{ customer.name }}</h1><p>Se eliminarán sus datos guardados. Las órdenes anteriores conservarán su información.</p><form method="post">{% csrf_token %}<button type="submit" class="danger-button">Eliminar cliente</button><a class="action-link action-link-secondary" href="{% url 'orders:customer_list' %}">Cancelar</a></form></div>{% endblock %}

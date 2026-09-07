@@ -12,6 +12,7 @@
             const palette = localStorage.getItem("suerteCafePalette") || "coffee";
             document.documentElement.dataset.theme = theme;
             document.documentElement.dataset.palette = palette;
+            document.documentElement.dataset.sidebar = localStorage.getItem("suerteCafeSidebar") || "expanded";
         })();
     </script>
 
@@ -23,18 +24,18 @@
         rel="stylesheet"
         href="{% static 'css/app.css' %}?v=20260822-8"
     >
-    <link rel="stylesheet" href="{% static 'css/workflow-2026.css' %}?v=1">
+    <link rel="stylesheet" href="{% static 'css/workflow-2026.css' %}?v=15">
 </head>
 
-<body>
+<body class="{% block body_class %}{% endblock %}">
     <div class="app-layout">
         <aside class="sidebar">
-            <a href="{% url 'home' %}" class="brand">
+            <button type="button" class="brand sidebar-toggle" data-sidebar-toggle aria-label="Plegar barra lateral" aria-expanded="true">
                 <img
                     src="{% static 'img/logoSuerteCafe.png' %}"
                     alt="Suerte Café"
                 >
-            </a>
+            </button>
 
             <nav>
                 <a
@@ -47,12 +48,21 @@
 
                 <a
                     href="{% url 'orders:list' %}"
-                    class="{% if request.resolver_match.namespace == 'orders' and request.resolver_match.url_name != 'create' and request.resolver_match.url_name != 'reports' %}active{% endif %}"
+                    class="{% if request.resolver_match.namespace == 'orders' and request.resolver_match.url_name != 'create' and request.resolver_match.url_name != 'reports' and request.resolver_match.url_name != 'kitchen' %}active{% endif %}"
                 >
                     <img class="nav-icon" src="{% static 'img/ui/icons/clipboard-list.svg' %}" alt="">
                     Pedidos
                 </a>
 
+                <a
+                    href="{% url 'orders:kitchen' %}"
+                    class="{% if request.resolver_match.namespace == 'orders' and request.resolver_match.url_name == 'kitchen' %}active{% endif %}"
+                >
+                    <img class="nav-icon" src="{% static 'img/ui/icons/clipboard-list.svg' %}" alt="">
+                    Cocina
+                </a>
+
+                {% if is_administrator %}
                 <a
                     href="{% url 'orders:reports' %}"
                     class="{% if request.resolver_match.namespace == 'orders' and request.resolver_match.url_name == 'reports' %}active{% endif %}"
@@ -60,6 +70,12 @@
                     <img class="nav-icon" src="{% static 'img/ui/icons/chart-no-axes-combined.svg' %}" alt="">
                     Reportes
                 </a>
+
+                <a href="{% url 'orders:customer_list' %}" class="{% if request.resolver_match.namespace == 'orders' and 'customer' in request.resolver_match.url_name %}active{% endif %}">
+                    <img class="nav-icon" src="{% static 'img/ui/icons/user-round.svg' %}" alt="">
+                    Clientes
+                </a>
+                {% endif %}
 
                 <button
                     type="button"
@@ -71,17 +87,9 @@
                     Calculadora
                 </button>
 
-                {% if perms.menu.view_category %}
+                {% if is_administrator %}
                     <a
                         href="{% url 'menu:configuration' %}"
-                        class="{% if request.resolver_match.namespace == 'menu' %}active{% endif %}"
-                    >
-                        <img class="nav-icon" src="{% static 'img/ui/icons/utensils.svg' %}" alt="">
-                        Menú
-                    </a>
-                {% else %}
-                    <a
-                        href="{% url 'menu:list' %}"
                         class="{% if request.resolver_match.namespace == 'menu' %}active{% endif %}"
                     >
                         <img class="nav-icon" src="{% static 'img/ui/icons/utensils.svg' %}" alt="">
@@ -180,7 +188,7 @@
 
                         <span class="user-summary-text">
                             <strong>{{ user.username }}</strong>
-                            <small>{% if user.is_staff or perms.menu.change_product %}Administrador{% else %}Usuario{% endif %}</small>
+                            <small>{% if is_administrator %}Administrador{% else %}Usuario{% endif %}</small>
                         </span>
                         <span aria-hidden="true">⌄</span>
                     </button>
@@ -287,6 +295,7 @@
     <script src="{% static 'js/modern-select.js' %}?v=3"></script>
     <script src="{% static 'js/number-input.js' %}?v=1"></script>
     <script src="{% static 'js/notifications.js' %}?v=2"></script>
+    <script src="{% static 'js/sidebar.js' %}?v=1"></script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

@@ -1,0 +1,18 @@
+{% if filter_mode == "two_players" %}
+<div class="players-board">
+    <div class="players-column-title is-cold"><span></span><div><strong>Barra fría</strong><small>Bebidas y preparaciones de barra</small></div></div>
+    <div class="players-column-title is-hot"><span></span><div><strong>Barra caliente</strong><small>Alimentos y cocina</small></div></div>
+    {% for row in order_rows %}
+        <div class="player-cell is-cold">{% if row.cold_items %}{% include "orders/_kitchen_ticket.html" with order=row.order items=row.cold_items quantity=row.cold_quantity station="cold" station_label="Barra fría" station_status=row.order.cold_bar_status station_status_label=row.order.get_cold_bar_status_display %}{% else %}{% include "orders/_kitchen_empty_ticket.html" with order=row.order station_label="Barra fría" %}{% endif %}</div>
+        <div class="player-cell is-hot">{% if row.hot_items %}{% include "orders/_kitchen_ticket.html" with order=row.order items=row.hot_items quantity=row.hot_quantity station="hot" station_label="Barra caliente" station_status=row.order.hot_bar_status station_status_label=row.order.get_hot_bar_status_display %}{% else %}{% include "orders/_kitchen_empty_ticket.html" with order=row.order station_label="Barra caliente" %}{% endif %}</div>
+    {% empty %}<div class="kitchen-empty-state"><strong>No hay comandas del día</strong><span>Las órdenes nuevas aparecerán automáticamente.</span></div>{% endfor %}
+</div>
+{% else %}
+<div class="single-station-board {% if filter_mode == 'cold' %}is-cold{% else %}is-hot{% endif %}">
+    {% if filter_mode == "cold" %}
+        {% for row in cold_rows %}{% include "orders/_kitchen_ticket.html" with order=row.order items=row.cold_items quantity=row.cold_quantity station="cold" station_label="Barra fría" station_status=row.order.cold_bar_status station_status_label=row.order.get_cold_bar_status_display %}{% empty %}<div class="kitchen-empty-state"><strong>No hay pedidos para barra fría</strong><span>Las órdenes nuevas aparecerán automáticamente.</span></div>{% endfor %}
+    {% else %}
+        {% for row in hot_rows %}{% include "orders/_kitchen_ticket.html" with order=row.order items=row.hot_items quantity=row.hot_quantity station="hot" station_label="Barra caliente" station_status=row.order.hot_bar_status station_status_label=row.order.get_hot_bar_status_display %}{% empty %}<div class="kitchen-empty-state"><strong>No hay pedidos para barra caliente</strong><span>Las órdenes nuevas aparecerán automáticamente.</span></div>{% endfor %}
+    {% endif %}
+</div>
+{% endif %}

@@ -59,7 +59,7 @@ def load_configurable_products(product_ids):
         for product in Product.objects.filter(
             id__in=product_ids,
             is_available=True,
-        ).prefetch_related(
+        ).select_related("category").prefetch_related(
             Prefetch(
                 "option_groups__options",
                 queryset=available_options,
@@ -245,6 +245,7 @@ def create_order(*, user, order_type, items, customer_data=None, packaging_items
             order=order,
             product=product,
             product_name_snapshot=product.name,
+            preparation_station_snapshot=product.effective_preparation_station,
             base_unit_price=configured["base_unit_price"],
             unit_price=configured["unit_price"],
             quantity=configured["quantity"],
@@ -333,7 +334,7 @@ def update_order(
         for product in Product.objects.filter(
             id__in=new_product_quantities,
             is_available=True,
-        )
+        ).select_related("category")
     }
     if len(products) != len(new_product_quantities):
         raise ValidationError(
@@ -356,6 +357,7 @@ def update_order(
             order=order,
             product=product,
             product_name_snapshot=product.name,
+            preparation_station_snapshot=product.effective_preparation_station,
             unit_price=product.price,
             quantity=quantity,
             subtotal=product.price * quantity,
@@ -535,6 +537,7 @@ def update_order_products(*, order, item_quantities, new_items, packaging_items=
             order=order,
             product=product,
             product_name_snapshot=product.name,
+            preparation_station_snapshot=product.effective_preparation_station,
             base_unit_price=configured["base_unit_price"],
             unit_price=configured["unit_price"],
             quantity=quantity,
@@ -550,6 +553,9 @@ def update_order_products(*, order, item_quantities, new_items, packaging_items=
         order.packaging_fee,
     )
     order.save(update_fields=["packaging_fee", "total", "updated_at"])
+    if new_configurations:
+        order.status = Order.Status.IN_PROGRESS
+        order.save(update_fields=["status", "updated_at"])
     return order
 
 

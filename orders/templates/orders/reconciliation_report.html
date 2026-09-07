@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Caja y conciliación | Suerte Café{% endblock %}
+{% block content %}
+<nav class="report-section-tabs"><a href="{% url 'orders:reports' %}">Ventas</a><a class="is-active" href="{% url 'orders:reconciliation' %}">Caja y conciliación</a></nav>
+<div class="page-heading reconciliation-heading"><div><p class="eyebrow">Administración diaria</p><h1>Caja y conciliación</h1><p>Compara lo registrado por la app contra el dinero reportado al cierre.</p></div><form method="get"><label for="reconciliation-date">Día</label><input id="reconciliation-date" type="date" name="date" value="{{ selected_date|date:'Y-m-d' }}"><button type="submit">Consultar</button></form></div>
+
+<section class="finance-summary-grid">
+    <article><span>Ventas del día</span><strong>${{ total_sales|floatformat:2 }}</strong><small>Sin incluir propinas</small></article>
+    <article><span>Propinas</span><strong>${{ total_tips|floatformat:2 }}</strong><small>Todos los métodos</small></article>
+    <article class="expense-total"><span>Gastos</span><strong>−${{ total_expenses|floatformat:2 }}</strong><small>Salidas registradas</small></article>
+    <article class="profit-total"><span>Ganancia neta</span><strong>${{ net_profit|floatformat:2 }}</strong><small>Ventas menos gastos</small></article>
+</section>
+
+<div class="reconciliation-layout">
+    <section class="reconciliation-main">
+        <article class="finance-panel">
+            <header><div><p class="eyebrow">Control de caja</p><h2>Apertura y cierre</h2></div><span class="closing-state {% if reconciliation.is_closed %}is-closed{% endif %}">{% if reconciliation.is_closed %}Cierre capturado{% else %}Cierre pendiente{% endif %}</span></header>
+            <form method="post" class="reconciliation-form">{% csrf_token %}<input type="hidden" name="form_type" value="reconciliation">{{ reconciliation_form.operating_date }}
+                <div class="opening-field">{{ reconciliation_form.opening_cash.label_tag }}{{ reconciliation_form.opening_cash }}{{ reconciliation_form.opening_cash.errors }}<small>Dinero disponible antes de comenzar a vender.</small></div>
+                <div class="closing-fields">
+                    <div>{{ reconciliation_form.closing_cash.label_tag }}{{ reconciliation_form.closing_cash }}{{ reconciliation_form.closing_cash.errors }}</div>
+                    <div>{{ reconciliation_form.closing_card.label_tag }}{{ reconciliation_form.closing_card }}{{ reconciliation_form.closing_card.errors }}</div>
+                    <div>{{ reconciliation_form.closing_transfer.label_tag }}{{ reconciliation_form.closing_transfer }}{{ reconciliation_form.closing_transfer.errors }}</div>
+                </div>
+                <button type="submit">Guardar apertura y cierre</button>
+            </form>
+        </article>
+
+        <article class="finance-panel">
+            <header><div><p class="eyebrow">Movimientos</p><h2>Gastos del día</h2></div></header>
+            <form method="post" class="expense-entry-form">{% csrf_token %}<input type="hidden" name="form_type" value="expense">{{ expense_form.operating_date }}
+                <div>{{ expense_form.concept.label_tag }}{{ expense_form.concept }}{{ expense_form.concept.errors }}</div>
+                <div>{{ expense_form.amount.label_tag }}{{ expense_form.amount }}{{ expense_form.amount.errors }}</div>
+                <div>{{ expense_form.payment_method.label_tag }}{{ expense_form.payment_method }}{{ expense_form.payment_method.errors }}</div>
+                <button type="submit">+ Registrar gasto</button>
+            </form>
+            <div class="expense-list">
+                {% for expense in expenses %}<div><span><strong>{{ expense.concept }}</strong><small>{{ expense.get_payment_method_display }} · {{ expense.created_at|date:"H:i" }}</small></span><b>−${{ expense.amount|floatformat:2 }}</b><form method="post" action="{% url 'orders:expense_delete' expense.id %}">{% csrf_token %}<button type="submit" aria-label="Eliminar {{ expense.concept }}">×</button></form></div>{% empty %}<p>No hay gastos registrados para este día.</p>{% endfor %}
+            </div>
+        </article>
+    </section>
+
+    <aside class="reconciliation-result">
+        <header><p class="eyebrow">Resultado</p><h2>Conciliación</h2><span>{{ selected_date|date:"d/m/Y" }}</span></header>
+        <div class="reconciliation-method"><div><strong>Efectivo</strong><small>Ventas ${{ cash.sales|floatformat:2 }} · Propinas ${{ cash.tips|floatformat:2 }} · Gastos ${{ cash_expenses|floatformat:2 }}</small></div><p><span>Esperado</span><b>${{ expected.cash|floatformat:2 }}</b></p>{% if differences.cash != None %}<p class="difference {% if differences.cash < 0 %}is-negative{% elif differences.cash > 0 %}is-positive{% endif %}"><span>Diferencia</span><b>${{ differences.cash|floatformat:2 }}</b></p>{% else %}<p><span>Cierre</span><em>Pendiente</em></p>{% endif %}</div>
+        <div class="reconciliation-method"><div><strong>Terminal</strong><small>Ventas ${{ card.sales|floatformat:2 }} · Propinas ${{ card.tips|floatformat:2 }} · Gastos ${{ card_expenses|floatformat:2 }}</small></div><p><span>Esperado</span><b>${{ expected.card|floatformat:2 }}</b></p>{% if differences.card != None %}<p class="difference {% if differences.card < 0 %}is-negative{% elif differences.card > 0 %}is-positive{% endif %}"><span>Diferencia</span><b>${{ differences.card|floatformat:2 }}</b></p>{% else %}<p><span>Cierre</span><em>Pendiente</em></p>{% endif %}</div>
+        <div class="reconciliation-method"><div><strong>Transferencia</strong><small>Ventas ${{ transfer.sales|floatformat:2 }} · Propinas ${{ transfer.tips|floatformat:2 }} · Gastos ${{ transfer_expenses|floatformat:2 }}</small></div><p><span>Esperado</span><b>${{ expected.transfer|floatformat:2 }}</b></p>{% if differences.transfer != None %}<p class="difference {% if differences.transfer < 0 %}is-negative{% elif differences.transfer > 0 %}is-positive{% endif %}"><span>Diferencia</span><b>${{ differences.transfer|floatformat:2 }}</b></p>{% else %}<p><span>Cierre</span><em>Pendiente</em></p>{% endif %}</div>
+        <small class="reconciliation-help">Efectivo esperado = fondo inicial + ventas + propinas − gastos en efectivo.</small>
+    </aside>
+</div>
+{% endblock %}

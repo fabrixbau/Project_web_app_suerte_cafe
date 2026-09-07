@@ -1,6 +1,14 @@
 (() => {
     const body = document.querySelector("#orders-table-body");
     if (!body) return;
+    
+    // Only run on the orders list page (/orders/ or /orders/?filter=...)
+    // NOT on detail pages (/orders/123/), kitchen (/orders/kitchen/), or create (/orders/new/)
+    const path = window.location.pathname;
+    if (path !== '/orders/' && !path.startsWith('/orders/?')) {
+        return;
+    }
+    
     let currentHtml = body.innerHTML;
     let busy = false;
     async function refreshOrders() {
