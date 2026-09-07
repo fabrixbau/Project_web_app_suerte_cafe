@@ -7,6 +7,7 @@ __pycache__/
 
 # Variables privadas
 .env
+.env_prod
 
 # Base de datos temporal
 db.sqlite3
