@@ -1,9 +1,11 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
-from django.test import TestCase
+from django.contrib.auth.models import AnonymousUser
+from django.test import RequestFactory, TestCase
 from django.urls import reverse
 
 from .signals import ADMINISTRATOR_GROUP, REGULAR_USER_GROUP
+from .context_processors import user_access
 
 
 class AccountsTests(TestCase):
@@ -128,3 +130,52 @@ class AccountsTests(TestCase):
         self.assertTrue(
             self.user_model.objects.filter(id=administrator.id).exists()
         )
+
+
+class LegacyIOSCompatibilityTests(TestCase):
+    ipad_ios9_user_agent = (
+        "Mozilla/5.0 (iPad; CPU OS 9_3_5 like Mac OS X) "
+        "AppleWebKit/601.1.46 Version/9.0 Mobile/13G36 Safari/601.1"
+    )
+
+    def test_ios9_ipad_enables_legacy_assets(self):
+        request = RequestFactory().get("/", HTTP_USER_AGENT=self.ipad_ios9_user_agent)
+        request.user = AnonymousUser()
+
+        self.assertTrue(user_access(request)["legacy_ios9"])
+
+    def test_current_browser_keeps_modern_assets(self):
+        request = RequestFactory().get(
+            "/", HTTP_USER_AGENT="Mozilla/5.0 Chrome/140.0 Safari/537.36"
+        )
+        request.user = AnonymousUser()
+
+        self.assertFalse(user_access(request)["legacy_ios9"])
+
+    def test_login_renders_es5_assets_for_ios9(self):
+        response = self.client.get(
+            reverse("login"), HTTP_USER_AGENT=self.ipad_ios9_user_agent
+        )
+
+        self.assertContains(response, "js/legacy-polyfills.js")
+        self.assertContains(response, "js/legacy/login-profiles.js")
+        self.assertContains(response, "css/legacy-ios9.css")
+
+    def test_authenticated_page_uses_legacy_global_scripts(self):
+        user = get_user_model().objects.create_user(
+            username="ipad", password="clave-segura-ipad"
+        )
+        user.groups.add(Group.objects.get(name=REGULAR_USER_GROUP))
+        self.client.force_login(user)
+
+        response = self.client.get(
+            reverse("orders:list"), HTTP_USER_AGENT=self.ipad_ios9_user_agent
+        )
+
+        self.assertContains(response, "js/legacy/appearance.js")
+        self.assertContains(response, "js/legacy/order-status.js")
+
+        create_response = self.client.get(
+            reverse("orders:create"), HTTP_USER_AGENT=self.ipad_ios9_user_agent
+        )
+        self.assertContains(create_response, "js/legacy/order-create-page.js")

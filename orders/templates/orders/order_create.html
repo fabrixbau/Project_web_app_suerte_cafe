@@ -246,8 +246,9 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/order-draft.js' %}?v=1"></script>
-<script>
+{% load compat %}
+<script src="{% compatible_js 'order-draft.js' %}?v=2"></script>
+{% if not legacy_ios9 %}<script>
     const orderType = document.querySelector("#id_order_type");
     const orderTypeButtons = document.querySelectorAll(".order-type-option");
     const phoneFields = document.querySelector("#phone-fields");
@@ -293,7 +294,7 @@
     const currencyFormatter = new Intl.NumberFormat("es-MX", {
         style: "currency",
         currency: "MXN",
-        currencyDisplay: "narrowSymbol",
+        currencyDisplay: "symbol",
     });
 
     function changeQuantity(input, difference) {
@@ -395,12 +396,12 @@
     });
     window.refreshBaseOrderSummary = updateOrderSummary;
     updateOrderSummary();
-</script>
-<script src="{% static 'js/delivery-customer.js' %}?v=1"></script>
-<script src="{% static 'js/product-customizer.js' %}?v=2"></script>
-<script src="{% static 'js/packaging-charge.js' %}?v=2"></script>
-<script src="{% static 'js/payment.js' %}?v=3"></script>
-<script src="{% static 'js/table-map.js' %}?v=2"></script>
-<script src="{% static 'js/order-flow-focus.js' %}?v=2"></script>
-<script src="{% static 'js/order-comment.js' %}?v=1"></script>
+</script>{% else %}<script src="{% static 'js/legacy/order-create-page.js' %}?v=1"></script>{% endif %}
+<script src="{% compatible_js 'delivery-customer.js' %}?v=2"></script>
+<script src="{% compatible_js 'product-customizer.js' %}?v=3"></script>
+<script src="{% compatible_js 'packaging-charge.js' %}?v=3"></script>
+<script src="{% compatible_js 'payment.js' %}?v=4"></script>
+<script src="{% compatible_js 'table-map.js' %}?v=3"></script>
+<script src="{% compatible_js 'order-flow-focus.js' %}?v=3"></script>
+<script src="{% compatible_js 'order-comment.js' %}?v=2"></script>
 {% endblock %}

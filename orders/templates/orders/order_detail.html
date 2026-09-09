@@ -106,4 +106,5 @@
 </div>
 {% endblock %}
 
-{% block extra_js %}<script src="{% static 'js/order-status.js' %}?v=1"></script>{% endblock %}
+{% load compat %}
+{% block extra_js %}<script src="{% compatible_js 'order-status.js' %}?v=2"></script>{% endblock %}

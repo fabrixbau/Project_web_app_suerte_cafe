@@ -1,0 +1,58 @@
+/* Functional fallback for the first-generation iPad (iOS 9.3.5 / Safari 9). */
+html, body.legacy-ios9 { width: 100%; max-width: 100%; overflow-x: hidden; }
+.legacy-ios9 * { box-sizing: border-box; }
+.legacy-ios9 .app-layout { display: block; width: 100%; }
+.legacy-ios9 .sidebar { position: relative; top: auto; width: 100%; max-width: 100%; height: auto; min-height: 0; }
+.legacy-ios9 .sidebar .brand { display: block; margin: 0 auto; }
+.legacy-ios9 .sidebar nav { display: -webkit-flex; display: flex; -webkit-flex-wrap: wrap; flex-wrap: wrap; -webkit-justify-content: center; justify-content: center; }
+.legacy-ios9 .sidebar nav a,
+.legacy-ios9 .sidebar nav button { width: auto; min-width: 8.5rem; margin: .25rem; }
+.legacy-ios9 .page { width: 100%; max-width: 100%; margin: 0; }
+.legacy-ios9 .topbar { position: relative; width: 100%; }
+.legacy-ios9 .content { width: 100%; max-width: 100%; padding: 1rem; }
+.legacy-ios9 [class*="grid"] { display: block; width: 100%; }
+.legacy-ios9 .auth-shell,
+.legacy-ios9 .auth-brand { display: block; width: 100%; text-align: center; }
+.legacy-ios9 .login-profile-grid { display: -webkit-flex; display: flex; -webkit-flex-wrap: wrap; flex-wrap: wrap; margin: -.4rem; }
+.legacy-ios9 .login-profile-card { width: calc(50% - .8rem); margin: .4rem; }
+.legacy-ios9 .login-access-panel.is-visible { display: block !important; }
+.legacy-ios9 .order-workspace,
+.legacy-ios9 .customer-fields-grid,
+.legacy-ios9 .delivery-fields,
+.legacy-ios9 .product-grid,
+.legacy-ios9 .reports-summary-grid,
+.legacy-ios9 .report-grid,
+.legacy-ios9 .menu-products-grid,
+.legacy-ios9 .kitchen-board-columns { display: block; width: 100%; }
+.legacy-ios9 .order-builder,
+.legacy-ios9 .current-order,
+.legacy-ios9 .product-card,
+.legacy-ios9 .report-card,
+.legacy-ios9 .kitchen-column { width: 100%; max-width: 100%; margin-bottom: 1rem; }
+.legacy-ios9 .category-tabs,
+.legacy-ios9 .payment-method-options,
+.legacy-ios9 .cash-denominations { display: -webkit-flex; display: flex; -webkit-flex-wrap: wrap; flex-wrap: wrap; }
+.legacy-ios9 .category-tabs > *,
+.legacy-ios9 .payment-method-options > *,
+.legacy-ios9 .cash-denominations > * { -webkit-flex: 1 1 auto; flex: 1 1 auto; }
+.legacy-ios9 dialog:not([open]) { display: none; }
+.legacy-ios9 dialog[open] { display: block; position: fixed; z-index: 10001; top: 5%; left: 5%; width: 90%; max-height: 90%; margin: 0; overflow-y: auto; }
+.legacy-dialog-backdrop { position: fixed; z-index: 10000; top: 0; right: 0; bottom: 0; left: 0; background: rgba(12, 10, 8, .72); }
+.legacy-dialog-open { overflow: hidden; }
+.legacy-ios9 .app-select-list { border-radius: 0 0 12px 12px; }
+.legacy-ios9 button,
+.legacy-ios9 a,
+.legacy-ios9 input,
+.legacy-ios9 select { min-height: 44px; }
+.legacy-ios9 .order-detail-modal { border: 1px solid #5c5148; background: #231f1b; color: #fff; }
+
+@media (min-width: 700px) {
+    .legacy-ios9 .product-grid,
+    .legacy-ios9 .reports-summary-grid,
+    .legacy-ios9 .menu-products-grid { display: -webkit-flex; display: flex; -webkit-flex-wrap: wrap; flex-wrap: wrap; margin: -.5rem; }
+    .legacy-ios9 .product-grid > *,
+    .legacy-ios9 .reports-summary-grid > *,
+    .legacy-ios9 .menu-products-grid > * { width: calc(50% - 1rem); margin: .5rem; }
+    .legacy-ios9 .kitchen-board-columns { display: -webkit-flex; display: flex; }
+    .legacy-ios9 .kitchen-column { width: 50%; padding: .35rem; }
+}

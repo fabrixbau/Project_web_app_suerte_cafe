@@ -1,0 +1,11 @@
+{
+  "private": true,
+  "scripts": {
+    "build:legacy": "babel static/js --out-dir static/js/legacy --extensions .js --ignore static/js/legacy/**,static/js/legacy-polyfills.js"
+  },
+  "devDependencies": {
+    "@babel/cli": "8.0.4",
+    "@babel/core": "8.0.1",
+    "@babel/preset-env": "8.0.2"
+  }
+}

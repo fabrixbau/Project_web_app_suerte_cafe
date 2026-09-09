@@ -278,6 +278,7 @@
 .login-profile-card small { padding: 3px 8px; color: #8c6d56; background: #fff; border-radius: 999px; font-size: .7rem; }
 .login-access-panel { display: grid; gap: 14px; margin-top: 18px; padding-top: 18px; border-top: 1px solid #eadfd4; animation: login-panel-in .22s ease both; }
 .login-access-panel[hidden] { display: none; }
+.login-access-panel.is-visible { display: grid !important; }
 .auth-page .login-control { background: #f7f1ea; border-color: #ddcfc2; }
 .auth-page .login-submit { background: linear-gradient(135deg, #b9682e, #8f4d25); }
 .login-errors .errorlist, .login-form > .errorlist { margin: 0 0 14px; padding: 11px 14px; color: #9c2f3b; background: #fbeaec; border-radius: 11px; list-style: none; }

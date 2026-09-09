@@ -112,4 +112,5 @@
 </dialog>
 {% endblock %}
 
-{% block extra_js %}<script src="{% static 'js/order-status.js' %}?v=2"></script><script src="{% static 'js/order-detail-modal.js' %}?v=2"></script><script src="{% static 'js/orders-live.js' %}?v=1"></script>{% endblock %}
+{% load compat %}
+{% block extra_js %}<script src="{% compatible_js 'order-status.js' %}?v=3"></script><script src="{% compatible_js 'order-detail-modal.js' %}?v=3"></script><script src="{% compatible_js 'orders-live.js' %}?v=2"></script>{% endblock %}

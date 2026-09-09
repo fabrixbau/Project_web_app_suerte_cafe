@@ -27,4 +27,5 @@
     </form>
 </div>
 {% endblock %}
-{% block extra_js %}<script src="{% static 'js/modern-select.js' %}?v=2"></script>{% endblock %}
+{% load compat %}
+{% block extra_js %}<script src="{% compatible_js 'modern-select.js' %}?v=4"></script>{% endblock %}

@@ -4,15 +4,15 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    {% load static %}
+    {% load static compat %}
 
     <script>
-        (() => {
-            const theme = localStorage.getItem("suerteCafeTheme") || "light";
-            const palette = localStorage.getItem("suerteCafePalette") || "coffee";
-            document.documentElement.dataset.theme = theme;
-            document.documentElement.dataset.palette = palette;
-            document.documentElement.dataset.sidebar = localStorage.getItem("suerteCafeSidebar") || "expanded";
+        (function () {
+            var theme = localStorage.getItem("suerteCafeTheme") || "light";
+            var palette = localStorage.getItem("suerteCafePalette") || "coffee";
+            document.documentElement.setAttribute("data-theme", theme);
+            document.documentElement.setAttribute("data-palette", palette);
+            document.documentElement.setAttribute("data-sidebar", localStorage.getItem("suerteCafeSidebar") || "expanded");
         })();
     </script>
 
@@ -24,10 +24,11 @@
         rel="stylesheet"
         href="{% static 'css/app.css' %}?v=20260822-8"
     >
-    <link rel="stylesheet" href="{% static 'css/workflow-2026.css' %}?v=15">
+    <link rel="stylesheet" href="{% static 'css/workflow-2026.css' %}?v=16">
+    {% if legacy_ios9 %}<link rel="stylesheet" href="{% static 'css/legacy-ios9.css' %}?v=1">{% endif %}
 </head>
 
-<body class="{% block body_class %}{% endblock %}">
+<body class="{% block body_class %}{% endblock %}{% if legacy_ios9 %} legacy-ios9{% endif %}">
     <div class="app-layout">
         <aside class="sidebar">
             <button type="button" class="brand sidebar-toggle" data-sidebar-toggle aria-label="Plegar barra lateral" aria-expanded="true">
@@ -289,13 +290,14 @@
         </div>
     </section>
 
-    <script src="{% static 'js/appearance.js' %}?v=1"></script>
-    <script src="{% static 'js/user-menu.js' %}?v=1"></script>
-    <script src="{% static 'js/calculator.js' %}?v=2"></script>
-    <script src="{% static 'js/modern-select.js' %}?v=3"></script>
-    <script src="{% static 'js/number-input.js' %}?v=1"></script>
-    <script src="{% static 'js/notifications.js' %}?v=2"></script>
-    <script src="{% static 'js/sidebar.js' %}?v=1"></script>
+{% if legacy_ios9 %}<script src="{% static 'js/legacy-polyfills.js' %}?v=1"></script>{% endif %}
+<script src="{% compatible_js 'appearance.js' %}?v=2"></script>
+<script src="{% compatible_js 'user-menu.js' %}?v=2"></script>
+<script src="{% compatible_js 'calculator.js' %}?v=3"></script>
+<script src="{% compatible_js 'modern-select.js' %}?v=4"></script>
+<script src="{% compatible_js 'number-input.js' %}?v=2"></script>
+<script src="{% compatible_js 'notifications.js' %}?v=3"></script>
+<script src="{% compatible_js 'sidebar.js' %}?v=2"></script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

@@ -19,5 +19,8 @@ media/
 .vscode/
 .idea/
 
+# Herramientas de compilacion frontend (los archivos ES5 generados si se versionan)
+node_modules/
+
 # Others files
 pasos_para_seguir.txt

@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    {% load static %}
+    {% load static compat %}
 
     <title>
         {% block title %}Suerte Café{% endblock %}
@@ -14,10 +14,11 @@
         rel="stylesheet"
         href="{% static 'css/app.css' %}?v=20260822-8"
     >
-    <link rel="stylesheet" href="{% static 'css/workflow-2026.css' %}?v=2">
+    <link rel="stylesheet" href="{% static 'css/workflow-2026.css' %}?v=16">
+    {% if legacy_ios9 %}<link rel="stylesheet" href="{% static 'css/legacy-ios9.css' %}?v=1">{% endif %}
 </head>
 
-<body class="auth-page">
+<body class="auth-page{% if legacy_ios9 %} legacy-ios9{% endif %}">
     <div class="auth-shell">
         <header class="auth-brand">
         <img
@@ -38,8 +39,9 @@
             {% block content %}{% endblock %}
         </main>
     </div>
-    <script src="{% static 'js/modern-select.js' %}?v=3"></script>
-    <script src="{% static 'js/number-input.js' %}?v=1"></script>
+    {% if legacy_ios9 %}<script src="{% static 'js/legacy-polyfills.js' %}?v=1"></script>{% endif %}
+    <script src="{% compatible_js 'modern-select.js' %}?v=4"></script>
+    <script src="{% compatible_js 'number-input.js' %}?v=2"></script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

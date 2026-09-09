@@ -17,7 +17,7 @@
     const summaryLabel = document.querySelector("#subtotal-change-label");
     const summaryValue = document.querySelector("#order-subtotal");
     const paymentPanel = document.querySelector(".payment-panel");
-    const money = new Intl.NumberFormat("es-MX", {style: "currency", currency: "MXN", currencyDisplay: "narrowSymbol"});
+    const money = new Intl.NumberFormat("es-MX", {style: "currency", currency: "MXN", currencyDisplay: "symbol"});
     let cashEditorCollapsed = false;
 
     function focusCheckout(completed = false) {

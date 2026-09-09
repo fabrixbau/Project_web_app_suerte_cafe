@@ -8,7 +8,7 @@
     const currency = new Intl.NumberFormat("es-MX", {
         style: "currency",
         currency: "MXN",
-        currencyDisplay: "narrowSymbol",
+        currencyDisplay: "symbol",
     });
     let activeProduct = null;
     let dialogQuantity = 1;

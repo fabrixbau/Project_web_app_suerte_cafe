@@ -37,4 +37,5 @@
 </form>
 {% endblock %}
 
-{% block extra_js %}<script src="{% static 'js/login-profiles.js' %}?v=1"></script>{% endblock %}
+{% load compat %}
+{% block extra_js %}<script src="{% compatible_js 'login-profiles.js' %}?v=3"></script>{% endblock %}

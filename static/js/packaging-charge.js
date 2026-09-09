@@ -9,7 +9,7 @@
 
     const catalog = JSON.parse(catalogElement.textContent);
     const automatic = editor.dataset.automatic === "true";
-    const currency = new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN", currencyDisplay: "narrowSymbol" });
+    const currency = new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN", currencyDisplay: "symbol" });
     let saved = [];
     try { saved = JSON.parse(hiddenInput.value || "[]"); } catch { saved = []; }
     let initialized = false;
