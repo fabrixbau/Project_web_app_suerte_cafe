@@ -105,6 +105,15 @@ def prepare_configured_item(product, quantity, selected_option_ids=None):
         selected_options = [
             option for option in options if option.id in group_selected_ids
         ]
+        selected_pairs = {}
+        for option in selected_options:
+            pair_key = option.replacement_pair.strip().casefold()
+            if pair_key:
+                if pair_key in selected_pairs:
+                    raise ValidationError(
+                        f"En {group.name} no puedes elegir {selected_pairs[pair_key].name} y {option.name} al mismo tiempo."
+                    )
+                selected_pairs[pair_key] = option
         selected_ids.update(group_selected_ids)
         if selected_options:
             snapshot.append(

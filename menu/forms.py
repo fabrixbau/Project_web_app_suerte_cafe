@@ -2,7 +2,8 @@ from django import forms
 
 from config.images import optimize_uploaded_image
 
-from .models import BusinessSettings, Category, PackagingType, Product, ProductOption, ProductOptionGroup
+from .models import BusinessSettings, Category, PackagingType, Product
+from .widgets import ProductImageInput
 
 
 class BusinessSettingsForm(forms.ModelForm):
@@ -76,6 +77,9 @@ class ProductForm(forms.ModelForm):
             "name",
             "price",
             "image",
+            "image_position_x",
+            "image_position_y",
+            "image_zoom",
             "description",
             "is_available",
             "preparation_station",
@@ -95,6 +99,10 @@ class ProductForm(forms.ModelForm):
             "description": forms.Textarea(
                 attrs={"rows": 3},
             ),
+            "image": ProductImageInput(attrs={"accept": "image/*"}),
+            "image_position_x": forms.HiddenInput(),
+            "image_position_y": forms.HiddenInput(),
+            "image_zoom": forms.HiddenInput(),
         }
 
     def clean_image(self):
@@ -105,6 +113,8 @@ class ProductForm(forms.ModelForm):
 
     def clean_name(self):
         name = " ".join(self.cleaned_data["name"].split())
+        if name:
+            name = name[0].upper() + name[1:]
         category = self.cleaned_data.get("category")
         if category:
             duplicate = Product.objects.filter(
@@ -118,50 +128,3 @@ class ProductForm(forms.ModelForm):
         return name
 
 
-class ProductOptionGroupForm(forms.ModelForm):
-    class Meta:
-        model = ProductOptionGroup
-        fields = ("name", "selection_type", "is_required", "sort_order")
-        labels = {
-            "name": "Nombre del grupo",
-            "selection_type": "Tipo de selección",
-            "is_required": "Elección obligatoria",
-            "sort_order": "Orden visual",
-        }
-        widgets = {
-            "name": forms.TextInput(attrs={"placeholder": "Ej. Salsa, Tamaño o Leche"}),
-        }
-
-
-class ProductOptionGroupCopyForm(forms.Form):
-    source_group = forms.ModelChoiceField(
-        label="Grupo que deseas pegar",
-        queryset=ProductOptionGroup.objects.none(),
-        empty_label="Selecciona un grupo existente",
-        help_text="Elige el producto y grupo que quieres reutilizar. Se pegarán sus opciones, precios y valores estándar.",
-    )
-
-    def __init__(self, *args, target_product, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields["source_group"].queryset = (
-            ProductOptionGroup.objects.exclude(product=target_product)
-            .select_related("product")
-            .prefetch_related("options")
-            .order_by("product__name", "sort_order", "name")
-        )
-
-
-class ProductOptionForm(forms.ModelForm):
-    class Meta:
-        model = ProductOption
-        fields = ("name", "price_adjustment", "is_default", "is_available", "sort_order")
-        labels = {
-            "name": "Nombre de la opción",
-            "price_adjustment": "Cargo adicional",
-            "is_default": "Parte del producto estándar",
-            "is_available": "Disponible",
-            "sort_order": "Orden visual",
-        }
-        widgets = {
-            "name": forms.TextInput(attrs={"placeholder": "Ej. Verde, Grande o Deslactosada"}),
-        }

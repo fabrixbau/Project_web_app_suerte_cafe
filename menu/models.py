@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from django.core.validators import MinValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 
@@ -68,6 +68,9 @@ class Product(models.Model):
         upload_to="products/",
         blank=True,
     )
+    image_position_x = models.PositiveSmallIntegerField(default=50, validators=[MaxValueValidator(100)])
+    image_position_y = models.PositiveSmallIntegerField(default=50, validators=[MaxValueValidator(100)])
+    image_zoom = models.DecimalField(max_digits=3, decimal_places=2, default=1, validators=[MinValueValidator(1), MaxValueValidator(3)])
     description = models.TextField(blank=True)
     is_available = models.BooleanField(default=True)
     preparation_station = models.CharField(
@@ -170,6 +173,7 @@ class ProductOption(models.Model):
     )
     is_default = models.BooleanField(default=False)
     is_available = models.BooleanField(default=True)
+    replacement_pair = models.CharField(max_length=100, blank=True)
     sort_order = models.PositiveIntegerField(default=0)
 
     class Meta:

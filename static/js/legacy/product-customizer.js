@@ -200,13 +200,23 @@ function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length)
         input.type = group.selection_type === "single" ? "radio" : "checkbox";
         input.name = `custom-group-${group.id}`;
         input.value = option.id;
+        input.dataset.replacementPair = option.replacement_pair || "";
         input.checked = selectedIds ? selectedIds.has(option.id) : option.is_default;
         var text = document.createElement("span");
         var adjustment = Number.parseFloat(option.price_adjustment);
         text.innerHTML = `<strong></strong><small></small>`;
         text.querySelector("strong").textContent = option.name;
         text.querySelector("small").textContent = adjustment ? `${adjustment > 0 ? "+" : ""}${currency.format(adjustment)}` : "Incluido";
-        input.addEventListener("change", updateDialogPrice);
+        input.addEventListener("change", function () {
+          if (input.checked && input.dataset.replacementPair) {
+            groupsContainer.querySelectorAll(`input[name="custom-group-${group.id}"]:checked`).forEach(function (candidate) {
+              if (candidate !== input && candidate.dataset.replacementPair && candidate.dataset.replacementPair.toLocaleLowerCase("es-MX") === input.dataset.replacementPair.toLocaleLowerCase("es-MX")) {
+                candidate.checked = false;
+              }
+            });
+          }
+          updateDialogPrice();
+        });
         label.append(input, text);
         section.appendChild(label);
       });

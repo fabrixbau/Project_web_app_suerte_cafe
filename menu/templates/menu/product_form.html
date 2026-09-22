@@ -3,11 +3,13 @@
 {% block title %}{{ title }} | Suerte Café{% endblock %}
 {% block content %}
 <div class="form-page">
-    <div class="page-heading"><div><p class="eyebrow">Menú</p><h1>{{ title }}</h1></div>{% if product %}<a class="action-link action-link-secondary" href="{% url 'menu:option_group_copy' product.id %}">Pegar grupo</a>{% endif %}</div>
-    <form method="post" enctype="multipart/form-data" class="modern-form form-card modern-select-form" novalidate>
+    <div class="page-heading"><div><p class="eyebrow">Menú</p><h1>{{ title }}</h1></div></div>
+    <form method="post" enctype="multipart/form-data" class="modern-form form-card modern-select-form" novalidate data-product-editor>
         {% csrf_token %} {{ form.non_field_errors }}
         {% for field in form %}
-            {% if field.field.widget.input_type == "checkbox" %}
+            {% if field.is_hidden %}
+                {{ field }}
+            {% elif field.field.widget.input_type == "checkbox" %}
                 <div class="form-field switch-field">
                     <div>
                         <label for="{{ field.id_for_label }}">{{ field.label }}</label>
@@ -23,9 +25,24 @@
                 <div class="form-field">{{ field.label_tag }} {{ field }}{% if field.name == "packaging_type" %}<small>Déjalo vacío para usar automáticamente el envase configurado en la categoría.</small>{% elif field.help_text %}<small>{{ field.help_text }}</small>{% endif %}{{ field.errors }}</div>
             {% endif %}
         {% endfor %}
+        <fieldset id="product-ingredients" class="integrated-customization" data-customization-editor>
+            <legend>Ingredientes y complementos</legend>
+            <p class="section-help">Crea aquí mismo los grupos de opciones (por ejemplo "Leche" o "Tamaño") y sus ingredientes, sin salir de esta pantalla. Marca como estándar lo que normalmente incluye el producto. Para sustitutos equivalentes, escribe el mismo nombre en "Par de sustitución" en ambas opciones (por ejemplo, "Leche" en Leche entera y Leche deslactosada).</p>
+            <div class="integrated-customization-toolbar">
+                <button type="button" data-add-group>Agregar grupo</button>
+                <label>Asociar grupo existente<select data-group-library data-native-select><option value="">Selecciona un grupo</option></select></label>
+                <button type="button" class="secondary-action" data-copy-group>Asociar grupo</button>
+            </div>
+            <div data-customization-errors class="message error" hidden></div>
+            <div class="integrated-group-list" data-group-list></div>
+            <p class="empty-customization-message" data-empty-groups>Este producto no tiene grupos. Puedes guardarlo así o agregar el primero.</p>
+            <input type="hidden" name="customization_data" data-customization-payload>
+            {{ customization_data|json_script:"product-customization-data" }}
+            {{ customization_library|json_script:"product-customization-library" }}
+        </fieldset>
         <div class="form-actions"><button type="submit">Guardar producto</button><a class="action-link action-link-secondary" href="{% url 'menu:configuration' %}">Cancelar</a></div>
     </form>
 </div>
 {% endblock %}
 {% load compat %}
-{% block extra_js %}<script src="{% compatible_js 'modern-select.js' %}?v=4"></script>{% endblock %}
+{% block extra_js %}<script src="{% compatible_js 'modern-select.js' %}?v=4"></script><script src="{% static 'js/product-image-framing.js' %}?v=1"></script><script src="{% static 'js/product-customization-editor.js' %}?v=1"></script>{% endblock %}

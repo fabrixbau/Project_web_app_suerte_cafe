@@ -142,7 +142,7 @@
                             title="Haz clic en la tarjeta para agregar una unidad"
                         >
                             {% if product.image %}
-                                <img class="product-card-image" src="{{ product.image.url }}" alt="{{ product.name }}" loading="lazy" decoding="async">
+                                <img class="product-card-image" src="{{ product.image.url }}" alt="{{ product.name }}" loading="lazy" decoding="async" style="--product-image-x:{{ product.image_position_x }}%;--product-image-y:{{ product.image_position_y }}%;--product-image-zoom:{{ product.image_zoom }}">
                             {% else %}
                                 <img class="product-card-image" src="{% static 'img/ui/placeholders/product.svg' %}" alt="" loading="lazy" decoding="async">
                             {% endif %}
@@ -398,7 +398,7 @@
     updateOrderSummary();
 </script>{% else %}<script src="{% static 'js/legacy/order-create-page.js' %}?v=1"></script>{% endif %}
 <script src="{% compatible_js 'delivery-customer.js' %}?v=2"></script>
-<script src="{% compatible_js 'product-customizer.js' %}?v=3"></script>
+<script src="{% compatible_js 'product-customizer.js' %}?v=4"></script>
 <script src="{% compatible_js 'packaging-charge.js' %}?v=3"></script>
 <script src="{% compatible_js 'payment.js' %}?v=4"></script>
 <script src="{% compatible_js 'table-map.js' %}?v=3"></script>

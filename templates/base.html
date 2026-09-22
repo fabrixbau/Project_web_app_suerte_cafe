@@ -22,7 +22,7 @@
 
     <link
         rel="stylesheet"
-        href="{% static 'css/app.css' %}?v=20260822-8"
+        href="{% static 'css/app.css' %}?v=20260922-7"
     >
     <link rel="stylesheet" href="{% static 'css/workflow-2026.css' %}?v=16">
     {% if legacy_ios9 %}<link rel="stylesheet" href="{% static 'css/legacy-ios9.css' %}?v=1">{% endif %}
@@ -298,6 +298,7 @@
 <script src="{% compatible_js 'number-input.js' %}?v=2"></script>
 <script src="{% compatible_js 'notifications.js' %}?v=3"></script>
 <script src="{% compatible_js 'sidebar.js' %}?v=2"></script>
+<script src="{% compatible_js 'capitalize-first-letter.js' %}?v=1"></script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

@@ -92,6 +92,7 @@ def prepare_product_customizations(products):
                         "name": option.name,
                         "price_adjustment": str(option.price_adjustment),
                         "is_default": option.is_default,
+                        "replacement_pair": option.replacement_pair,
                     }
                 )
                 if option.is_default:
