@@ -1,0 +1,2916 @@
+[
+{
+  "model": "menu.packagingtype",
+  "pk": 1,
+  "fields": {
+    "name": "Envase alimento",
+    "price": "10.00",
+    "is_active": true,
+    "sort_order": 0
+  }
+},
+{
+  "model": "menu.packagingtype",
+  "pk": 2,
+  "fields": {
+    "name": "Envase para bebida",
+    "price": "5.00",
+    "is_active": true,
+    "sort_order": 1
+  }
+},
+{
+  "model": "menu.packagingtype",
+  "pk": 3,
+  "fields": {
+    "name": "Envase postre",
+    "price": "5.00",
+    "is_active": true,
+    "sort_order": 2
+  }
+},
+{
+  "model": "menu.category",
+  "pk": 1,
+  "fields": {
+    "name": "Alimentos",
+    "preparation_station": "hot",
+    "default_packaging_type": 1,
+    "image": ""
+  }
+},
+{
+  "model": "menu.category",
+  "pk": 2,
+  "fields": {
+    "name": "Bebidas frías",
+    "preparation_station": "cold",
+    "default_packaging_type": 2,
+    "image": ""
+  }
+},
+{
+  "model": "menu.category",
+  "pk": 3,
+  "fields": {
+    "name": "Bebidas calientes",
+    "preparation_station": "cold",
+    "default_packaging_type": 2,
+    "image": ""
+  }
+},
+{
+  "model": "menu.category",
+  "pk": 4,
+  "fields": {
+    "name": "Postres",
+    "preparation_station": "hot",
+    "default_packaging_type": 1,
+    "image": ""
+  }
+},
+{
+  "model": "menu.category",
+  "pk": 5,
+  "fields": {
+    "name": "Birria",
+    "preparation_station": "hot",
+    "default_packaging_type": 1,
+    "image": "categories/birria.png"
+  }
+},
+{
+  "model": "menu.category",
+  "pk": 6,
+  "fields": {
+    "name": "Metodos",
+    "preparation_station": "hot",
+    "default_packaging_type": 2,
+    "image": ""
+  }
+},
+{
+  "model": "menu.product",
+  "pk": 1,
+  "fields": {
+    "category": 1,
+    "name": "Chilaquiles",
+    "price": "50.00",
+    "image": "products/chilaquiles.webp",
+    "image_position_x": 50,
+    "image_position_y": 50,
+    "image_zoom": "1.00",
+    "description": "Chilaquiles verdes/rojos con pollo o huevo",
+    "is_available": true,
+    "preparation_station": "hot",
+    "packaging_type": null
+  }
+},
+{
+  "model": "menu.product",
+  "pk": 3,
+  "fields": {
+    "category": 2,
+    "name": "Frappe oreo",
+    "price": "60.00",
+    "image": "products/ore.webp",
+    "image_position_x": 50,
+    "image_position_y": 50,
+    "image_zoom": "1.00",
+    "description": "Frappe sabor oreo con crema batida",
+    "is_available": true,
+    "preparation_station": "cold",
+    "packaging_type": 2
+  }
+},
+{
+  "model": "menu.product",
+  "pk": 4,
+  "fields": {
+    "category": 4,
+    "name": "Pay de limón",
+    "price": "40.00",
+    "image": "products/pay.webp",
+    "image_position_x": 50,
+    "image_position_y": 50,
+    "image_zoom": "1.00",
+    "description": "Pay de limón",
+    "is_available": true,
+    "preparation_station": "hot",
+    "packaging_type": 3
+  }
+},
+{
+  "model": "menu.product",
+  "pk": 5,
+  "fields": {
+    "category": 2,
+    "name": "Chocolate Frío",
+    "price": "50.00",
+    "image": "products/chocolate_frio.webp",
+    "image_position_x": 50,
+    "image_position_y": 50,
+    "image_zoom": "1.00",
+    "description": "Chocolate abuelita con leche fría y hielos",
+    "is_available": true,
+    "preparation_station": "cold",
+    "packaging_type": null
+  }
+},
+{
+  "model": "menu.product",
+  "pk": 7,
+  "fields": {
+    "category": 3,
+    "name": "Chocolate",
+    "price": "40.00",
+    "image": "products/chocolate.webp",
+    "image_position_x": 51,
+    "image_position_y": 42,
+    "image_zoom": "1.00",
+    "description": "Chocolate con leche",
+    "is_available": true,
+    "preparation_station": "cold",
+    "packaging_type": 2
+  }
+},
+{
+  "model": "menu.product",
+  "pk": 8,
+  "fields": {
+    "category": 5,
+    "name": "Quesabirria",
+    "price": "35.00",
+    "image": "products/quesabirria.webp",
+    "image_position_x": 50,
+    "image_position_y": 50,
+    "image_zoom": "1.00",
+    "description": "Quesadilla de birria",
+    "is_available": true,
+    "preparation_station": "hot",
+    "packaging_type": 1
+  }
+},
+{
+  "model": "menu.product",
+  "pk": 9,
+  "fields": {
+    "category": 1,
+    "name": "Sandwich pollo",
+    "price": "45.00",
+    "image": "products/s_pollo.webp",
+    "image_position_x": 100,
+    "image_position_y": 12,
+    "image_zoom": "1.10",
+    "description": "Sandwich de pollo sencillo",
+    "is_available": true,
+    "preparation_station": "hot",
+    "packaging_type": null
+  }
+},
+{
+  "model": "menu.product",
+  "pk": 10,
+  "fields": {
+    "category": 3,
+    "name": "Cappuchino",
+    "price": "30.00",
+    "image": "products/cap.webp",
+    "image_position_x": 50,
+    "image_position_y": 50,
+    "image_zoom": "1.00",
+    "description": "Café con leche espumada",
+    "is_available": true,
+    "preparation_station": "cold",
+    "packaging_type": 2
+  }
+},
+{
+  "model": "menu.product",
+  "pk": 11,
+  "fields": {
+    "category": 3,
+    "name": "Latte",
+    "price": "40.00",
+    "image": "products/latte.webp",
+    "image_position_x": 50,
+    "image_position_y": 50,
+    "image_zoom": "1.00",
+    "description": "Café con leche cremosa",
+    "is_available": true,
+    "preparation_station": "",
+    "packaging_type": null
+  }
+},
+{
+  "model": "menu.product",
+  "pk": 12,
+  "fields": {
+    "category": 2,
+    "name": "Frappuchino",
+    "price": "70.00",
+    "image": "products/frap.webp",
+    "image_position_x": 48,
+    "image_position_y": 65,
+    "image_zoom": "1.00",
+    "description": "Espresso con leche y hielos triturado",
+    "is_available": true,
+    "preparation_station": "cold",
+    "packaging_type": 2
+  }
+},
+{
+  "model": "menu.product",
+  "pk": 13,
+  "fields": {
+    "category": 6,
+    "name": "Dripper",
+    "price": "40.00",
+    "image": "products/cafe_americano.webp",
+    "image_position_x": 50,
+    "image_position_y": 50,
+    "image_zoom": "1.00",
+    "description": "Café método dripper con agua caliente",
+    "is_available": true,
+    "preparation_station": "cold",
+    "packaging_type": 2
+  }
+},
+{
+  "model": "menu.product",
+  "pk": 14,
+  "fields": {
+    "category": 1,
+    "name": "Waffle",
+    "price": "45.00",
+    "image": "products/waffles.webp",
+    "image_position_x": 50,
+    "image_position_y": 50,
+    "image_zoom": "1.00",
+    "description": "Waffle acompañado de fruta y tu topic favorito",
+    "is_available": true,
+    "preparation_station": "hot",
+    "packaging_type": 1
+  }
+},
+{
+  "model": "menu.product",
+  "pk": 15,
+  "fields": {
+    "category": 1,
+    "name": "Sincronizada",
+    "price": "30.00",
+    "image": "products/sincronizada.webp",
+    "image_position_x": 50,
+    "image_position_y": 50,
+    "image_zoom": "1.00",
+    "description": "Sincronizada",
+    "is_available": true,
+    "preparation_station": "hot",
+    "packaging_type": 1
+  }
+},
+{
+  "model": "menu.product",
+  "pk": 16,
+  "fields": {
+    "category": 1,
+    "name": "Hot dog",
+    "price": "40.00",
+    "image": "products/hotdog.webp",
+    "image_position_x": 50,
+    "image_position_y": 50,
+    "image_zoom": "1.00",
+    "description": "Hot dog acompañado de ketchup, mostaza, mayonesa y pico de gallo",
+    "is_available": true,
+    "preparation_station": "hot",
+    "packaging_type": 1
+  }
+},
+{
+  "model": "menu.product",
+  "pk": 17,
+  "fields": {
+    "category": 1,
+    "name": "Sandwich jamón",
+    "price": "40.00",
+    "image": "products/sandwich_j.webp",
+    "image_position_x": 50,
+    "image_position_y": 50,
+    "image_zoom": "1.00",
+    "description": "Sandwich de jamón",
+    "is_available": true,
+    "preparation_station": "hot",
+    "packaging_type": 1
+  }
+},
+{
+  "model": "menu.product",
+  "pk": 18,
+  "fields": {
+    "category": 1,
+    "name": "Sandwich salchicha",
+    "price": "40.00",
+    "image": "products/sandwich_salc.webp",
+    "image_position_x": 71,
+    "image_position_y": 33,
+    "image_zoom": "1.00",
+    "description": "Sandwich de salchicha",
+    "is_available": true,
+    "preparation_station": "hot",
+    "packaging_type": 1
+  }
+},
+{
+  "model": "menu.product",
+  "pk": 19,
+  "fields": {
+    "category": 1,
+    "name": "Sandwich pollo con ensalada rusa",
+    "price": "55.00",
+    "image": "products/sand_p_ensalada.webp",
+    "image_position_x": 50,
+    "image_position_y": 50,
+    "image_zoom": "1.00",
+    "description": "Sandwich de pollo con ensalada rusa",
+    "is_available": true,
+    "preparation_station": "hot",
+    "packaging_type": 1
+  }
+},
+{
+  "model": "menu.product",
+  "pk": 20,
+  "fields": {
+    "category": 1,
+    "name": "Sandwich pollo con chipotle",
+    "price": "55.00",
+    "image": "products/sand_p_chipo.webp",
+    "image_position_x": 50,
+    "image_position_y": 50,
+    "image_zoom": "1.00",
+    "description": "Sandwich de pollo deshebrado al chipotle",
+    "is_available": true,
+    "preparation_station": "hot",
+    "packaging_type": 1
+  }
+},
+{
+  "model": "menu.product",
+  "pk": 21,
+  "fields": {
+    "category": 1,
+    "name": "Sandwich atún",
+    "price": "45.00",
+    "image": "products/sandwich_atun.webp",
+    "image_position_x": 50,
+    "image_position_y": 50,
+    "image_zoom": "1.00",
+    "description": "Sandwich de atún",
+    "is_available": true,
+    "preparation_station": "hot",
+    "packaging_type": 1
+  }
+},
+{
+  "model": "menu.product",
+  "pk": 22,
+  "fields": {
+    "category": 1,
+    "name": "Molletes",
+    "price": "40.00",
+    "image": "products/molletes.webp",
+    "image_position_x": 50,
+    "image_position_y": 50,
+    "image_zoom": "1.00",
+    "description": "Bolillo con queso, frijol y pico de gallo",
+    "is_available": true,
+    "preparation_station": "hot",
+    "packaging_type": 1
+  }
+},
+{
+  "model": "menu.product",
+  "pk": 23,
+  "fields": {
+    "category": 2,
+    "name": "Frappe leche",
+    "price": "60.00",
+    "image": "products/frappe.webp",
+    "image_position_x": 50,
+    "image_position_y": 50,
+    "image_zoom": "1.55",
+    "description": "Frappe a base de leche",
+    "is_available": true,
+    "preparation_station": "cold",
+    "packaging_type": 2
+  }
+},
+{
+  "model": "menu.product",
+  "pk": 24,
+  "fields": {
+    "category": 2,
+    "name": "Sodas italianas",
+    "price": "50.00",
+    "image": "products/soda.webp",
+    "image_position_x": 50,
+    "image_position_y": 50,
+    "image_zoom": "1.00",
+    "description": "Soda italiana de sabor",
+    "is_available": true,
+    "preparation_station": "cold",
+    "packaging_type": 2
+  }
+},
+{
+  "model": "menu.product",
+  "pk": 25,
+  "fields": {
+    "category": 2,
+    "name": "Chamoyada",
+    "price": "70.00",
+    "image": "products/chamoyada.webp",
+    "image_position_x": 50,
+    "image_position_y": 50,
+    "image_zoom": "1.00",
+    "description": "Chamoyada",
+    "is_available": true,
+    "preparation_station": "cold",
+    "packaging_type": 2
+  }
+},
+{
+  "model": "menu.product",
+  "pk": 26,
+  "fields": {
+    "category": 2,
+    "name": "Frappe a base de agua",
+    "price": "60.00",
+    "image": "products/imagen_2026-09-22_144120829.webp",
+    "image_position_x": 50,
+    "image_position_y": 50,
+    "image_zoom": "1.00",
+    "description": "Frappe a base de agua",
+    "is_available": true,
+    "preparation_station": "cold",
+    "packaging_type": 2
+  }
+},
+{
+  "model": "menu.product",
+  "pk": 27,
+  "fields": {
+    "category": 3,
+    "name": "Espresso",
+    "price": "20.00",
+    "image": "products/espresso.webp",
+    "image_position_x": 50,
+    "image_position_y": 50,
+    "image_zoom": "1.00",
+    "description": "Espresso",
+    "is_available": true,
+    "preparation_station": "cold",
+    "packaging_type": 2
+  }
+},
+{
+  "model": "menu.product",
+  "pk": 28,
+  "fields": {
+    "category": 3,
+    "name": "Americano",
+    "price": "25.00",
+    "image": "products/americano.webp",
+    "image_position_x": 99,
+    "image_position_y": 46,
+    "image_zoom": "1.00",
+    "description": "Espresso con agua",
+    "is_available": true,
+    "preparation_station": "cold",
+    "packaging_type": 2
+  }
+},
+{
+  "model": "menu.product",
+  "pk": 29,
+  "fields": {
+    "category": 3,
+    "name": "Flat white",
+    "price": "25.00",
+    "image": "products/flat.webp",
+    "image_position_x": 50,
+    "image_position_y": 50,
+    "image_zoom": "1.00",
+    "description": "Espresso con un poco de leche cremosa",
+    "is_available": true,
+    "preparation_station": "cold",
+    "packaging_type": 2
+  }
+},
+{
+  "model": "menu.product",
+  "pk": 30,
+  "fields": {
+    "category": 3,
+    "name": "Cappuccino de sabor",
+    "price": "45.00",
+    "image": "products/cap_sab.webp",
+    "image_position_x": 49,
+    "image_position_y": 59,
+    "image_zoom": "1.00",
+    "description": "Esppresso con leche y saborizante",
+    "is_available": true,
+    "preparation_station": "cold",
+    "packaging_type": 2
+  }
+},
+{
+  "model": "menu.product",
+  "pk": 31,
+  "fields": {
+    "category": 3,
+    "name": "Moka",
+    "price": "40.00",
+    "image": "products/moka.webp",
+    "image_position_x": 50,
+    "image_position_y": 50,
+    "image_zoom": "1.00",
+    "description": "Espresso con leche y chocolate liquido",
+    "is_available": true,
+    "preparation_station": "cold",
+    "packaging_type": 2
+  }
+},
+{
+  "model": "menu.product",
+  "pk": 32,
+  "fields": {
+    "category": 3,
+    "name": "Chaí latte",
+    "price": "40.00",
+    "image": "products/chai.webp",
+    "image_position_x": 50,
+    "image_position_y": 50,
+    "image_zoom": "1.00",
+    "description": "Chaí latte con leche",
+    "is_available": true,
+    "preparation_station": "cold",
+    "packaging_type": 2
+  }
+},
+{
+  "model": "menu.product",
+  "pk": 33,
+  "fields": {
+    "category": 3,
+    "name": "Té",
+    "price": "25.00",
+    "image": "products/tee.webp",
+    "image_position_x": 0,
+    "image_position_y": 32,
+    "image_zoom": "1.00",
+    "description": "Té con agua",
+    "is_available": true,
+    "preparation_station": "cold",
+    "packaging_type": 2
+  }
+},
+{
+  "model": "menu.product",
+  "pk": 34,
+  "fields": {
+    "category": 4,
+    "name": "Pan de plátano",
+    "price": "25.00",
+    "image": "products/pan_platanao.webp",
+    "image_position_x": 6,
+    "image_position_y": 50,
+    "image_zoom": "1.00",
+    "description": "Pan a base de plátano",
+    "is_available": true,
+    "preparation_station": "hot",
+    "packaging_type": 1
+  }
+},
+{
+  "model": "menu.product",
+  "pk": 35,
+  "fields": {
+    "category": 4,
+    "name": "Fresas con crema",
+    "price": "25.00",
+    "image": "products/fresas_crema.webp",
+    "image_position_x": 50,
+    "image_position_y": 50,
+    "image_zoom": "1.00",
+    "description": "Fresas con crema",
+    "is_available": true,
+    "preparation_station": "hot",
+    "packaging_type": 3
+  }
+},
+{
+  "model": "menu.product",
+  "pk": 36,
+  "fields": {
+    "category": 4,
+    "name": "Arroz con leche",
+    "price": "25.00",
+    "image": "products/arroz_con_leche.webp",
+    "image_position_x": 50,
+    "image_position_y": 50,
+    "image_zoom": "1.00",
+    "description": "Arroz con leche",
+    "is_available": true,
+    "preparation_station": "hot",
+    "packaging_type": 3
+  }
+},
+{
+  "model": "menu.product",
+  "pk": 37,
+  "fields": {
+    "category": 4,
+    "name": "Pan de elote",
+    "price": "40.00",
+    "image": "products/panque_elo.webp",
+    "image_position_x": 50,
+    "image_position_y": 50,
+    "image_zoom": "1.00",
+    "description": "Panque a base de elote",
+    "is_available": true,
+    "preparation_station": "hot",
+    "packaging_type": 3
+  }
+},
+{
+  "model": "menu.product",
+  "pk": 38,
+  "fields": {
+    "category": 6,
+    "name": "Aeropress",
+    "price": "40.00",
+    "image": "products/aeropress.webp",
+    "image_position_x": 50,
+    "image_position_y": 50,
+    "image_zoom": "1.00",
+    "description": "Espresso a base de método aeropress",
+    "is_available": true,
+    "preparation_station": "cold",
+    "packaging_type": 2
+  }
+},
+{
+  "model": "menu.product",
+  "pk": 39,
+  "fields": {
+    "category": 6,
+    "name": "Moka pot",
+    "price": "40.00",
+    "image": "products/moka_pot.webp",
+    "image_position_x": 50,
+    "image_position_y": 50,
+    "image_zoom": "1.00",
+    "description": "Espresso extraido con moka pot",
+    "is_available": true,
+    "preparation_station": "cold",
+    "packaging_type": 2
+  }
+},
+{
+  "model": "menu.product",
+  "pk": 40,
+  "fields": {
+    "category": 6,
+    "name": "Prensa francesa",
+    "price": "40.00",
+    "image": "products/prensa.webp",
+    "image_position_x": 50,
+    "image_position_y": 50,
+    "image_zoom": "1.00",
+    "description": "Espresso extraído por método prensa francesa",
+    "is_available": true,
+    "preparation_station": "cold",
+    "packaging_type": 2
+  }
+},
+{
+  "model": "menu.productoptiongroup",
+  "pk": 1,
+  "fields": {
+    "product": 1,
+    "name": "Chilaquiles",
+    "selection_type": "multiple",
+    "is_required": false,
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoptiongroup",
+  "pk": 4,
+  "fields": {
+    "product": 7,
+    "name": "Leche",
+    "selection_type": "single",
+    "is_required": true,
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoptiongroup",
+  "pk": 6,
+  "fields": {
+    "product": 8,
+    "name": "Verdura",
+    "selection_type": "multiple",
+    "is_required": false,
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoptiongroup",
+  "pk": 7,
+  "fields": {
+    "product": 9,
+    "name": "Sandwich",
+    "selection_type": "multiple",
+    "is_required": true,
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoptiongroup",
+  "pk": 9,
+  "fields": {
+    "product": 11,
+    "name": "Leche",
+    "selection_type": "multiple",
+    "is_required": true,
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoptiongroup",
+  "pk": 10,
+  "fields": {
+    "product": 12,
+    "name": "Leche",
+    "selection_type": "single",
+    "is_required": true,
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoptiongroup",
+  "pk": 11,
+  "fields": {
+    "product": 13,
+    "name": "Leche",
+    "selection_type": "single",
+    "is_required": true,
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoptiongroup",
+  "pk": 14,
+  "fields": {
+    "product": 14,
+    "name": "Waffle",
+    "selection_type": "multiple",
+    "is_required": false,
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoptiongroup",
+  "pk": 15,
+  "fields": {
+    "product": 15,
+    "name": "Sincronizada",
+    "selection_type": "multiple",
+    "is_required": false,
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoptiongroup",
+  "pk": 16,
+  "fields": {
+    "product": 16,
+    "name": "Hot dogs",
+    "selection_type": "multiple",
+    "is_required": true,
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoptiongroup",
+  "pk": 18,
+  "fields": {
+    "product": 17,
+    "name": "Sandwich jamón",
+    "selection_type": "multiple",
+    "is_required": false,
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoptiongroup",
+  "pk": 19,
+  "fields": {
+    "product": 18,
+    "name": "Sandwich",
+    "selection_type": "multiple",
+    "is_required": true,
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoptiongroup",
+  "pk": 20,
+  "fields": {
+    "product": 19,
+    "name": "Sandwich",
+    "selection_type": "multiple",
+    "is_required": true,
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoptiongroup",
+  "pk": 21,
+  "fields": {
+    "product": 20,
+    "name": "Sandwich",
+    "selection_type": "multiple",
+    "is_required": true,
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoptiongroup",
+  "pk": 22,
+  "fields": {
+    "product": 21,
+    "name": "Sandwich atún",
+    "selection_type": "multiple",
+    "is_required": true,
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoptiongroup",
+  "pk": 23,
+  "fields": {
+    "product": 22,
+    "name": "Molletes",
+    "selection_type": "multiple",
+    "is_required": false,
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoptiongroup",
+  "pk": 24,
+  "fields": {
+    "product": 23,
+    "name": "Frappe a base de leche",
+    "selection_type": "multiple",
+    "is_required": false,
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoptiongroup",
+  "pk": 25,
+  "fields": {
+    "product": 24,
+    "name": "Sodas italianas",
+    "selection_type": "multiple",
+    "is_required": false,
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoptiongroup",
+  "pk": 26,
+  "fields": {
+    "product": 25,
+    "name": "Chamoyada",
+    "selection_type": "multiple",
+    "is_required": false,
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoptiongroup",
+  "pk": 27,
+  "fields": {
+    "product": 26,
+    "name": "Frappe base de agua",
+    "selection_type": "multiple",
+    "is_required": false,
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoptiongroup",
+  "pk": 28,
+  "fields": {
+    "product": 27,
+    "name": "Espresso",
+    "selection_type": "multiple",
+    "is_required": false,
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoptiongroup",
+  "pk": 29,
+  "fields": {
+    "product": 10,
+    "name": "Capuccino",
+    "selection_type": "multiple",
+    "is_required": false,
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoptiongroup",
+  "pk": 30,
+  "fields": {
+    "product": 28,
+    "name": "Espresso",
+    "selection_type": "multiple",
+    "is_required": false,
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoptiongroup",
+  "pk": 31,
+  "fields": {
+    "product": 29,
+    "name": "Capuccino",
+    "selection_type": "multiple",
+    "is_required": false,
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoptiongroup",
+  "pk": 32,
+  "fields": {
+    "product": 30,
+    "name": "Cappuccino sabor",
+    "selection_type": "multiple",
+    "is_required": false,
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoptiongroup",
+  "pk": 33,
+  "fields": {
+    "product": 31,
+    "name": "Capuccino",
+    "selection_type": "multiple",
+    "is_required": false,
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoptiongroup",
+  "pk": 34,
+  "fields": {
+    "product": 32,
+    "name": "Capuccino",
+    "selection_type": "multiple",
+    "is_required": false,
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoptiongroup",
+  "pk": 35,
+  "fields": {
+    "product": 33,
+    "name": "Té",
+    "selection_type": "multiple",
+    "is_required": false,
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoptiongroup",
+  "pk": 36,
+  "fields": {
+    "product": 38,
+    "name": "Espresso",
+    "selection_type": "multiple",
+    "is_required": false,
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoptiongroup",
+  "pk": 37,
+  "fields": {
+    "product": 39,
+    "name": "Espresso",
+    "selection_type": "multiple",
+    "is_required": false,
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoptiongroup",
+  "pk": 38,
+  "fields": {
+    "product": 40,
+    "name": "Espresso",
+    "selection_type": "multiple",
+    "is_required": false,
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoptiongroup",
+  "pk": 39,
+  "fields": {
+    "product": 5,
+    "name": "Chocolate frio",
+    "selection_type": "multiple",
+    "is_required": false,
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoptiongroup",
+  "pk": 40,
+  "fields": {
+    "product": 3,
+    "name": "Frappe oreo",
+    "selection_type": "multiple",
+    "is_required": false,
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 1,
+  "fields": {
+    "group": 1,
+    "name": "Verde",
+    "price_adjustment": "0.00",
+    "is_default": true,
+    "is_available": true,
+    "replacement_pair": "Salsa",
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 2,
+  "fields": {
+    "group": 1,
+    "name": "Roja",
+    "price_adjustment": "0.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "Salsa",
+    "sort_order": 50
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 8,
+  "fields": {
+    "group": 4,
+    "name": "Entera",
+    "price_adjustment": "0.00",
+    "is_default": true,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 9,
+  "fields": {
+    "group": 4,
+    "name": "Deslactosada",
+    "price_adjustment": "5.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 20
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 13,
+  "fields": {
+    "group": 6,
+    "name": "Cebolla",
+    "price_adjustment": "0.00",
+    "is_default": true,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 20
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 14,
+  "fields": {
+    "group": 6,
+    "name": "Cilantro",
+    "price_adjustment": "0.00",
+    "is_default": true,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 30
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 15,
+  "fields": {
+    "group": 7,
+    "name": "Jitomate",
+    "price_adjustment": "0.00",
+    "is_default": true,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 20
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 16,
+  "fields": {
+    "group": 7,
+    "name": "Cebolla",
+    "price_adjustment": "0.00",
+    "is_default": true,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 30
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 17,
+  "fields": {
+    "group": 7,
+    "name": "Lechuga",
+    "price_adjustment": "0.00",
+    "is_default": true,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 40
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 18,
+  "fields": {
+    "group": 7,
+    "name": "Mayonesa",
+    "price_adjustment": "0.00",
+    "is_default": true,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 19,
+  "fields": {
+    "group": 7,
+    "name": "Papas",
+    "price_adjustment": "0.00",
+    "is_default": true,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 50
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 22,
+  "fields": {
+    "group": 9,
+    "name": "Entera",
+    "price_adjustment": "0.00",
+    "is_default": true,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 23,
+  "fields": {
+    "group": 9,
+    "name": "Leche deslactosada",
+    "price_adjustment": "5.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 20
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 24,
+  "fields": {
+    "group": 10,
+    "name": "Entera",
+    "price_adjustment": "0.00",
+    "is_default": true,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 25,
+  "fields": {
+    "group": 10,
+    "name": "Leche deslactosada",
+    "price_adjustment": "10.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 20
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 26,
+  "fields": {
+    "group": 11,
+    "name": "Entera",
+    "price_adjustment": "0.00",
+    "is_default": true,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 27,
+  "fields": {
+    "group": 11,
+    "name": "Leche deslactosada",
+    "price_adjustment": "5.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 20
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 34,
+  "fields": {
+    "group": 6,
+    "name": "salsa",
+    "price_adjustment": "0.00",
+    "is_default": true,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 35,
+  "fields": {
+    "group": 14,
+    "name": "Miel",
+    "price_adjustment": "0.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 36,
+  "fields": {
+    "group": 14,
+    "name": "Lechera",
+    "price_adjustment": "0.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 20
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 37,
+  "fields": {
+    "group": 14,
+    "name": "Chocolate",
+    "price_adjustment": "0.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 30
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 38,
+  "fields": {
+    "group": 14,
+    "name": "Helado",
+    "price_adjustment": "20.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 40
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 39,
+  "fields": {
+    "group": 15,
+    "name": "Pico de gallo",
+    "price_adjustment": "0.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 40,
+  "fields": {
+    "group": 15,
+    "name": "Ketchup",
+    "price_adjustment": "0.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 20
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 41,
+  "fields": {
+    "group": 15,
+    "name": "Valentina",
+    "price_adjustment": "0.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 30
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 42,
+  "fields": {
+    "group": 15,
+    "name": "Chorizo",
+    "price_adjustment": "5.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 40
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 43,
+  "fields": {
+    "group": 16,
+    "name": "Ketchup",
+    "price_adjustment": "0.00",
+    "is_default": true,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 44,
+  "fields": {
+    "group": 16,
+    "name": "Mostaza",
+    "price_adjustment": "0.00",
+    "is_default": true,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 20
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 45,
+  "fields": {
+    "group": 16,
+    "name": "Mayonesa",
+    "price_adjustment": "0.00",
+    "is_default": true,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 30
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 46,
+  "fields": {
+    "group": 16,
+    "name": "Pico de gallo",
+    "price_adjustment": "0.00",
+    "is_default": true,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 40
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 47,
+  "fields": {
+    "group": 16,
+    "name": "Quesillo",
+    "price_adjustment": "10.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 50
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 48,
+  "fields": {
+    "group": 7,
+    "name": "Quesillo",
+    "price_adjustment": "10.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 60
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 51,
+  "fields": {
+    "group": 18,
+    "name": "Jitomate",
+    "price_adjustment": "0.00",
+    "is_default": true,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 52,
+  "fields": {
+    "group": 18,
+    "name": "Lechuga",
+    "price_adjustment": "0.00",
+    "is_default": true,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 20
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 53,
+  "fields": {
+    "group": 18,
+    "name": "Mayonesa",
+    "price_adjustment": "0.00",
+    "is_default": true,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 30
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 54,
+  "fields": {
+    "group": 18,
+    "name": "Rajas",
+    "price_adjustment": "0.00",
+    "is_default": true,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 40
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 55,
+  "fields": {
+    "group": 18,
+    "name": "Quesillo",
+    "price_adjustment": "10.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 50
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 56,
+  "fields": {
+    "group": 19,
+    "name": "Mayonesa",
+    "price_adjustment": "0.00",
+    "is_default": true,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 57,
+  "fields": {
+    "group": 19,
+    "name": "Quesillo",
+    "price_adjustment": "10.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 60
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 58,
+  "fields": {
+    "group": 19,
+    "name": "Jitomate",
+    "price_adjustment": "0.00",
+    "is_default": true,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 20
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 59,
+  "fields": {
+    "group": 19,
+    "name": "Cebolla",
+    "price_adjustment": "0.00",
+    "is_default": true,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 30
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 60,
+  "fields": {
+    "group": 19,
+    "name": "Lechuga",
+    "price_adjustment": "0.00",
+    "is_default": true,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 40
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 61,
+  "fields": {
+    "group": 19,
+    "name": "Papas",
+    "price_adjustment": "0.00",
+    "is_default": true,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 50
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 62,
+  "fields": {
+    "group": 20,
+    "name": "Mayonesa",
+    "price_adjustment": "0.00",
+    "is_default": true,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 63,
+  "fields": {
+    "group": 20,
+    "name": "Quesillo",
+    "price_adjustment": "10.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 60
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 64,
+  "fields": {
+    "group": 20,
+    "name": "Jitomate",
+    "price_adjustment": "0.00",
+    "is_default": true,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 20
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 65,
+  "fields": {
+    "group": 20,
+    "name": "Cebolla",
+    "price_adjustment": "0.00",
+    "is_default": true,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 30
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 66,
+  "fields": {
+    "group": 20,
+    "name": "Lechuga",
+    "price_adjustment": "0.00",
+    "is_default": true,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 40
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 67,
+  "fields": {
+    "group": 20,
+    "name": "Papas",
+    "price_adjustment": "0.00",
+    "is_default": true,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 50
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 68,
+  "fields": {
+    "group": 21,
+    "name": "Mayonesa",
+    "price_adjustment": "0.00",
+    "is_default": true,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 69,
+  "fields": {
+    "group": 21,
+    "name": "Quesillo",
+    "price_adjustment": "10.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 60
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 70,
+  "fields": {
+    "group": 21,
+    "name": "Jitomate",
+    "price_adjustment": "0.00",
+    "is_default": true,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 20
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 71,
+  "fields": {
+    "group": 21,
+    "name": "Cebolla",
+    "price_adjustment": "0.00",
+    "is_default": true,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 30
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 72,
+  "fields": {
+    "group": 21,
+    "name": "Lechuga",
+    "price_adjustment": "0.00",
+    "is_default": true,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 40
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 73,
+  "fields": {
+    "group": 21,
+    "name": "Papas",
+    "price_adjustment": "0.00",
+    "is_default": true,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 50
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 74,
+  "fields": {
+    "group": 22,
+    "name": "Mayonesa",
+    "price_adjustment": "0.00",
+    "is_default": true,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 75,
+  "fields": {
+    "group": 22,
+    "name": "Quesillo",
+    "price_adjustment": "10.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 60
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 76,
+  "fields": {
+    "group": 22,
+    "name": "Jitomate",
+    "price_adjustment": "0.00",
+    "is_default": true,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 20
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 77,
+  "fields": {
+    "group": 22,
+    "name": "Cebolla",
+    "price_adjustment": "0.00",
+    "is_default": true,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 30
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 78,
+  "fields": {
+    "group": 22,
+    "name": "Lechuga",
+    "price_adjustment": "0.00",
+    "is_default": true,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 40
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 79,
+  "fields": {
+    "group": 22,
+    "name": "Papas",
+    "price_adjustment": "0.00",
+    "is_default": true,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 50
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 80,
+  "fields": {
+    "group": 22,
+    "name": "Ensalada rusa",
+    "price_adjustment": "10.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 70
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 81,
+  "fields": {
+    "group": 23,
+    "name": "Pico de gallo",
+    "price_adjustment": "0.00",
+    "is_default": true,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 82,
+  "fields": {
+    "group": 23,
+    "name": "Ketchup",
+    "price_adjustment": "0.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 20
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 83,
+  "fields": {
+    "group": 23,
+    "name": "Jamón",
+    "price_adjustment": "10.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 30
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 84,
+  "fields": {
+    "group": 23,
+    "name": "Chorizo",
+    "price_adjustment": "10.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 40
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 85,
+  "fields": {
+    "group": 24,
+    "name": "Entera",
+    "price_adjustment": "0.00",
+    "is_default": true,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 86,
+  "fields": {
+    "group": 24,
+    "name": "Deslactosada",
+    "price_adjustment": "5.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 20
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 87,
+  "fields": {
+    "group": 24,
+    "name": "Amareto",
+    "price_adjustment": "10.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 30
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 88,
+  "fields": {
+    "group": 24,
+    "name": "Caramelo",
+    "price_adjustment": "10.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 40
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 89,
+  "fields": {
+    "group": 24,
+    "name": "Chocolate",
+    "price_adjustment": "0.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 50
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 90,
+  "fields": {
+    "group": 24,
+    "name": "Frappuchino",
+    "price_adjustment": "0.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 60
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 91,
+  "fields": {
+    "group": 24,
+    "name": "Matcha",
+    "price_adjustment": "0.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 70
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 92,
+  "fields": {
+    "group": 24,
+    "name": "Moka",
+    "price_adjustment": "0.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 80
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 93,
+  "fields": {
+    "group": 24,
+    "name": "Oreo",
+    "price_adjustment": "0.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 90
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 94,
+  "fields": {
+    "group": 24,
+    "name": "Taro",
+    "price_adjustment": "0.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 100
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 95,
+  "fields": {
+    "group": 24,
+    "name": "Vainilla",
+    "price_adjustment": "0.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 110
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 96,
+  "fields": {
+    "group": 25,
+    "name": "Blueberry",
+    "price_adjustment": "0.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 97,
+  "fields": {
+    "group": 25,
+    "name": "Frutos rojos",
+    "price_adjustment": "0.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 20
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 98,
+  "fields": {
+    "group": 25,
+    "name": "Granada",
+    "price_adjustment": "0.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 30
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 99,
+  "fields": {
+    "group": 25,
+    "name": "Mandarina",
+    "price_adjustment": "0.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 40
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 100,
+  "fields": {
+    "group": 25,
+    "name": "Mango",
+    "price_adjustment": "0.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 50
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 101,
+  "fields": {
+    "group": 25,
+    "name": "Manzana verde",
+    "price_adjustment": "0.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 60
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 102,
+  "fields": {
+    "group": 26,
+    "name": "Mango",
+    "price_adjustment": "0.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 103,
+  "fields": {
+    "group": 26,
+    "name": "Fresa",
+    "price_adjustment": "0.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 20
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 104,
+  "fields": {
+    "group": 27,
+    "name": "Fresa",
+    "price_adjustment": "0.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 105,
+  "fields": {
+    "group": 27,
+    "name": "Horchata",
+    "price_adjustment": "0.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 20
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 106,
+  "fields": {
+    "group": 27,
+    "name": "Mango",
+    "price_adjustment": "0.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 30
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 107,
+  "fields": {
+    "group": 27,
+    "name": "Piña",
+    "price_adjustment": "0.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 40
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 108,
+  "fields": {
+    "group": 28,
+    "name": "Frío",
+    "price_adjustment": "10.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 109,
+  "fields": {
+    "group": 28,
+    "name": "Entera",
+    "price_adjustment": "5.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 20
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 110,
+  "fields": {
+    "group": 28,
+    "name": "Deslactosada",
+    "price_adjustment": "5.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 30
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 111,
+  "fields": {
+    "group": 29,
+    "name": "Entera",
+    "price_adjustment": "0.00",
+    "is_default": true,
+    "is_available": true,
+    "replacement_pair": "Leche",
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 112,
+  "fields": {
+    "group": 29,
+    "name": "Deslactosada",
+    "price_adjustment": "0.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "Leche",
+    "sort_order": 20
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 113,
+  "fields": {
+    "group": 29,
+    "name": "Frio",
+    "price_adjustment": "10.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 30
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 114,
+  "fields": {
+    "group": 30,
+    "name": "Frío",
+    "price_adjustment": "10.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 115,
+  "fields": {
+    "group": 30,
+    "name": "Entera",
+    "price_adjustment": "5.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 20
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 116,
+  "fields": {
+    "group": 30,
+    "name": "Deslactosada",
+    "price_adjustment": "5.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 30
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 117,
+  "fields": {
+    "group": 31,
+    "name": "Entera",
+    "price_adjustment": "0.00",
+    "is_default": true,
+    "is_available": true,
+    "replacement_pair": "Leche",
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 118,
+  "fields": {
+    "group": 31,
+    "name": "Deslactosada",
+    "price_adjustment": "0.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "Leche",
+    "sort_order": 20
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 119,
+  "fields": {
+    "group": 31,
+    "name": "Frio",
+    "price_adjustment": "10.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 30
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 120,
+  "fields": {
+    "group": 9,
+    "name": "Frío",
+    "price_adjustment": "10.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 30
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 121,
+  "fields": {
+    "group": 4,
+    "name": "Frío",
+    "price_adjustment": "10.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 30
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 122,
+  "fields": {
+    "group": 32,
+    "name": "Entera",
+    "price_adjustment": "0.00",
+    "is_default": true,
+    "is_available": true,
+    "replacement_pair": "Leche",
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 123,
+  "fields": {
+    "group": 32,
+    "name": "Deslactosada",
+    "price_adjustment": "5.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "Leche",
+    "sort_order": 20
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 124,
+  "fields": {
+    "group": 32,
+    "name": "Amareto",
+    "price_adjustment": "0.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 30
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 125,
+  "fields": {
+    "group": 32,
+    "name": "Avellana",
+    "price_adjustment": "0.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 40
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 126,
+  "fields": {
+    "group": 32,
+    "name": "Caramelo",
+    "price_adjustment": "0.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 50
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 127,
+  "fields": {
+    "group": 32,
+    "name": "Chocolate",
+    "price_adjustment": "0.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 60
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 128,
+  "fields": {
+    "group": 32,
+    "name": "Vainilla",
+    "price_adjustment": "0.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 70
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 129,
+  "fields": {
+    "group": 32,
+    "name": "Frío",
+    "price_adjustment": "10.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 80
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 130,
+  "fields": {
+    "group": 33,
+    "name": "Entera",
+    "price_adjustment": "0.00",
+    "is_default": true,
+    "is_available": true,
+    "replacement_pair": "Leche",
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 131,
+  "fields": {
+    "group": 33,
+    "name": "Deslactosada",
+    "price_adjustment": "0.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "Leche",
+    "sort_order": 20
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 132,
+  "fields": {
+    "group": 33,
+    "name": "Frio",
+    "price_adjustment": "10.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 30
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 133,
+  "fields": {
+    "group": 34,
+    "name": "Entera",
+    "price_adjustment": "0.00",
+    "is_default": true,
+    "is_available": true,
+    "replacement_pair": "Leche",
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 134,
+  "fields": {
+    "group": 34,
+    "name": "Deslactosada",
+    "price_adjustment": "0.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "Leche",
+    "sort_order": 20
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 135,
+  "fields": {
+    "group": 34,
+    "name": "Frio",
+    "price_adjustment": "10.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 30
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 136,
+  "fields": {
+    "group": 35,
+    "name": "Limon",
+    "price_adjustment": "0.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 137,
+  "fields": {
+    "group": 35,
+    "name": "Manzana canela",
+    "price_adjustment": "0.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 20
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 138,
+  "fields": {
+    "group": 35,
+    "name": "Manzanilla",
+    "price_adjustment": "0.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 30
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 139,
+  "fields": {
+    "group": 35,
+    "name": "Frío",
+    "price_adjustment": "10.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 40
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 140,
+  "fields": {
+    "group": 36,
+    "name": "Frío",
+    "price_adjustment": "10.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 141,
+  "fields": {
+    "group": 36,
+    "name": "Entera",
+    "price_adjustment": "5.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 20
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 142,
+  "fields": {
+    "group": 36,
+    "name": "Deslactosada",
+    "price_adjustment": "5.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 30
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 143,
+  "fields": {
+    "group": 37,
+    "name": "Frío",
+    "price_adjustment": "10.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 144,
+  "fields": {
+    "group": 37,
+    "name": "Entera",
+    "price_adjustment": "5.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 20
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 145,
+  "fields": {
+    "group": 37,
+    "name": "Deslactosada",
+    "price_adjustment": "5.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 30
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 146,
+  "fields": {
+    "group": 38,
+    "name": "Frío",
+    "price_adjustment": "10.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 147,
+  "fields": {
+    "group": 38,
+    "name": "Entera",
+    "price_adjustment": "5.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 20
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 148,
+  "fields": {
+    "group": 38,
+    "name": "Deslactosada",
+    "price_adjustment": "5.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 30
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 149,
+  "fields": {
+    "group": 1,
+    "name": "Pollo",
+    "price_adjustment": "0.00",
+    "is_default": true,
+    "is_available": true,
+    "replacement_pair": "Proteina",
+    "sort_order": 20
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 150,
+  "fields": {
+    "group": 1,
+    "name": "Crema",
+    "price_adjustment": "0.00",
+    "is_default": true,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 30
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 151,
+  "fields": {
+    "group": 1,
+    "name": "Queso",
+    "price_adjustment": "0.00",
+    "is_default": true,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 40
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 152,
+  "fields": {
+    "group": 1,
+    "name": "Huevo extra",
+    "price_adjustment": "10.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 60
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 153,
+  "fields": {
+    "group": 1,
+    "name": "Huevo",
+    "price_adjustment": "0.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "Proteina",
+    "sort_order": 70
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 154,
+  "fields": {
+    "group": 39,
+    "name": "Entera",
+    "price_adjustment": "0.00",
+    "is_default": true,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 155,
+  "fields": {
+    "group": 39,
+    "name": "Deslactosada",
+    "price_adjustment": "5.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 20
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 156,
+  "fields": {
+    "group": 40,
+    "name": "Entera",
+    "price_adjustment": "0.00",
+    "is_default": true,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 10
+  }
+},
+{
+  "model": "menu.productoption",
+  "pk": 157,
+  "fields": {
+    "group": 40,
+    "name": "Deslactosada",
+    "price_adjustment": "5.00",
+    "is_default": false,
+    "is_available": true,
+    "replacement_pair": "",
+    "sort_order": 20
+  }
+},
+{
+  "model": "menu.businesssettings",
+  "pk": 1,
+  "fields": {
+    "singleton_key": true,
+    "automatic_packaging_fee": true
+  }
+}
+]

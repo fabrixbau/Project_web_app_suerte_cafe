@@ -6,6 +6,7 @@
     const input = control.querySelector("input[name='q']");
     const list = control.querySelector(".menu-product-suggestions");
     const compactToggle = control.querySelector(".menu-search-toggle");
+    const compactMedia = window.matchMedia("(max-width: 600px), (min-width: 601px) and (max-width: 900px) and (orientation: portrait)");
     const allOptions = Array.from(list.querySelectorAll(".menu-product-suggestion"));
     let visibleOptions = [];
     let activeIndex = -1;
@@ -25,17 +26,50 @@
     function closeCompactSearch() {
         control.classList.remove("is-search-open");
         if (compactToggle) compactToggle.setAttribute("aria-expanded", "false");
+        input.removeAttribute("style");
+        list.removeAttribute("style");
         closeList();
+    }
+
+    function positionCompactSearch() {
+        if (!compactMedia.matches || !control.classList.contains("is-search-open")) return;
+
+        const viewportWidth = document.documentElement.clientWidth;
+        const toggleRect = compactToggle.getBoundingClientRect();
+        const width = Math.min(320, viewportWidth - 24);
+        const left = Math.max(12, Math.min(toggleRect.left, viewportWidth - width - 12));
+        const top = toggleRect.bottom + 7;
+
+        input.style.position = "fixed";
+        input.style.left = `${left}px`;
+        input.style.top = `${top}px`;
+        input.style.width = `${width}px`;
+        input.style.maxWidth = `${width}px`;
     }
 
     function positionList() {
         if (list.hidden) return;
         control.classList.remove("opens-up");
+        positionCompactSearch();
         const rect = input.getBoundingClientRect();
         const desiredHeight = Math.min(list.scrollHeight || 300, 300) + 12;
         const spaceBelow = window.innerHeight - rect.bottom;
         const spaceAbove = rect.top;
-        control.classList.toggle("opens-up", spaceBelow < desiredHeight && spaceAbove > spaceBelow);
+        const opensUp = spaceBelow < desiredHeight && spaceAbove > spaceBelow;
+        control.classList.toggle("opens-up", opensUp);
+
+        if (compactMedia.matches) {
+            const maxHeight = Math.max(96, Math.min(300, (opensUp ? spaceAbove : spaceBelow) - 16));
+            list.style.position = "fixed";
+            list.style.left = `${rect.left}px`;
+            list.style.width = `${rect.width}px`;
+            list.style.maxWidth = `${rect.width}px`;
+            list.style.maxHeight = `${maxHeight}px`;
+            list.style.top = opensUp ? "auto" : `${rect.bottom + 7}px`;
+            list.style.bottom = opensUp ? `${window.innerHeight - rect.top + 7}px` : "auto";
+        } else {
+            list.removeAttribute("style");
+        }
     }
 
     function refreshActive() {
@@ -77,14 +111,20 @@
     });
 
     if (compactToggle) {
-        compactToggle.addEventListener("click", () => {
+        compactToggle.addEventListener("click", (event) => {
+            event.preventDefault();
             const willOpen = !control.classList.contains("is-search-open");
             control.classList.toggle("is-search-open", willOpen);
             compactToggle.setAttribute("aria-expanded", String(willOpen));
             if (willOpen) {
-                window.setTimeout(() => input.focus(), 0);
+                positionCompactSearch();
+                window.setTimeout(() => {
+                    positionCompactSearch();
+                    input.focus();
+                    showMatches();
+                }, 0);
             } else {
-                closeList();
+                closeCompactSearch();
             }
         });
     }
@@ -112,7 +152,10 @@
     document.addEventListener("click", (event) => {
         if (!control.contains(event.target)) closeCompactSearch();
     });
-    window.addEventListener("resize", positionList);
+    window.addEventListener("resize", () => {
+        positionCompactSearch();
+        positionList();
+    });
     window.addEventListener("scroll", () => {
         if (list.hidden) return;
         const rect = input.getBoundingClientRect();
