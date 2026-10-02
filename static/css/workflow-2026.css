@@ -1337,21 +1337,21 @@ body:has(dialog[open]) .lachi *, body:has(#calculator:not([hidden]):not(.is-hidd
 .lachi-option:has(input:checked) .lachi-option-switch::after { transform: translateX(16px); }
 
 /* Looks de Lachi (cada usuario elige uno en Apariencia). */
-.lachi-look-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.lachi-look-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
 .lachi-look-options .appearance-choice-content { justify-content: center; min-height: 42px; padding: 6px 4px; font-size: .8rem; font-weight: 700; }
 .lachi-phrases-link { justify-self: start; color: var(--accent); font-size: .82rem; font-weight: 800; text-decoration: none; }
 .lachi-phrases-link:hover { text-decoration: underline; }
 /* Peluche: no tiene brazos y está sentado en un platito; se mueve el peluche, no el plato. */
 .lachi-plush { transform-box: fill-box; transform-origin: 50% 100%; }
-.lachi-look-peluche .lachi-brows { opacity: 0; transition: opacity .2s ease; }
-.lachi-look-peluche.is-alert .lachi-brows, .lachi-look-peluche.is-worried .lachi-brows { opacity: 1; }
-.lachi-look-peluche.is-celebrating .lachi-figure, .lachi-look-peluche.is-alert .lachi-figure, .lachi-look-peluche.is-worried .lachi-figure { animation: none; }
-.lachi-look-peluche.is-celebrating .lachi-plush { animation: lachi-jump .55s ease-out 3; }
-.lachi-look-peluche.is-alert .lachi-plush { animation: lachi-hop .35s ease-out 4; }
-.lachi-look-peluche.is-worried .lachi-plush { animation: lachi-shake .4s ease-in-out 3; }
-.lachi-look-peluche.is-waving .lachi-plush { animation: lachi-sway .6s ease-in-out 4; }
-.lachi-look-peluche.is-sleeping .lachi-figure { transform: none; }
-.lachi-look-peluche.is-sleeping .lachi-plush { transform: rotate(-7deg); }
+.lachi[data-lachi-look^="peluche"] .lachi-brows { opacity: 0; transition: opacity .2s ease; }
+.lachi[data-lachi-look^="peluche"].is-alert .lachi-brows, .lachi[data-lachi-look^="peluche"].is-worried .lachi-brows { opacity: 1; }
+.lachi[data-lachi-look^="peluche"].is-celebrating .lachi-figure, .lachi[data-lachi-look^="peluche"].is-alert .lachi-figure, .lachi[data-lachi-look^="peluche"].is-worried .lachi-figure { animation: none; }
+.lachi[data-lachi-look^="peluche"].is-celebrating .lachi-plush { animation: lachi-jump .55s ease-out 3; }
+.lachi[data-lachi-look^="peluche"].is-alert .lachi-plush { animation: lachi-hop .35s ease-out 4; }
+.lachi[data-lachi-look^="peluche"].is-worried .lachi-plush { animation: lachi-shake .4s ease-in-out 3; }
+.lachi[data-lachi-look^="peluche"].is-waving .lachi-plush { animation: lachi-sway .6s ease-in-out 4; }
+.lachi[data-lachi-look^="peluche"].is-sleeping .lachi-figure { transform: none; }
+.lachi[data-lachi-look^="peluche"].is-sleeping .lachi-plush { transform: rotate(-7deg); }
 @keyframes lachi-sway { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-7deg); } 75% { transform: rotate(7deg); } }
 
 /* Pantalla "Frases de Lachi". */

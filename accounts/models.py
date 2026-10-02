@@ -4,9 +4,10 @@ from django.db import models
 
 class Profile(models.Model):
     class MascotLook(models.TextChoices):
-        TIERNO = "tierno", "Tierno"
         CARTOON = "cartoon", "Cartoon"
         PELUCHE = "peluche", "Peluche"
+        CARTOON_HALLOWEEN = "cartoon_halloween", "Cartoon Halloween"
+        PELUCHE_HALLOWEEN = "peluche_halloween", "Peluche Halloween"
 
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
@@ -19,9 +20,9 @@ class Profile(models.Model):
     )
     # Look de Lachi (la mascota) que eligió este usuario en el panel Apariencia.
     mascot_look = models.CharField(
-        max_length=10,
+        max_length=20,
         choices=MascotLook.choices,
-        default=MascotLook.TIERNO,
+        default=MascotLook.CARTOON,
     )
 
     def __str__(self):
@@ -110,6 +111,7 @@ class LachiPhrase(models.Model):
         CANCELED = "canceled", "Pedido cancelado"
         ERROR = "error", "Error"
         WAKE = "wake", "Al despertar"
+        KITCHEN = "kitchen", "Cocina: llega un pedido"
 
     text = models.CharField("Frase", max_length=160)
     moment = models.CharField("Cuándo la dice", max_length=20, choices=Moment.choices, default=Moment.POKE)

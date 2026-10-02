@@ -25,6 +25,7 @@
         completed: ["¡Pedido completado!", "¡Excelente trabajo!", "¡Otro cliente feliz!", "Yeah buddy, lightweight baby!"],
         canceled: ["Pedido cancelado. ¡Ánimo, seguimos!"],
         error: ["Uy, algo salió mal. Revisa el mensaje", "¡Ups! Algo no salió bien"],
+        kitchen: ["Tlabaja..!! -.-", "¡Comanda nueva! A la plancha, equipo", "Pedido entrando, ¡manos a la obra!", "¡Otro antojo por cumplir! Échenle sazón", "¡Fuego en la cocina! Llegó un pedido"],
         wake: ["¡Ya desperté! ¿Me perdí de algo?", "¡Uf! Me quedé dormido un ratito", "I rose up from the dead, I do it all the time"],
         poke: [
             "¡Hola! Soy Lachi, la mascota de Suerte Café",
@@ -43,7 +44,7 @@
     // Frases editables (modelo LachiPhrase), inyectadas en la página con json_script.
     try {
         const saved = JSON.parse(document.querySelector("#lachi-phrases")?.textContent || "{}");
-        const keys = {poke: "poke", new_order: "newOrder", created: "created", completed: "completed", canceled: "canceled", error: "error", wake: "wake"};
+        const keys = {poke: "poke", new_order: "newOrder", created: "created", completed: "completed", canceled: "canceled", error: "error", wake: "wake", kitchen: "kitchen"};
         Object.entries(keys).forEach(([moment, key]) => {
             if (saved[moment]?.length) phrases[key] = saved[moment];
         });
@@ -177,6 +178,21 @@
         seenOrders = current;
         if (arrived) say(pick(phrases.newOrder), "is-alert");
     });
+
+    // Cocina: el tablero se redibuja cada 2 s (kitchen-board.js); si aparece un pedido con folio
+    // mayor a los ya vistos, Lachi avisa con una frase de cocina.
+    const kitchenBoard = document.querySelector("#kitchen-board");
+    if (kitchenBoard) {
+        const kitchenOrders = () => [...kitchenBoard.querySelectorAll("[data-kitchen-ticket]")]
+            .map((ticket) => Number.parseInt(ticket.dataset.ticketKey, 10))
+            .filter(Number.isFinite);
+        let lastKitchenOrder = Math.max(0, ...kitchenOrders());
+        new MutationObserver(() => {
+            const newest = Math.max(0, ...kitchenOrders());
+            if (newest > lastKitchenOrder) say(pick(phrases.kitchen), "is-alert");
+            lastKitchenOrder = Math.max(lastKitchenOrder, newest);
+        }).observe(kitchenBoard, {childList: true});
+    }
 
     applyVisibility();
     resetSleep();

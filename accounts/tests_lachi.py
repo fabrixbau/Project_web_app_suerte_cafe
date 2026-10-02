@@ -24,14 +24,28 @@ class LachiTests(TestCase):
 
     def test_frases_iniciales_y_crud_de_empleado(self):
         self.assertTrue(LachiPhrase.objects.filter(text="Never say never").exists())
-        self.client.post(reverse("accounts:lachi_phrases"), {"text": "  Hola   café ", "moment": "poke", "is_active": "on"})
-        phrase = LachiPhrase.objects.get(text="Hola café")
+        self.client.post(reverse("accounts:lachi_phrases"), {"text": "  Hola   amigos ", "moment": "poke", "is_active": "on"})
+        phrase = LachiPhrase.objects.get(text="Hola amigos")
         self.assertEqual(phrase.created_by, self.user)
-        self.assertContains(self.client.get(reverse("orders:list")), "Hola café")
+        self.assertContains(self.client.get(reverse("orders:list")), "Hola amigos")
         prefix = f"phrase-{phrase.id}"
-        self.client.post(reverse("accounts:lachi_phrase_edit", args=[phrase.id]), {f"{prefix}-text": "Hola café", f"{prefix}-moment": "poke"})
+        self.client.post(reverse("accounts:lachi_phrase_edit", args=[phrase.id]), {f"{prefix}-text": "Hola amigos", f"{prefix}-moment": "poke"})
         phrase.refresh_from_db()
         self.assertFalse(phrase.is_active)
-        self.assertNotContains(self.client.get(reverse("orders:list")), "Hola café")
+        self.assertNotContains(self.client.get(reverse("orders:list")), "Hola amigos")
         self.client.post(reverse("accounts:lachi_phrase_delete", args=[phrase.id]))
         self.assertFalse(LachiPhrase.objects.filter(pk=phrase.id).exists())
+
+    def test_lachi_aparece_en_cocina_con_frases_de_cocina(self):
+        page = self.client.get(reverse("orders:kitchen"))
+        self.assertContains(page, "data-lachi")
+        self.assertContains(page, "Tlabaja..!! -.-")
+
+    def test_looks_halloween_y_tierno_retirado(self):
+        for look in ("cartoon_halloween", "peluche_halloween"):
+            response = self.client.post(reverse("accounts:lachi_look"), {"look": look})
+            self.assertEqual(response.status_code, 200)
+        self.assertIn("lachi-hat", response.json()["html"])
+        self.assertEqual(self.client.post(reverse("accounts:lachi_look"), {"look": "tierno"}).status_code, 400)
+        Profile.objects.filter(user=self.user).update(mascot_look="tierno")
+        self.assertContains(self.client.get(reverse("orders:list")), "lachi-look-cartoon")
