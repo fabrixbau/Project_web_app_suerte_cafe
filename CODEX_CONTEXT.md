@@ -390,6 +390,7 @@ Portado del mismo cambio en Super Cocina (allí en `live-search.js`). En `/order
 - Al agregar el primer producto en "Comer aquí", `order-flow-focus.js` compacta el mapa de mesas y la página se recorría, sacando la lupa de la pantalla; tras cada `+`/`−` se mide cuánto se movió el input y se compensa con `window.scrollBy` para que la lista quede en el mismo lugar.
 - Estilos `.product-search-row/-controls/-control/-count` al final de `workflow-2026.css` (`?v=61`); en celular los botones bajan debajo del nombre y el nombre puede ocupar dos líneas.
 - Verificado con Playwright en 1440×900, 1180×820 táctil y 390×844: + suma (lista sigue abierta), − resta, contador = tarjeta, Personalizar abre su diálogo.
+- **Legibilidad (mismo día, pedido del dueño)**: en tema oscuro el resaltado al pasar el mouse usaba `--accent-soft` (fondo claro) con el texto claro del tema → ilegible. Ahora el resaltado es `color-mix(in srgb, var(--accent) 16%, var(--surface))` y el texto queda en `var(--text)` (sirve en claro y oscuro, en las 3 paletas). La barra y las sugerencias usan fuente del sistema (`system-ui, "Segoe UI", Roboto, Arial`) sin el peso 900 que heredaban: nombre 600, categoría 400, precio 600, texto escrito 500. Ojo: el peso del input se fija en `.product-search-control` porque la regla global `input:not([type=checkbox])…{font-weight:inherit}` es más específica que cualquier selector corto sobre el input. En tema oscuro el precio se aclara (`color-mix` 45% acento / texto). `workflow-2026.css?v=64`.
 
 ### 5.3 Usuarios y Permisos
 - Sistema de autenticación de Django

@@ -1378,7 +1378,6 @@ body:has(dialog[open]) .lachi *, body:has(#calculator:not([hidden]):not(.is-hidd
 /* Nuevo pedido: cada sugerencia de la lupa trae − # + y Personalizar (presionan los botones
    reales de la tarjeta). Si no caben junto al nombre, bajan a una segunda línea. */
 .product-search-row { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; padding-right: 6px; border-radius: 8px; }
-.product-search-row:hover, .product-search-row:has(.product-search-suggestion.is-active) { background: var(--accent-soft); }
 .product-search-row > .product-search-suggestion { flex: 1 1 150px; width: auto; min-width: 0; background: transparent; }
 .product-search-controls { display: flex; flex: 0 0 auto; align-items: center; gap: 5px; margin-left: auto; }
 .product-search-control {
@@ -1389,3 +1388,25 @@ body:has(dialog[open]) .lachi *, body:has(#calculator:not([hidden]):not(.is-hidd
 .product-search-control.is-customize { padding-inline: 10px; color: var(--accent); background: var(--accent-soft); font-size: .76rem; font-weight: 800; }
 .product-search-count { min-width: 22px; color: var(--text); font-size: .95rem; font-weight: 900; text-align: center; }
 .product-search-row .product-search-suggestion strong { overflow: visible; white-space: normal; overflow-wrap: anywhere; }
+
+/* Lupa de Nuevo pedido: letra legible (fuente del sistema, sin negritas extremas) y resaltado
+   que respeta el tema; antes el fondo claro --accent-soft dejaba el texto claro del tema
+   oscuro casi invisible al pasar el mouse. */
+.product-search-panel input[data-product-search-input],
+.product-search-suggestions { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
+.product-search-panel .product-search-control { font-weight: 500; } /* el input hereda este peso */
+.product-search-suggestion strong { font-weight: 600; letter-spacing: 0; }
+.product-search-suggestion small { font-weight: 400; }
+.product-search-suggestion span { font-weight: 600; }
+.product-search-count { font-weight: 700; }
+.product-search-control.is-customize { font-weight: 600; }
+.product-search-suggestions .product-search-suggestion:hover,
+.product-search-suggestions .product-search-suggestion.is-active,
+.product-search-row:hover,
+.product-search-row:has(.product-search-suggestion.is-active) {
+    color: var(--text);
+    background: color-mix(in srgb, var(--accent) 16%, var(--surface));
+}
+.product-search-row > .product-search-suggestion:hover,
+.product-search-row > .product-search-suggestion.is-active { background: transparent; }
+:root[data-theme="dark"] .product-search-suggestion span { color: color-mix(in srgb, var(--accent) 45%, var(--text)); }
