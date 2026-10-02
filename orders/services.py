@@ -69,7 +69,7 @@ def load_configurable_products(product_ids):
     }
 
 
-def prepare_configured_item(product, quantity, selected_option_ids=None):
+def prepare_configured_item(product, quantity, selected_option_ids=None, comment=""):
     if quantity < 1:
         raise ValidationError("La cantidad debe ser mayor que cero.")
 
@@ -140,6 +140,10 @@ def prepare_configured_item(product, quantity, selected_option_ids=None):
     if unit_price < 0:
         raise ValidationError("La configuración produce un precio inválido.")
 
+    clean_comment = " ".join(str(comment or "").split())
+    if len(clean_comment) > 500:
+        raise ValidationError("El comentario del producto es demasiado largo.")
+
     return {
         "product": product,
         "quantity": quantity,
@@ -147,7 +151,8 @@ def prepare_configured_item(product, quantity, selected_option_ids=None):
         "unit_price": unit_price,
         "configuration_snapshot": snapshot,
         "configuration_signature": ",".join(map(str, sorted(selected_ids))),
-        "is_customized": selected_ids != default_ids,
+        "is_customized": selected_ids != default_ids or bool(clean_comment),
+        "customization_comment": clean_comment,
     }
 
 
@@ -238,8 +243,9 @@ def create_order(*, user, order_type, items, customer_data=None, packaging_items
             products[item["product_id"]],
             item["quantity"],
             item.get("option_ids"),
+            item.get("comment", ""),
         )
-        key = (configured["product"].id, configured["configuration_signature"])
+        key = (configured["product"].id, configured["configuration_signature"], configured["customization_comment"])
         if key in configured_items:
             configured_items[key]["quantity"] += configured["quantity"]
         else:
@@ -262,6 +268,7 @@ def create_order(*, user, order_type, items, customer_data=None, packaging_items
             configuration_snapshot=configured["configuration_snapshot"],
             configuration_signature=configured["configuration_signature"],
             is_customized=configured["is_customized"],
+            customization_comment=configured["customization_comment"],
         )
 
         total += subtotal
@@ -496,10 +503,12 @@ def update_order_products(*, order, item_quantities, new_items, packaging_items=
             products[new_item["product_id"]],
             new_item["quantity"],
             new_item.get("option_ids"),
+            new_item.get("comment", ""),
         )
         key = (
             configured["product"].id,
             configured["configuration_signature"],
+            configured["customization_comment"],
         )
         if key in prepared_additions:
             prepared_additions[key]["quantity"] += configured["quantity"]
@@ -508,7 +517,7 @@ def update_order_products(*, order, item_quantities, new_items, packaging_items=
 
     current_by_configuration = {}
     for item in current_items.values():
-        key = (item.product_id, item.configuration_signature)
+        key = (item.product_id, item.configuration_signature, item.customization_comment)
         current_by_configuration.setdefault(key, item)
 
     new_configurations = []
@@ -554,6 +563,7 @@ def update_order_products(*, order, item_quantities, new_items, packaging_items=
             configuration_snapshot=configured["configuration_snapshot"],
             configuration_signature=configured["configuration_signature"],
             is_customized=configured["is_customized"],
+            customization_comment=configured["customization_comment"],
         )
 
     order.packaging_fee = replace_packaging_items(order, packaging_items or [])

@@ -14,6 +14,10 @@
     </header>
     <section id="kitchen-board" data-live-url="{% url 'orders:kitchen_live' %}">{% include "orders/_kitchen_board.html" %}</section>
 </main>
+<dialog id="kitchen-hidden-dialog" class="kitchen-hidden-dialog" aria-labelledby="kitchen-hidden-title">
+    <header><div><p class="eyebrow">Fuera de vista</p><h2 id="kitchen-hidden-title">Productos ocultos</h2><span data-hidden-dialog-context></span></div><button type="button" data-hidden-dialog-close aria-label="Cerrar">×</button></header>
+    <div class="kitchen-hidden-dialog-list" data-hidden-dialog-list></div>
+</dialog>
 {% endblock %}
 {% load compat %}
-{% block extra_js %}<script src="{% compatible_js 'kitchen-board.js' %}?v=2"></script>{% endblock %}
+{% block extra_js %}<script src="{% compatible_js 'kitchen-board.js' %}?v=5"></script>{% endblock %}

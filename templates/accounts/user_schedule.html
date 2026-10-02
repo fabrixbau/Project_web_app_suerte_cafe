@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Horario de {{ employee.username }} | Suerte Café{% endblock %}
+
+{% block content %}
+<div class="employee-schedule-page">
+    <div class="page-heading employee-schedule-heading">
+        <div>
+            <p class="eyebrow">Administración de asistencia</p>
+            <h1>Horario de {{ employee.get_full_name|default:employee.username }}</h1>
+            <p>Activa únicamente los días laborales y define la hora exacta de entrada.</p>
+        </div>
+        <a class="action-link action-link-secondary" href="{% url 'accounts:user_list' %}">Volver a empleados</a>
+    </div>
+
+    <form method="post" class="form-card employee-schedule-form">
+        {% csrf_token %}
+        <header>
+            <div><h2>Horario semanal</h2><p>No existe tolerancia: cualquier acceso posterior se registra como retraso.</p></div>
+        </header>
+        <div class="schedule-week-grid">
+            {% for row in schedule_rows %}
+            <div class="schedule-day-row">
+                <label class="schedule-day-toggle" for="enabled-{{ row.weekday }}">
+                    <input id="enabled-{{ row.weekday }}" type="checkbox" name="enabled_{{ row.weekday }}" {% if row.enabled %}checked{% endif %} data-schedule-toggle>
+                    <span aria-hidden="true"></span>
+                    <strong>{{ row.label }}</strong>
+                </label>
+                <label class="schedule-time-field" for="entry-time-{{ row.weekday }}">
+                    <span>Hora de entrada</span>
+                    <input id="entry-time-{{ row.weekday }}" type="time" name="entry_time_{{ row.weekday }}" value="{{ row.entry_time }}" {% if not row.enabled %}disabled{% endif %} data-schedule-time>
+                </label>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="form-actions employee-schedule-actions">
+            <a class="action-link action-link-secondary" href="{% url 'accounts:user_list' %}">Cancelar</a>
+            <button type="submit">Guardar horario</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.querySelectorAll('[data-schedule-toggle]').forEach(function (toggle) {
+    var row = toggle.closest('.schedule-day-row');
+    var time = row.querySelector('[data-schedule-time]');
+    function sync() {
+        time.disabled = !toggle.checked;
+        row.classList.toggle('is-disabled', !toggle.checked);
+        if (toggle.checked && !time.value) time.value = '08:00';
+    }
+    toggle.addEventListener('change', sync);
+    sync();
+});
+</script>
+{% endblock %}

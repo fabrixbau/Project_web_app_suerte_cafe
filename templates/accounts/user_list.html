@@ -34,6 +34,7 @@
                         {% endif %}
                     </td>
                     <td>
+                        <a class="small-action" href="{% url 'accounts:user_schedule' employee.id %}">Horarios</a>
                         {% if perms.auth.delete_user and employee != user %}
                             <a
                                 class="action-link action-link-danger"

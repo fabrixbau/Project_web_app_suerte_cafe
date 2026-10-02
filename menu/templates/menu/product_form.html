@@ -30,7 +30,7 @@
             <p class="section-help">Crea aquí mismo los grupos de opciones (por ejemplo "Leche" o "Tamaño") y sus ingredientes, sin salir de esta pantalla. Marca como estándar lo que normalmente incluye el producto. Para sustitutos equivalentes, escribe el mismo nombre en "Par de sustitución" en ambas opciones (por ejemplo, "Leche" en Leche entera y Leche deslactosada).</p>
             <div class="integrated-customization-toolbar">
                 <button type="button" data-add-group>Agregar grupo</button>
-                <label>Asociar grupo existente<select data-group-library data-native-select><option value="">Selecciona un grupo</option></select></label>
+                <label>Asociar grupo existente<select data-group-library><option value="">Selecciona un grupo</option></select></label>
                 <button type="button" class="secondary-action" data-copy-group>Asociar grupo</button>
             </div>
             <div data-customization-errors class="message error" hidden></div>
@@ -45,4 +45,4 @@
 </div>
 {% endblock %}
 {% load compat %}
-{% block extra_js %}<script src="{% compatible_js 'modern-select.js' %}?v=4"></script><script src="{% static 'js/product-image-framing.js' %}?v=1"></script><script src="{% static 'js/product-customization-editor.js' %}?v=1"></script>{% endblock %}
+{% block extra_js %}<script src="{% compatible_js 'product-image-framing.js' %}?v=2"></script><script src="{% compatible_js 'product-customization-editor.js' %}?v=2"></script>{% endblock %}

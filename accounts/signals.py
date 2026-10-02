@@ -1,8 +1,10 @@
 from django.conf import settings
 from django.contrib.auth.models import Group, Permission
+from django.contrib.auth.signals import user_logged_in
 from django.db.models.signals import post_migrate, post_save
 from django.dispatch import receiver
 
+from .attendance import register_check_in
 from .models import Profile
 
 
@@ -14,6 +16,11 @@ REGULAR_USER_GROUP = "Usuario regular"
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
         Profile.objects.get_or_create(user=instance)
+
+
+@receiver(user_logged_in)
+def register_daily_attendance(sender, request, user, **kwargs):
+    register_check_in(user)
 
 
 @receiver(post_migrate)

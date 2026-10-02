@@ -140,6 +140,8 @@ class Order(models.Model):
         choices=BarStatus.choices,
         default=BarStatus.PENDING,
     )
+    cold_bar_completed_at = models.DateTimeField(null=True, blank=True)
+    hot_bar_completed_at = models.DateTimeField(null=True, blank=True)
 
     customer_name = models.CharField(max_length=150, blank=True)
     phone = models.CharField(max_length=30, blank=True)
@@ -283,6 +285,7 @@ class OrderItem(models.Model):
     configuration_snapshot = models.JSONField(default=list, blank=True)
     configuration_signature = models.CharField(max_length=500, blank=True)
     is_customized = models.BooleanField(default=False)
+    customization_comment = models.CharField(max_length=500, blank=True)
     quantity = models.PositiveIntegerField(
         validators=[MinValueValidator(1)],
     )

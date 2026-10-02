@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Check-in | Suerte Café{% endblock %}
+
+{% block content %}
+<nav class="report-section-tabs"><a href="{% url 'orders:reports' %}">Ventas</a><a href="{% url 'orders:reconciliation' %}">Caja y conciliación</a><a class="is-active" href="{% url 'orders:attendance_report' %}">Check-in</a></nav>
+
+<div class="page-heading attendance-heading">
+    <div><p class="eyebrow">Administración de asistencia</p><h1>Check-in de empleados</h1><p>El primer inicio de sesión del día determina si la llegada fue puntual o con retraso.</p></div>
+</div>
+
+<form method="get" class="attendance-filters form-card">
+    <div><label for="attendance-date-from">Desde</label><input id="attendance-date-from" type="date" name="date_from" value="{{ date_from|date:'Y-m-d' }}"></div>
+    <div><label for="attendance-date-to">Hasta</label><input id="attendance-date-to" type="date" name="date_to" value="{{ date_to|date:'Y-m-d' }}"></div>
+    <div><label for="attendance-employee">Empleado</label><select id="attendance-employee" name="employee"><option value="">Todos</option>{% for employee in employees %}<option value="{{ employee.id }}" {% if selected_employee == employee.id|stringformat:'s' %}selected{% endif %}>{{ employee.get_full_name|default:employee.username }}</option>{% endfor %}</select></div>
+    <div><label for="attendance-status">Estado</label><select id="attendance-status" name="status"><option value="">Todos</option>{% for value, label in status_choices %}<option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+    <div class="attendance-filter-actions"><button type="submit">Consultar</button><a class="action-link action-link-secondary" href="{% url 'orders:attendance_report' %}">Hoy</a></div>
+</form>
+
+<section class="attendance-summary-grid">
+    <article><span>Check-ins</span><strong>{{ summary.total }}</strong><small>{{ date_from|date:"d/m/Y" }}{% if date_to != date_from %} – {{ date_to|date:"d/m/Y" }}{% endif %}</small></article>
+    <article class="is-on-time"><span>A tiempo</span><strong>{{ summary.on_time }}</strong><small>Entrada puntual o anticipada</small></article>
+    <article class="is-late"><span>Retrasos</span><strong>{{ summary.late }}</strong><small>Promedio: {{ summary.average_late|floatformat:0 }} min</small></article>
+    <article><span>Sin horario</span><strong>{{ summary.no_schedule }}</strong><small>Requieren configuración</small></article>
+    {% if summary.without_record != None %}<article><span>Sin registro</span><strong>{{ summary.without_record }}</strong><small>No significa ausencia</small></article>{% endif %}
+</section>
+
+<section class="attendance-records-panel">
+    <header><div><p class="eyebrow">Detalle</p><h2>Registros de asistencia</h2></div><span>{{ page.paginator.count }} resultado{{ page.paginator.count|pluralize }}</span></header>
+    <div class="attendance-table-wrap">
+        <table class="attendance-table">
+            <thead><tr><th>Empleado</th><th>Fecha</th><th>Horario</th><th>Primer check-in</th><th>Retraso</th><th>Último acceso</th><th>Accesos</th><th>Estado</th></tr></thead>
+            <tbody>
+                {% for check_in in page %}
+                <tr>
+                    <td data-label="Empleado"><strong>{{ check_in.employee_name_snapshot }}</strong></td>
+                    <td data-label="Fecha">{{ check_in.work_date|date:"d/m/Y" }}</td>
+                    <td data-label="Horario">{% if check_in.scheduled_entry_time %}{{ check_in.scheduled_entry_time|time:"H:i" }}{% else %}—{% endif %}</td>
+                    <td data-label="Primer check-in">{{ check_in.first_check_in_at|date:"H:i" }}</td>
+                    <td data-label="Retraso">{% if check_in.status == "late" %}{{ check_in.late_minutes }} min{% else %}—{% endif %}</td>
+                    <td data-label="Último acceso">{{ check_in.last_login_at|date:"H:i" }}</td>
+                    <td data-label="Accesos">{{ check_in.login_count }}</td>
+                    <td data-label="Estado"><span class="attendance-status is-{{ check_in.status }}">{{ check_in.get_status_display }}</span></td>
+                </tr>
+                {% empty %}<tr><td colspan="8" class="attendance-empty">No hay check-ins para los filtros seleccionados.</td></tr>{% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+{% if page.paginator.num_pages > 1 %}<nav class="pagination">{% if page.has_previous %}<a href="?{{ filter_query }}&page={{ page.previous_page_number }}">Anterior</a>{% endif %}<span>Página {{ page.number }} de {{ page.paginator.num_pages }}</span>{% if page.has_next %}<a href="?{{ filter_query }}&page={{ page.next_page_number }}">Siguiente</a>{% endif %}</nav>{% endif %}
+{% endblock %}

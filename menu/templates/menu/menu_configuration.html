@@ -14,6 +14,7 @@
         <a href="{% url 'menu:configuration' %}?tab=products" class="{% if active_tab == 'products' %}is-selected{% endif %}">Productos</a>
         <a href="{% url 'menu:configuration' %}?tab=categories" class="{% if active_tab == 'categories' %}is-selected{% endif %}">Categorías</a>
         {% if perms.menu.change_product %}<a href="{% url 'menu:configuration' %}?tab=settings" class="{% if active_tab == 'settings' %}is-selected{% endif %}">Ajustes</a>{% endif %}
+        {% if perms.menu.add_product %}<a class="mobile-new-product-action" href="{% url 'menu:product_create' %}">+ Nuevo producto</a>{% endif %}
     </nav>
 </div>
 
@@ -22,10 +23,22 @@
         <form method="get" class="menu-search-form">
             <input type="hidden" name="tab" value="products">
             <div class="menu-filter-fields">
-                <label class="search-control">
-                    <img src="{% static 'img/ui/icons/search.svg' %}" alt="">
-                    <input name="q" value="{{ search }}" placeholder="Buscar productos..." aria-label="Buscar productos">
-                </label>
+                <div class="search-control" data-menu-product-search>
+                    <img class="search-control-icon" src="{% static 'img/ui/icons/search.svg' %}" alt="">
+                    <button class="menu-search-toggle" type="button" aria-label="Abrir búsqueda de productos" aria-expanded="false">
+                        <img src="{% static 'img/ui/icons/search.svg' %}" alt="" aria-hidden="true">
+                    </button>
+                    <input name="q" value="{{ search }}" placeholder="Buscar productos..." aria-label="Buscar productos" autocomplete="off" aria-autocomplete="list" aria-expanded="false">
+                    <div class="menu-product-suggestions" role="listbox" aria-label="Productos encontrados" hidden>
+                        {% for suggestion in product_suggestions %}
+                            <button type="button" class="menu-product-suggestion" role="option" aria-selected="false" data-search-value="{{ suggestion.name }}">
+                                <strong>{{ suggestion.name }}</strong>
+                                <small>{{ suggestion.category.name }}</small>
+                                <span>${{ suggestion.price }}</span>
+                            </button>
+                        {% endfor %}
+                    </div>
+                </div>
 
                 <select name="category" aria-label="Filtrar por categoría">
                     <option value="">Todas las categorías</option>
@@ -39,18 +52,18 @@
                     <option value="available" {% if availability == "available" %}selected{% endif %}>Disponibles</option>
                     <option value="unavailable" {% if availability == "unavailable" %}selected{% endif %}>No disponibles</option>
                 </select>
-            </div>
 
-            <div class="menu-filter-actions">
-                <button type="submit">Buscar</button>
-                {% if search or selected_category or availability %}
-                    <a class="action-link action-link-secondary" href="{% url 'menu:configuration' %}?tab=products">Limpiar</a>
-                {% endif %}
+                <div class="menu-filter-actions">
+                    {% if search or selected_category or availability %}
+                        <a class="action-link action-link-secondary" href="{% url 'menu:configuration' %}?tab=products">Limpiar</a>
+                    {% endif %}
+                    <button type="submit">Buscar</button>
+                </div>
             </div>
         </form>
 
         {% if perms.menu.add_product %}
-            <a class="action-link action-link-primary" href="{% url 'menu:product_create' %}">+ Nuevo producto</a>
+            <a class="action-link action-link-primary desktop-new-product-action" href="{% url 'menu:product_create' %}">+ Nuevo producto</a>
         {% endif %}
     </section>
 
@@ -81,7 +94,7 @@
                                     <input type="hidden" name="next" value="{{ request.get_full_path }}">
                                     <button type="submit" class="availability-toggle {% if product.is_available %}is-available{% else %}is-unavailable{% endif %}">
                                         <span class="availability-switch" aria-hidden="true"><span></span></span>
-                                        {% if product.is_available %}Disponible{% else %}No disponible{% endif %}
+                                        <span class="availability-label">{% if product.is_available %}Disponible{% else %}No disponible{% endif %}</span>
                                     </button>
                                 </form>
                             {% else %}
@@ -92,7 +105,7 @@
                             <div class="table-actions">
                                 {% if perms.menu.change_product %}
                                     <a class="small-action" href="{% url 'menu:product_configuration' product.id %}">Opciones</a>
-                                    <a class="small-action" href="{% url 'menu:product_edit' product.id %}"><img src="{% static 'img/ui/icons/pencil.svg' %}" alt=""> Editar</a>
+                                    <a class="small-action icon-only product-edit-action" href="{% url 'menu:product_edit' product.id %}" aria-label="Editar {{ product.name }}" title="Editar {{ product.name }}"><img src="{% static 'img/ui/icons/pencil.svg' %}" alt="" aria-hidden="true"></a>
                                 {% endif %}
                                 {% if perms.menu.delete_product %}
                                     <a class="small-action destructive" href="{% url 'menu:product_delete' product.id %}"><img src="{% static 'img/ui/icons/trash-2.svg' %}" alt=""> Eliminar</a>
@@ -139,4 +152,9 @@
         </div>
     </section>
 {% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/menu-product-search.js' %}?v=2"></script>
+<script src="{% static 'js/menu-availability-toggle.js' %}?v=1"></script>
 {% endblock %}

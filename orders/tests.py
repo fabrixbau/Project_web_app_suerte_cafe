@@ -9,8 +9,9 @@ from django.utils import timezone
 
 from menu.models import Category, Product
 
-from .models import Order
+from .models import DeliveryCustomer, Order
 from .services import create_order
+from .views import build_kitchen_context
 
 
 class CreateOrderTests(TestCase):
@@ -83,6 +84,67 @@ class CreateOrderTests(TestCase):
                 order_type=Order.OrderType.PICKUP,
                 items=[],
             )
+
+    def test_custom_comments_are_preserved_and_grouped_only_when_equal(self):
+        order = create_order(
+            user=self.user,
+            order_type=Order.OrderType.PICKUP,
+            items=[
+                {"product_id": self.product.id, "quantity": 1, "option_ids": [], "comment": "Bien caliente"},
+                {"product_id": self.product.id, "quantity": 2, "option_ids": [], "comment": "Bien caliente"},
+                {"product_id": self.product.id, "quantity": 1, "option_ids": [], "comment": "Sin tapa"},
+            ],
+        )
+
+        items = list(order.items.order_by("customization_comment"))
+        self.assertEqual(len(items), 2)
+        self.assertEqual(
+            [(item.customization_comment, item.quantity) for item in items],
+            [("Bien caliente", 3), ("Sin tapa", 1)],
+        )
+        self.assertTrue(all(item.is_customized for item in items))
+
+    def test_kitchen_prioritizes_pending_and_sorts_completed_by_closing_time(self):
+        now = timezone.now()
+        pending_old = create_order(
+            user=self.user,
+            order_type=Order.OrderType.PICKUP,
+            items=[{"product_id": self.product.id, "quantity": 1}],
+        )
+        pending_new = create_order(
+            user=self.user,
+            order_type=Order.OrderType.PICKUP,
+            items=[{"product_id": self.product.id, "quantity": 1}],
+        )
+        completed_old = create_order(
+            user=self.user,
+            order_type=Order.OrderType.PICKUP,
+            items=[{"product_id": self.product.id, "quantity": 1}],
+        )
+        completed_new = create_order(
+            user=self.user,
+            order_type=Order.OrderType.PICKUP,
+            items=[{"product_id": self.product.id, "quantity": 1}],
+        )
+        Order.objects.filter(pk=pending_old.pk).update(created_at=now - timedelta(minutes=20))
+        Order.objects.filter(pk=pending_new.pk).update(created_at=now - timedelta(minutes=10))
+        Order.objects.filter(pk=completed_old.pk).update(
+            status=Order.Status.COMPLETED,
+            hot_bar_status=Order.BarStatus.COMPLETED,
+            hot_bar_completed_at=now - timedelta(minutes=5),
+        )
+        Order.objects.filter(pk=completed_new.pk).update(
+            status=Order.Status.COMPLETED,
+            hot_bar_status=Order.BarStatus.COMPLETED,
+            hot_bar_completed_at=now - timedelta(minutes=1),
+        )
+
+        hot_order_ids = [row["order"].id for row in build_kitchen_context("hot")["hot_rows"]]
+
+        self.assertEqual(
+            hot_order_ids,
+            [pending_old.id, pending_new.id, completed_old.id, completed_new.id],
+        )
 
     def test_rejects_unavailable_product(self):
         self.product.is_available = False
@@ -179,3 +241,38 @@ class CreateOrderTests(TestCase):
 
         self.assertIn(today_order.id, visible_ids)
         self.assertIn(previous_order.id, visible_ids)
+
+
+class DeliveryCustomerLookupTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_superuser(
+            username="admin_clientes",
+            password="clave-segura-123",
+        )
+        self.client.force_login(self.user)
+        DeliveryCustomer.objects.create(
+            name="María González",
+            phone="555 123 4567",
+            street="Calle Reforma",
+            exterior_number="18",
+            neighborhood="Centro",
+        )
+        DeliveryCustomer.objects.create(name="Mario López", phone="555 987 0000")
+
+    def test_lookup_returns_partial_name_matches(self):
+        response = self.client.get(reverse("orders:delivery_customer_lookup"), {"q": "mari"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            [customer["name"] for customer in response.json()["matches"]],
+            ["María González", "Mario López"],
+        )
+
+    def test_lookup_returns_phone_match_and_saved_address(self):
+        response = self.client.get(reverse("orders:delivery_customer_lookup"), {"q": "123 45"})
+
+        self.assertEqual(response.status_code, 200)
+        match = response.json()["matches"][0]
+        self.assertEqual(match["name"], "María González")
+        self.assertEqual(match["street"], "Calle Reforma")
+        self.assertEqual(match["exterior_number"], "18")

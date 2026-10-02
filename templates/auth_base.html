@@ -12,10 +12,10 @@
 
     <link
         rel="stylesheet"
-        href="{% static 'css/app.css' %}?v=20260822-8"
+        href="{% static 'css/app.css' %}?v=20260930-21"
     >
-    <link rel="stylesheet" href="{% static 'css/workflow-2026.css' %}?v=16">
-    {% if legacy_ios9 %}<link rel="stylesheet" href="{% static 'css/legacy-ios9.css' %}?v=1">{% endif %}
+    <link rel="stylesheet" href="{% static 'css/workflow-2026.css' %}?v=49">
+    {% if legacy_ios9 %}<link rel="stylesheet" href="{% static 'css/legacy-ios9.css' %}?v=4">{% endif %}
 </head>
 
 <body class="auth-page{% if legacy_ios9 %} legacy-ios9{% endif %}">
@@ -40,7 +40,7 @@
         </main>
     </div>
     {% if legacy_ios9 %}<script src="{% static 'js/legacy-polyfills.js' %}?v=1"></script>{% endif %}
-    <script src="{% compatible_js 'modern-select.js' %}?v=4"></script>
+    <script src="{% compatible_js 'modern-select.js' %}?v=6"></script>
     <script src="{% compatible_js 'number-input.js' %}?v=2"></script>
     {% block extra_js %}{% endblock %}
 </body>

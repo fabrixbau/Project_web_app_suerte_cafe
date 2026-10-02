@@ -1,9 +1,11 @@
 from django.contrib import messages
+from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required, permission_required
 from django.core.exceptions import ValidationError
 from datetime import timedelta
 from decimal import Decimal
 import json
+import unicodedata
 
 from django.core.paginator import Paginator
 from django.db import transaction
@@ -19,6 +21,7 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
 from menu.models import BusinessSettings, Category, PackagingType, Product, ProductOption
+from accounts.models import AttendanceCheckIn
 from accounts.permissions import administrator_required
 
 from .forms import (
@@ -135,14 +138,15 @@ def parse_custom_items(request, errors):
             product_id = int(item["product_id"])
             quantity = int(item["quantity"])
             option_ids = [int(value) for value in item.get("option_ids", [])]
+            comment = str(item.get("comment", "")).strip()
         except (KeyError, TypeError, ValueError):
             errors.append("Un producto personalizado contiene datos inválidos.")
             continue
-        if quantity < 1 or quantity > 99 or len(option_ids) > 50:
+        if quantity < 1 or quantity > 99 or len(option_ids) > 50 or len(comment) > 500:
             errors.append("Una cantidad o selección personalizada no es válida.")
             continue
         items.append(
-            {"product_id": product_id, "quantity": quantity, "option_ids": option_ids}
+            {"product_id": product_id, "quantity": quantity, "option_ids": option_ids, "comment": comment}
         )
     return items
 
@@ -150,28 +154,52 @@ def parse_custom_items(request, errors):
 @login_required
 @permission_required("orders.add_order", raise_exception=True)
 def delivery_customer_lookup(request):
-    normalized_name = normalize_customer_name(request.GET.get("name", ""))
-    if not normalized_name:
-        return JsonResponse({"found": False})
+    raw_query = (request.GET.get("q") or request.GET.get("name") or "").strip()
+    normalized_query = normalize_customer_name(raw_query)
+    if not normalized_query:
+        return JsonResponse({"found": False, "matches": []})
 
-    customer = DeliveryCustomer.objects.filter(
-        normalized_name=normalized_name
-    ).first()
-    if not customer:
-        return JsonResponse({"found": False})
+    def customer_payload(customer):
+        return {
+            "id": customer.id,
+            "name": customer.name,
+            "phone": customer.phone,
+            "street": customer.street,
+            "exterior_number": customer.exterior_number,
+            "interior_number": customer.interior_number,
+            "neighborhood": customer.neighborhood,
+            "notes": customer.notes,
+        }
 
+    def search_text(value):
+        return "".join(
+            character for character in unicodedata.normalize("NFKD", value)
+            if not unicodedata.combining(character)
+        ).casefold()
+
+    folded_query = search_text(normalized_query)
+    phone_query = "".join(character for character in raw_query if character.isdigit())
+    matches = []
+    for customer in DeliveryCustomer.objects.only(
+        "id", "name", "normalized_name", "phone", "street", "exterior_number",
+        "interior_number", "neighborhood", "notes",
+    ).order_by("name"):
+        customer_phone = "".join(character for character in customer.phone if character.isdigit())
+        if folded_query in search_text(customer.normalized_name) or (
+            phone_query and phone_query in customer_phone
+        ):
+            matches.append(customer)
+        if len(matches) == 8:
+            break
+    exact_customer = next(
+        (customer for customer in matches if search_text(customer.normalized_name) == folded_query),
+        None,
+    )
     return JsonResponse(
         {
-            "found": True,
-            "customer": {
-                "name": customer.name,
-                "phone": customer.phone,
-                "street": customer.street,
-                "exterior_number": customer.exterior_number,
-                "interior_number": customer.interior_number,
-                "neighborhood": customer.neighborhood,
-                "notes": customer.notes,
-            },
+            "found": exact_customer is not None,
+            "customer": customer_payload(exact_customer) if exact_customer else None,
+            "matches": [customer_payload(customer) for customer in matches],
         }
     )
 
@@ -610,7 +638,6 @@ def build_kitchen_context(filter_mode=None):
             status__in=[Order.Status.IN_PROGRESS, Order.Status.COMPLETED],
         ).order_by("-created_at")
     )
-    orders.sort(key=lambda order: order.status == Order.Status.COMPLETED)
     rows = []
     for order in orders:
         items = list(order.items.all())
@@ -623,11 +650,35 @@ def build_kitchen_context(filter_mode=None):
             "cold_quantity": sum(item.quantity for item in cold_items),
             "hot_quantity": sum(item.quantity for item in hot_items),
         })
+    def station_sort_key(row, station):
+        order = row["order"]
+        status = getattr(order, f"{station}_bar_status")
+        completed_at = getattr(order, f"{station}_bar_completed_at")
+        if status == Order.BarStatus.COMPLETED:
+            return (1, completed_at or order.updated_at, order.created_at)
+        return (0, order.created_at, order.created_at)
+
+    cold_rows = sorted(
+        (row for row in rows if row["cold_items"]),
+        key=lambda row: station_sort_key(row, "cold"),
+    )
+    hot_rows = sorted(
+        (row for row in rows if row["hot_items"]),
+        key=lambda row: station_sort_key(row, "hot"),
+    )
+    two_player_rows = []
+    for index in range(max(len(cold_rows), len(hot_rows))):
+        two_player_rows.append({
+            "cold": cold_rows[index] if index < len(cold_rows) else None,
+            "hot": hot_rows[index] if index < len(hot_rows) else None,
+        })
+
     return {
         "filter_mode": filter_mode,
         "order_rows": rows,
-        "cold_rows": [row for row in rows if row["cold_items"]],
-        "hot_rows": [row for row in rows if row["hot_items"]],
+        "cold_rows": cold_rows,
+        "hot_rows": hot_rows,
+        "two_player_rows": two_player_rows,
         "cold_count": sum(bool(row["cold_items"]) for row in rows),
         "hot_count": sum(bool(row["hot_items"]) for row in rows),
     }
@@ -667,10 +718,15 @@ def update_bar_status(request, order_id):
             
             if bar == "cold":
                 order.cold_bar_status = status
+                order.cold_bar_completed_at = timezone.now() if status == Order.BarStatus.COMPLETED else None
             else:
                 order.hot_bar_status = status
+                order.hot_bar_completed_at = timezone.now() if status == Order.BarStatus.COMPLETED else None
 
-            order.save(update_fields=["cold_bar_status", "hot_bar_status", "updated_at"])
+            order.save(update_fields=[
+                "cold_bar_status", "hot_bar_status",
+                "cold_bar_completed_at", "hot_bar_completed_at", "updated_at",
+            ])
             station_items.update(preparation_status=status)
             
             # Update overall status based on bar statuses
@@ -971,3 +1027,71 @@ def sales_report(request):
             "filter_query": query_params.urlencode(),
         },
     )
+
+
+@administrator_required
+def attendance_report(request):
+    today = timezone.localdate()
+    date_from = parse_date(request.GET.get("date_from", "")) or today
+    date_to = parse_date(request.GET.get("date_to", "")) or date_from
+    if date_from > date_to:
+        date_from, date_to = date_to, date_from
+    if (date_to - date_from).days > 366:
+        date_from = date_to - timedelta(days=366)
+
+    selected_employee = request.GET.get("employee", "").strip()
+    selected_status = request.GET.get("status", "").strip()
+    valid_statuses = {value for value, _label in AttendanceCheckIn.Status.choices}
+
+    check_ins = AttendanceCheckIn.objects.filter(
+        work_date__range=(date_from, date_to)
+    ).select_related("user")
+    if selected_employee.isdigit():
+        check_ins = check_ins.filter(user_id=int(selected_employee))
+    else:
+        selected_employee = ""
+    if selected_status in valid_statuses:
+        check_ins = check_ins.filter(status=selected_status)
+    else:
+        selected_status = ""
+
+    summary = check_ins.aggregate(
+        total=Count("id"),
+        on_time=Count("id", filter=Q(status=AttendanceCheckIn.Status.ON_TIME)),
+        late=Count("id", filter=Q(status=AttendanceCheckIn.Status.LATE)),
+        no_schedule=Count("id", filter=Q(status=AttendanceCheckIn.Status.NO_SCHEDULE)),
+        average_late=Coalesce(
+            Avg("late_minutes", filter=Q(status=AttendanceCheckIn.Status.LATE)),
+            0.0,
+        ),
+    )
+    summary["without_record"] = None
+    if date_from == date_to and not selected_employee and not selected_status:
+        checked_user_ids = AttendanceCheckIn.objects.filter(
+            work_date=date_from,
+            user_id__isnull=False,
+        ).values_list("user_id", flat=True)
+        summary["without_record"] = get_user_model().objects.filter(
+            is_active=True,
+        ).exclude(id__in=checked_user_ids).count()
+
+    check_ins = check_ins.order_by("-work_date", "first_check_in_at")
+    paginator = Paginator(check_ins, 40)
+    page = paginator.get_page(request.GET.get("page"))
+    query_params = request.GET.copy()
+    query_params.pop("page", None)
+    employees = get_user_model().objects.filter(is_active=True).order_by(
+        "first_name", "last_name", "username"
+    )
+
+    return render(request, "orders/attendance_report.html", {
+        "date_from": date_from,
+        "date_to": date_to,
+        "selected_employee": selected_employee,
+        "selected_status": selected_status,
+        "status_choices": AttendanceCheckIn.Status.choices,
+        "employees": employees,
+        "summary": summary,
+        "page": page,
+        "filter_query": query_params.urlencode(),
+    })

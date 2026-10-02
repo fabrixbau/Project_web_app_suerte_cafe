@@ -8,6 +8,7 @@ from django.contrib.auth.decorators import (
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Count, Prefetch, Q
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
@@ -107,6 +108,7 @@ def menu_configuration(request):
         "category__name",
         "name",
     )
+    product_suggestions = Product.objects.select_related("category").order_by("name")
 
     search = request.GET.get("q", "").strip()
     category_id = request.GET.get("category", "").strip()
@@ -129,6 +131,7 @@ def menu_configuration(request):
         {
             "categories": categories,
             "products": products,
+            "product_suggestions": product_suggestions,
             "active_tab": active_tab,
             "search": search,
             "selected_category": category_id,
@@ -353,6 +356,15 @@ def product_toggle_availability(request, product_id):
         if product.is_available
         else "no disponible"
     )
+
+    if request.headers.get("x-requested-with") == "XMLHttpRequest":
+        return JsonResponse(
+            {
+                "success": True,
+                "is_available": product.is_available,
+                "label": "Disponible" if product.is_available else "No disponible",
+            }
+        )
 
     messages.success(
         request,

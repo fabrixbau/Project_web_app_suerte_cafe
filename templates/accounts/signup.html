@@ -1,18 +1,48 @@
-{% extends "auth_base.html" %}
+{% extends "base.html" %}
 
-{% block title %}Registro | Suerte Café{% endblock %}
+{% block title %}Nuevo empleado | Suerte Café{% endblock %}
 
 {% block content %}
-    <h1>Crear cuenta</h1>
+<div class="employee-create-page">
+    <div class="page-heading employee-create-heading">
+        <div>
+            <p class="eyebrow">Administración</p>
+            <h1>Nuevo empleado</h1>
+            <p>Crea el perfil que utilizará el empleado para ingresar al sistema.</p>
+        </div>
+    </div>
 
-    <form method="post" enctype="multipart/form-data">
+    <form method="post" enctype="multipart/form-data" class="modern-form form-card employee-create-form" novalidate>
         {% csrf_token %}
-        {{ form.as_p }}
+        {{ form.non_field_errors }}
 
-        <button type="submit">Crear cuenta</button>
+        <header class="employee-form-intro">
+            <div class="employee-form-icon" aria-hidden="true">+</div>
+            <div>
+                <h2>Datos del empleado</h2>
+                <p>La contraseña es opcional; puede configurarse posteriormente desde el perfil.</p>
+            </div>
+        </header>
+
+        <div class="employee-fields-grid">
+            <div class="form-field field-username">{{ form.username.label_tag }}{{ form.username }}{{ form.username.errors }}</div>
+            <div class="form-field field-email">{{ form.email.label_tag }}{{ form.email }}{{ form.email.errors }}</div>
+            <div class="form-field field-first-name">{{ form.first_name.label_tag }}{{ form.first_name }}{{ form.first_name.errors }}</div>
+            <div class="form-field field-last-name">{{ form.last_name.label_tag }}{{ form.last_name }}{{ form.last_name.errors }}</div>
+            <div class="form-field field-password">{{ form.password.label_tag }}{{ form.password }}{{ form.password.errors }}</div>
+            <div class="form-field field-password-confirm">{{ form.password_confirm.label_tag }}{{ form.password_confirm }}{{ form.password_confirm.errors }}</div>
+            <div class="form-field field-image">
+                {{ form.image.label_tag }}
+                <div class="employee-image-input">{{ form.image }}</div>
+                <small>Opcional. Usa una imagen clara para identificar rápidamente el perfil.</small>
+                {{ form.image.errors }}
+            </div>
+        </div>
+
+        <div class="form-actions employee-form-actions">
+            <a class="action-link action-link-secondary" href="{% url 'accounts:user_list' %}">Cancelar</a>
+            <button type="submit">Crear empleado</button>
+        </div>
     </form>
-
-    <p>
-        <a href="{% url 'login' %}">Regresar al Login</a>
-    </p>
+</div>
 {% endblock %}

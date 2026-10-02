@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Caja y conciliación | Suerte Café{% endblock %}
 {% block content %}
-<nav class="report-section-tabs"><a href="{% url 'orders:reports' %}">Ventas</a><a class="is-active" href="{% url 'orders:reconciliation' %}">Caja y conciliación</a></nav>
+<nav class="report-section-tabs"><a href="{% url 'orders:reports' %}">Ventas</a><a class="is-active" href="{% url 'orders:reconciliation' %}">Caja y conciliación</a><a href="{% url 'orders:attendance_report' %}">Check-in</a></nav>
 <div class="page-heading reconciliation-heading"><div><p class="eyebrow">Administración diaria</p><h1>Caja y conciliación</h1><p>Compara lo registrado por la app contra el dinero reportado al cierre.</p></div><form method="get"><label for="reconciliation-date">Día</label><input id="reconciliation-date" type="date" name="date" value="{{ selected_date|date:'Y-m-d' }}"><button type="submit">Consultar</button></form></div>
 
 <section class="finance-summary-grid">

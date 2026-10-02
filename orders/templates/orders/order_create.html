@@ -63,6 +63,7 @@
                     {{ form.customer_name }}
                     {{ form.customer_name.errors }}
                     <small class="customer-lookup-status" aria-live="polite"></small>
+                    <div class="customer-match-list" data-customer-match-list role="listbox" aria-label="Clientes encontrados" hidden></div>
                 </div>
 
                 <div id="phone-fields" class="field-group phone-field">
@@ -111,6 +112,9 @@
         {% regroup products by category as category_list %}
 
         <div class="category-selector" aria-label="Categorías del menú">
+            <button type="button" class="product-search-card" data-product-search-toggle aria-label="Buscar productos" title="Buscar productos">
+                <span class="category-order-icon" aria-hidden="true"><img src="{% static 'img/ui/icons/search.svg' %}" alt=""></span>
+            </button>
             {% for category in category_list %}
                 <button
                     type="button"
@@ -122,6 +126,16 @@
                 </button>
             {% endfor %}
         </div>
+
+        <section class="product-search-panel" data-product-search-panel hidden>
+            <label for="product-search-input">Buscar producto</label>
+            <div class="product-search-control">
+                <img src="{% static 'img/ui/icons/search.svg' %}" alt="" aria-hidden="true">
+                <input id="product-search-input" type="search" autocomplete="off" placeholder="Escribe el nombre de un producto" data-product-search-input aria-autocomplete="list" aria-expanded="false">
+                <div class="product-search-suggestions" data-product-search-suggestions role="listbox" aria-label="Productos encontrados" hidden></div>
+            </div>
+            <p class="product-search-feedback" data-product-search-feedback>Escribe para buscar en todo el menú.</p>
+        </section>
 
         {% for category in category_list %}
             <section
@@ -141,14 +155,18 @@
                             data-packaging-type="{{ product.effective_packaging_type_id|default:'' }}"
                             title="Haz clic en la tarjeta para agregar una unidad"
                         >
-                            {% if product.image %}
-                                <img class="product-card-image" src="{{ product.image.url }}" alt="{{ product.name }}" loading="lazy" decoding="async" style="--product-image-x:{{ product.image_position_x }}%;--product-image-y:{{ product.image_position_y }}%;--product-image-zoom:{{ product.image_zoom }}">
-                            {% else %}
-                                <img class="product-card-image" src="{% static 'img/ui/placeholders/product.svg' %}" alt="" loading="lazy" decoding="async">
-                            {% endif %}
+                            <div class="product-card-image-frame">
+                                {% if product.image %}
+                                    <img class="product-card-image" src="{{ product.image.url }}" alt="{{ product.name }}" loading="lazy" decoding="async" style="--product-image-x:{{ product.image_position_x }}%;--product-image-y:{{ product.image_position_y }}%;--product-image-zoom:{{ product.image_zoom }}">
+                                {% else %}
+                                    <img class="product-card-image" src="{% static 'img/ui/placeholders/product.svg' %}" alt="" loading="lazy" decoding="async">
+                                {% endif %}
+                            </div>
 
-                            <strong>{{ product.name }}</strong>
-                            {% if product.description %}<small>{{ product.description }}</small>{% endif %}
+                            <div class="product-card-copy">
+                                <strong>{{ product.name }}</strong>
+                                {% if product.description %}<small>{{ product.description }}</small>{% endif %}
+                            </div>
 
                             <div class="product-card-footer">
                                 <strong>${{ product.standard_price }}</strong>
@@ -156,17 +174,18 @@
                                     <button type="button" class="decrease-quantity" aria-label="Quitar uno">−</button>
                                     <input
                                         id="quantity_{{ product.id }}"
-                                        class="quantity-input"
+                                        class="quantity-input standard-quantity-input"
                                         name="quantity_{{ product.id }}"
                                         type="number"
                                         min="0"
                                         value="{{ product.selected_quantity }}"
                                         aria-label="Cantidad de {{ product.name }}"
                                     >
+                                    <output class="product-total-quantity" data-product-total-quantity aria-label="Cantidad total de {{ product.name }}">{{ product.selected_quantity }}</output>
                                     <button type="button" class="increase-quantity" aria-label="Agregar uno">+</button>
                                 </div>
                             </div>
-                            {% if product.has_options %}<button type="button" class="customize-product-button" data-customize-product="{{ product.id }}">Personalizar</button>{% endif %}
+                            {% if product.has_options %}<button type="button" class="customize-product-button" data-customize-product="{{ product.id }}">Personalizar</button>{% else %}<span class="customize-product-spacer" aria-hidden="true"></span>{% endif %}
                         </article>
                     {% endfor %}
                 </div>
@@ -177,6 +196,18 @@
     </div>
 
     <aside class="current-order-panel">
+        <div class="ticket-sticky-checkout">
+            <button type="submit" class="finish-order-button">Finalizar pedido</button>
+            <p class="ticket-sticky-total" aria-live="polite">
+                <span>Total</span>
+                <strong data-sticky-total>$0.00</strong>
+            </p>
+            <p class="ticket-sticky-change" data-sticky-change-row hidden aria-live="polite">
+                <span>Cambio</span>
+                <strong data-sticky-change>$0.00</strong>
+            </p>
+        </div>
+
         <section class="payment-panel" aria-labelledby="payment-title">
             <div class="payment-heading"><strong id="payment-title">Método de pago</strong><span>Obligatorio</span></div>
             <div class="payment-methods" role="group" aria-label="Método de pago">
@@ -239,8 +270,6 @@
             {% include "orders/_packaging_charge.html" %}
             <p class="final-total"><span>Total</span><strong id="order-total">$0.00</strong></p>
         </div>
-
-        <button type="submit" class="finish-order-button">Finalizar pedido</button>
     </aside>
 </form>
 {% endblock %}
@@ -291,11 +320,39 @@
     const summaryItemsElement = document.querySelector("#summary-items");
     const subtotalElement = document.querySelector("#order-subtotal");
     const totalElement = document.querySelector("#order-total");
+    const ticketBelowMedia = window.matchMedia("(max-width: 1200px)");
     const currencyFormatter = new Intl.NumberFormat("es-MX", {
         style: "currency",
         currency: "MXN",
         currencyDisplay: "symbol",
     });
+
+    function updateTicketListHeight() {
+        currentOrderItems.classList.remove("is-six-row-scroll");
+        currentOrderItems.style.removeProperty("--ticket-six-row-height");
+        if (!ticketBelowMedia.matches) return;
+
+        const rows = Array.from(currentOrderItems.children).filter((element) =>
+            element.classList.contains("current-order-item")
+        );
+        if (rows.length <= 6) return;
+
+        const styles = window.getComputedStyle(currentOrderItems);
+        const gap = Number.parseFloat(styles.rowGap || styles.gap) || 0;
+        const visibleHeight = rows.slice(0, 6).reduce(
+            (height, row) => height + row.getBoundingClientRect().height,
+            gap * 5,
+        );
+        currentOrderItems.style.setProperty("--ticket-six-row-height", `${Math.ceil(visibleHeight)}px`);
+        currentOrderItems.classList.add("is-six-row-scroll");
+    }
+
+    const ticketRowsObserver = new MutationObserver(() => {
+        window.requestAnimationFrame(updateTicketListHeight);
+    });
+    ticketRowsObserver.observe(currentOrderItems, {childList: true});
+    ticketBelowMedia.addEventListener("change", updateTicketListHeight);
+    window.addEventListener("resize", updateTicketListHeight);
 
     function changeQuantity(input, difference) {
         const currentValue = Number.parseInt(input.value, 10) || 0;
@@ -355,6 +412,8 @@
             const input = card.querySelector(".quantity-input");
             const quantity = Number.parseInt(input.value, 10) || 0;
             const price = Number.parseFloat(card.dataset.price);
+            const displayedQuantity = card.querySelector("[data-product-total-quantity]");
+            if (displayedQuantity) displayedQuantity.textContent = quantity;
             card.classList.toggle("has-quantity", quantity > 0);
 
             if (quantity > 0) {
@@ -376,6 +435,7 @@
         subtotalElement.dataset.subtotal = orderTotal;
         totalElement.textContent = currencyFormatter.format(orderTotal);
         document.dispatchEvent(new CustomEvent("base-order-summary-rendered", {detail: {count: totalItems, total: orderTotal}}));
+        window.requestAnimationFrame(updateTicketListHeight);
     }
 
     productCards.forEach((card) => {
@@ -397,11 +457,12 @@
     window.refreshBaseOrderSummary = updateOrderSummary;
     updateOrderSummary();
 </script>{% else %}<script src="{% static 'js/legacy/order-create-page.js' %}?v=1"></script>{% endif %}
-<script src="{% compatible_js 'delivery-customer.js' %}?v=2"></script>
-<script src="{% compatible_js 'product-customizer.js' %}?v=4"></script>
+<script src="{% compatible_js 'customer-autocomplete.js' %}?v=2"></script>
+<script src="{% compatible_js 'product-customizer.js' %}?v=7"></script>
 <script src="{% compatible_js 'packaging-charge.js' %}?v=3"></script>
-<script src="{% compatible_js 'payment.js' %}?v=4"></script>
+<script src="{% compatible_js 'payment.js' %}?v=6"></script>
 <script src="{% compatible_js 'table-map.js' %}?v=3"></script>
 <script src="{% compatible_js 'order-flow-focus.js' %}?v=3"></script>
 <script src="{% compatible_js 'order-comment.js' %}?v=2"></script>
+<script src="{% compatible_js 'product-search.js' %}?v=3"></script>
 {% endblock %}

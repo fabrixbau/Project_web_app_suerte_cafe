@@ -21,6 +21,11 @@ class AccountsTests(TestCase):
         self.assertEqual(self.regular_user.profile.user, self.regular_user)
 
     def test_signup_creates_regular_user(self):
+        administrator = self.user_model.objects.create_superuser(
+            username="admin-registro",
+            password="clave-segura-123",
+        )
+        self.client.force_login(administrator)
         response = self.client.post(
             reverse("accounts:signup"),
             {
@@ -34,7 +39,7 @@ class AccountsTests(TestCase):
         )
 
         user = self.user_model.objects.get(username="nuevo-empleado")
-        self.assertRedirects(response, reverse("home"))
+        self.assertRedirects(response, reverse("accounts:user_list"))
         self.assertTrue(
             user.groups.filter(name=REGULAR_USER_GROUP).exists()
         )
@@ -179,3 +184,17 @@ class LegacyIOSCompatibilityTests(TestCase):
             reverse("orders:create"), HTTP_USER_AGENT=self.ipad_ios9_user_agent
         )
         self.assertContains(create_response, "js/legacy/order-create-page.js")
+
+    def test_sales_report_renders_for_modern_and_ios9_browsers(self):
+        administrator = get_user_model().objects.create_superuser(
+            username="report_admin", password="clave-segura-reportes"
+        )
+        self.client.force_login(administrator)
+
+        modern_response = self.client.get(reverse("orders:reports"))
+        legacy_response = self.client.get(
+            reverse("orders:reports"), HTTP_USER_AGENT=self.ipad_ios9_user_agent
+        )
+
+        self.assertEqual(modern_response.status_code, 200)
+        self.assertContains(legacy_response, "js/legacy/sales-report-page.js")

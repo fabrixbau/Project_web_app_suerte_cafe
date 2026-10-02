@@ -14,6 +14,11 @@ urlpatterns = [
     ),
     path("users/", views.user_list, name="user_list"),
     path(
+        "users/<int:user_id>/schedule/",
+        views.user_schedule,
+        name="user_schedule",
+    ),
+    path(
         "users/<int:user_id>/delete/",
         views.user_delete,
         name="user_delete",

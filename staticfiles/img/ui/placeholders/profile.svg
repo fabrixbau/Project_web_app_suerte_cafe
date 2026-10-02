@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-labelledby="title">
+  <title id="title">Perfil sin imagen</title>
+  <rect width="400" height="400" rx="200" fill="#eadfd5"/>
+  <circle cx="200" cy="145" r="72" fill="#795548"/>
+  <path d="M75 355c14-86 61-130 125-130s111 44 125 130" fill="#795548"/>
+</svg>

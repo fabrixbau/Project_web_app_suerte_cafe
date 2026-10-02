@@ -7,11 +7,14 @@ from django.contrib.auth import (
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth.forms import PasswordChangeForm, SetPasswordForm
 from django.core.exceptions import PermissionDenied
+from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils.dateparse import parse_time
 from django.utils.http import url_has_allowed_host_and_scheme
 
+from .permissions import administrator_required
 from .forms import EmployeeLoginForm, ProfileEditForm, SignUpForm
-from .models import Profile
+from .models import EmployeeWorkSchedule, Profile
 from .signals import ADMINISTRATOR_GROUP
 
 
@@ -160,6 +163,69 @@ def user_list(request):
         "accounts/user_list.html",
         {"users": users},
     )
+
+
+@administrator_required
+def user_schedule(request, user_id):
+    employee = get_object_or_404(get_user_model(), id=user_id)
+    existing = {
+        schedule.weekday: schedule
+        for schedule in employee.work_schedules.all()
+    }
+    posted_values = {}
+
+    if request.method == "POST":
+        errors = []
+        for weekday, label in EmployeeWorkSchedule.Weekday.choices:
+            is_enabled = request.POST.get(f"enabled_{weekday}") == "on"
+            raw_time = request.POST.get(f"entry_time_{weekday}", "").strip()
+            posted_values[weekday] = {
+                "enabled": is_enabled,
+                "entry_time": raw_time,
+            }
+            if is_enabled and parse_time(raw_time) is None:
+                errors.append(f"Captura una hora válida para {label}.")
+
+        if not errors:
+            with transaction.atomic():
+                for weekday, _label in EmployeeWorkSchedule.Weekday.choices:
+                    values = posted_values[weekday]
+                    if values["enabled"]:
+                        EmployeeWorkSchedule.objects.update_or_create(
+                            user=employee,
+                            weekday=weekday,
+                            defaults={"entry_time": parse_time(values["entry_time"])},
+                        )
+                    else:
+                        EmployeeWorkSchedule.objects.filter(
+                            user=employee,
+                            weekday=weekday,
+                        ).delete()
+            messages.success(request, f"El horario de {employee.username} fue actualizado.")
+            return redirect("accounts:user_schedule", user_id=employee.id)
+
+        for error in errors:
+            messages.error(request, error)
+
+    schedule_rows = []
+    for weekday, label in EmployeeWorkSchedule.Weekday.choices:
+        schedule = existing.get(weekday)
+        posted = posted_values.get(weekday)
+        schedule_rows.append({
+            "weekday": weekday,
+            "label": label,
+            "enabled": posted["enabled"] if posted is not None else schedule is not None,
+            "entry_time": (
+                posted["entry_time"]
+                if posted is not None
+                else schedule.entry_time.strftime("%H:%M") if schedule else ""
+            ),
+        })
+
+    return render(request, "accounts/user_schedule.html", {
+        "employee": employee,
+        "schedule_rows": schedule_rows,
+    })
 
 
 @login_required
