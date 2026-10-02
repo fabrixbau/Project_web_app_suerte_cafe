@@ -3,6 +3,11 @@ from django.db import models
 
 
 class Profile(models.Model):
+    class MascotLook(models.TextChoices):
+        TIERNO = "tierno", "Tierno"
+        CARTOON = "cartoon", "Cartoon"
+        PELUCHE = "peluche", "Peluche"
+
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -11,6 +16,12 @@ class Profile(models.Model):
     image = models.ImageField(
         upload_to="profiles/",
         blank=True,
+    )
+    # Look de Lachi (la mascota) que eligió este usuario en el panel Apariencia.
+    mascot_look = models.CharField(
+        max_length=10,
+        choices=MascotLook.choices,
+        default=MascotLook.TIERNO,
     )
 
     def __str__(self):
@@ -86,3 +97,34 @@ class AttendanceCheckIn(models.Model):
 
     def __str__(self):
         return f"{self.employee_name_snapshot} · {self.work_date:%d/%m/%Y}"
+
+
+class LachiPhrase(models.Model):
+    """Frases que dice Lachi, la mascota; las editan administradores y empleados."""
+
+    class Moment(models.TextChoices):
+        POKE = "poke", "Al tocarlo"
+        NEW_ORDER = "new_order", "Llega un pedido nuevo"
+        CREATED = "created", "Pedido registrado"
+        COMPLETED = "completed", "Pedido completado"
+        CANCELED = "canceled", "Pedido cancelado"
+        ERROR = "error", "Error"
+        WAKE = "wake", "Al despertar"
+
+    text = models.CharField("Frase", max_length=160)
+    moment = models.CharField("Cuándo la dice", max_length=20, choices=Moment.choices, default=Moment.POKE)
+    is_active = models.BooleanField("Activa", default=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="lachi_phrases",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ("moment", "id")
+
+    def __str__(self):
+        return self.text

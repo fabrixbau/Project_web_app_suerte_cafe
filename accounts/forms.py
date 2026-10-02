@@ -5,7 +5,7 @@ from django.db import transaction
 
 from config.images import optimize_uploaded_image
 
-from .models import Profile
+from .models import LachiPhrase, Profile
 from .signals import ADMINISTRATOR_GROUP, REGULAR_USER_GROUP
 
 
@@ -221,3 +221,15 @@ class ProfileEditForm(forms.ModelForm):
             profile.save()
 
         return profile
+
+
+class LachiPhraseForm(forms.ModelForm):
+    class Meta:
+        model = LachiPhrase
+        fields = ("text", "moment", "is_active")
+        widgets = {
+            "text": forms.TextInput(attrs={"placeholder": "Ej. ¡Hoy es un gran día para un café!", "maxlength": 160}),
+        }
+
+    def clean_text(self):
+        return " ".join(self.cleaned_data["text"].split())

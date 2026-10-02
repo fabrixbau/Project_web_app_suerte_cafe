@@ -8,13 +8,16 @@ from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth.forms import PasswordChangeForm, SetPasswordForm
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.template.loader import render_to_string
+from django.views.decorators.http import require_POST
 from django.utils.dateparse import parse_time
 from django.utils.http import url_has_allowed_host_and_scheme
 
 from .permissions import administrator_required
-from .forms import EmployeeLoginForm, ProfileEditForm, SignUpForm
-from .models import EmployeeWorkSchedule, Profile
+from .forms import EmployeeLoginForm, LachiPhraseForm, ProfileEditForm, SignUpForm
+from .models import EmployeeWorkSchedule, LachiPhrase, Profile
 from .signals import ADMINISTRATOR_GROUP
 
 
@@ -251,3 +254,62 @@ def user_delete(request, user_id):
         "accounts/user_confirm_delete.html",
         {"target_user": target_user},
     )
+
+
+# Lachi, la mascota -------------------------------------------------------------------
+
+@login_required
+@require_POST
+def lachi_look(request):
+    """Guarda el look de Lachi del usuario y devuelve el dibujo nuevo para cambiarlo sin recargar."""
+    look = request.POST.get("look")
+    if look not in Profile.MascotLook.values:
+        return JsonResponse({"ok": False, "error": "Look no válido."}, status=400)
+    profile, _ = Profile.objects.get_or_create(user=request.user)
+    profile.mascot_look = look
+    profile.save(update_fields=["mascot_look"])
+    html = render_to_string(f"includes/lachi_{look}.html", request=request)
+    return JsonResponse({"ok": True, "look": look, "html": html})
+
+
+@login_required
+def lachi_phrases(request):
+    form = LachiPhraseForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        phrase = form.save(commit=False)
+        phrase.created_by = request.user
+        phrase.save()
+        messages.success(request, "Frase agregada. Lachi ya la puede decir.")
+        return redirect("accounts:lachi_phrases")
+    groups = []
+    phrases = list(LachiPhrase.objects.select_related("created_by"))
+    for value, label in LachiPhrase.Moment.choices:
+        groups.append({
+            "label": label,
+            "phrases": [
+                (phrase, LachiPhraseForm(instance=phrase, prefix=f"phrase-{phrase.id}"))
+                for phrase in phrases if phrase.moment == value
+            ],
+        })
+    return render(request, "accounts/lachi_phrases.html", {"form": form, "groups": groups})
+
+
+@login_required
+@require_POST
+def lachi_phrase_edit(request, phrase_id):
+    phrase = get_object_or_404(LachiPhrase, pk=phrase_id)
+    form = LachiPhraseForm(request.POST, instance=phrase, prefix=f"phrase-{phrase.id}")
+    if form.is_valid():
+        form.save()
+        messages.success(request, "Frase actualizada.")
+    else:
+        messages.error(request, "No se pudo guardar la frase: escribe un texto de máximo 160 caracteres.")
+    return redirect("accounts:lachi_phrases")
+
+
+@login_required
+@require_POST
+def lachi_phrase_delete(request, phrase_id):
+    get_object_or_404(LachiPhrase, pk=phrase_id).delete()
+    messages.success(request, "Frase eliminada.")
+    return redirect("accounts:lachi_phrases")

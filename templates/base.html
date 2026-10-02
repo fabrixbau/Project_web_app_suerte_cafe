@@ -24,7 +24,7 @@
         rel="stylesheet"
         href="{% static 'css/app.css' %}?v=20260930-21"
     >
-    <link rel="stylesheet" href="{% static 'css/workflow-2026.css' %}?v=52">
+    <link rel="stylesheet" href="{% static 'css/workflow-2026.css' %}?v=58">
     {% if legacy_ios9 %}<link rel="stylesheet" href="{% static 'css/legacy-ios9.css' %}?v=4">{% endif %}
 </head>
 
@@ -163,6 +163,23 @@
                                 <span class="palette-sample palette-green"></span> Verde
                             </label>
                         </fieldset>
+                        {% if not legacy_ios9 %}
+                        <fieldset>
+                            <legend>Mascota</legend>
+                            <label class="palette-option lachi-option">
+                                <input type="checkbox" name="lachi" data-lachi-toggle checked>
+                                <span class="lachi-option-switch" aria-hidden="true"></span> Mostrar a Lachi
+                            </label>
+                            {% load lachi %}{% lachi_look user as lachi_current_look %}
+                            <div class="lachi-look-options" role="radiogroup" aria-label="Look de Lachi">
+                                {% csrf_token %}
+                                <label class="appearance-choice"><input type="radio" name="lachi_look" value="tierno" data-lachi-look-choice {% if lachi_current_look == "tierno" %}checked{% endif %}><span class="appearance-choice-content">Tierno</span></label>
+                                <label class="appearance-choice"><input type="radio" name="lachi_look" value="cartoon" data-lachi-look-choice {% if lachi_current_look == "cartoon" %}checked{% endif %}><span class="appearance-choice-content">Cartoon</span></label>
+                                <label class="appearance-choice"><input type="radio" name="lachi_look" value="peluche" data-lachi-look-choice {% if lachi_current_look == "peluche" %}checked{% endif %}><span class="appearance-choice-content">Peluche</span></label>
+                            </div>
+                            <a class="lachi-phrases-link" href="{% url 'accounts:lachi_phrases' %}">Editar frases de Lachi →</a>
+                        </fieldset>
+                        {% endif %}
                     </section>
 
                     <button
@@ -298,6 +315,7 @@
 <script src="{% compatible_js 'number-input.js' %}?v=2"></script>
 <script src="{% compatible_js 'notifications.js' %}?v=3"></script>
 <script src="{% compatible_js 'sidebar.js' %}?v=3"></script>
+{% if user.is_authenticated and not legacy_ios9 and request.resolver_match.url_name != 'kitchen' %}{% include "includes/lachi.html" %}<script src="{% static 'js/lachi.js' %}?v=3"></script>{% endif %}
 <script src="{% compatible_js 'capitalize-first-letter.js' %}?v=1"></script>
     {% block extra_js %}{% endblock %}
 </body>

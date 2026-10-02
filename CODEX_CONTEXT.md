@@ -339,6 +339,44 @@ Todo en `static/css/workflow-2026.css` (subido a `?v=52` en `base.html` y `auth_
 - **Panel de Apariencia (barra superior)**: estaba en `right: 150px` con ancho 320px, así que en celular quedaba ~80–110px fuera de la pantalla por la izquierda. En ≤600px ahora va `left: 12px; right: 12px; width: auto`. En todos los tamaños tiene `max-height: calc(100vh - 90px)` con scroll propio (celular horizontal).
 - **Lista de Pedidos (`/orders/`) en celular (≤600px)**: la tabla de 8 columnas se desbordaba (el botón de estado quedaba cortado, el folio salía letra por letra). Ahora cada `tr.order-row` es una tarjeta en grid: fila 1 folio · cliente (máx. 2 líneas) · total; fila 2 fecha/hora · mesa/entrega; fila 3 empleado · botón de estado. La columna "Tipo" se oculta (ya lo indican la etiqueta Mesa/Entrega/Recoger y el color lateral). El color por tipo se movió del `td` al `tr`. Como `_order_rows.html` (actualización en vivo) usa el mismo marcado, no requirió cambios de JS/plantilla. De 601–900px sigue la tabla compacta anterior.
 
+### 5.9 Lachi, la mascota animada (NUEVA FUNCIONALIDAD, fase 1, 2026-10-01)
+
+**Propósito**: asistente estilo "Clippy" con la mascota real de la cafetería (Lachi, el grano de café inflable). Prioridad del proyecto = costo cero: todo es SVG + CSS + JS en el navegador, sin servicios ni peticiones extra al servidor.
+
+**Archivos**:
+- `templates/includes/lachi.html`: SVG inline (grano con surco central, ojos grandes iris gris, cejas, nariz redonda, sonrisa con lengua, bracitos con manoplas, piernas). Tiene piezas alternativas que el CSS muestra según el ánimo: `.lachi-eyes-open/-happy/-closed`, `.lachi-mouth-smile/-o`, `.lachi-zzz`.
+- `static/js/lachi.js` (sin versión legacy: no se carga en iOS 9).
+- Estilos al final de `static/css/workflow-2026.css` (bloque "Lachi").
+- Se incluye en `templates/base.html` sólo si `user.is_authenticated and not legacy_ios9` y **no** en Cocina (`url_name != 'kitchen'`).
+
+**Ánimos** (clases en `.lachi`): `is-waving` (saludo/toque), `is-celebrating` (salta, ojos felices), `is-alert` (pedido nuevo, boca "o"), `is-worried` (error, cejas caídas), `is-sleeping` (tras 5 min sin actividad; cualquier clic/tecla lo despierta). En reposo respira, parpadea y mueve los brazos; con mouse, las pupilas siguen al puntero.
+
+**Eventos que lo activan**:
+- Al cargar: `[data-error-notification]` → preocupado; `[data-success-feedback]` (pedido creado) → celebra; si no, saludo según la hora con el nombre del usuario, **una vez por día y usuario** (`localStorage.suerteCafeLachiGreeting`).
+- `order-status-changed` (nuevo, lo emite `order-status.js` tras cambiar estado; `completed` → celebra, `canceled` → preocupado).
+- `app-error` (nuevo, lo emite `showError` de `order-status.js`).
+- `orders-live-updated` (ya existía en `orders-live.js`): si aparece un `data-order-id` mayor a los vistos → "¡Llegó un pedido nuevo!".
+- Clic/toque en Lachi → frase aleatoria.
+
+**Para agregar reacciones nuevas**: emitir `document.dispatchEvent(new CustomEvent("nombre"))` desde el JS de la pantalla y escucharlo en `lachi.js` con `say(texto, "is-…")`.
+
+**No estorbar**: se oculta con cualquier `dialog[open]`, con la calculadora abierta y, en pantallas táctiles, con el teclado abierto (input/textarea/select con foco). En celular y tabletas táctiles queda asomándose por la orilla derecha (`translateX(52%)`) y sale completo sólo mientras habla. Respeta `prefers-reduced-motion`.
+
+**Apagar/encender**: interruptor "Mostrar a Lachi" en el panel Apariencia (`localStorage.suerteCafeLachi = on|off`, por dispositivo).
+
+**Nota sobre `npm run build:legacy`**: al correrlo para `order-status.js` se detectó que `static/js/legacy/kitchen-board.js`, `payment.js`, `product-customizer.js` estaban desactualizados respecto a sus fuentes y que faltaban `menu-availability-toggle.js`/`menu-product-search.js` en legacy (estos dos se cargan sin `compatible_js`, así que no importa). No se incluyeron esos cambios en esta tarea (sólo `legacy/order-status.js`) para no alterar sin probar lo que reciben los iPad con iOS 9.
+
+**Rediseño "más cute" (mismo día, a pedido del dueño)**: proporciones chibi (grano más redondo y ancho, piernas cortas, brazos cortitos a media altura), ojos más grandes y bajos con iris gris en degradado y doble brillo, nariz y boca pequeñas con lengua, chapitas rosas más marcadas y dos hilos de vapor animados sobre la cabeza (`.lachi-steam`, se ocultan al dormir). Frases pedidas por el dueño agregadas a `phrases.poke`: "Yeah buddy, lightweight baby!" (también en `completed`), "I rose up from the dead, I do it all the time" (también en `wake`), "Never say never" y "La vida es un gran baile, y el mundo es un salón". `lachi.js?v=2`, `workflow-2026.css?v=56`.
+
+**Fase 2 (mismo día): 3 looks por usuario + frases editables**
+- **Looks** (`Profile.mascot_look`, choices `tierno`/`cartoon`/`peluche`, default `tierno`; migración `accounts.0006_lachi_look_and_phrases`). Cada look es un parcial con sólo el `<svg>`: `templates/includes/lachi_tierno.html` (v1 + guantes blancos y tenis blancos), `lachi_cartoon.html` (v2, dibujo original inspirado en una imagen de stock con marca de agua que NO se usó: contorno grueso, taza humeante en la mano izquierda, pulgar arriba en la derecha, tenis) y `lachi_peluche.html` (v3, inspirado en un peluche: felpa con borde `stroke-dasharray`, ojitos de botón, sin brazos, patitas redondas, sentado en un platito). Los ids de `<defs>` llevan prefijo por look (`t-`, `c-`, `p-`). **Regla para looks nuevos**: usar los mismos nombres de piezas (`lachi-body`, `lachi-arm-left/right`, `lachi-eyes-open/-happy/-closed`, `lachi-pupils` con `data-lachi-pupils`, `lachi-brows` + `lachi-brow-left/right`, `lachi-mouth-smile/-o`, `lachi-legs`, `lachi-zzz`, opcional `lachi-steam`/`lachi-cheek`) y el CSS ya lo anima. El Peluche agrupa cuerpo+patitas en `.lachi-plush` y el CSS (`.lachi-look-peluche …`) mueve ese grupo en vez de todo el SVG para que el platito no brinque.
+- `templates/includes/lachi.html` ahora es sólo el contenedor: resuelve el look con el tag `{% lachi_look user %}` (`accounts/templatetags/lachi.py`) y hace `{% include "includes/lachi_<look>.html" %}`; el contenedor lleva la clase `lachi-look-<look>`.
+- **Selector** en Apariencia → Mascota (3 botones Tierno/Cartoon/Peluche + `{% csrf_token %}`). Al elegir, `lachi.js` hace POST a `accounts:lachi_look` (`/accounts/lachi/look/`), que guarda en el perfil y responde `{html}` con el SVG nuevo; se reemplaza sin recargar y Lachi dice "¡Mira mi nuevo look!".
+- **Frases** (modelo `LachiPhrase`: `text` ≤160, `moment` poke/new_order/created/completed/canceled/error/wake, `is_active`, `created_by`). Migración de datos `accounts.0007_seed_lachi_phrases` carga todas las frases que antes estaban fijas en el JS. Pantalla `accounts:lachi_phrases` (`/accounts/lachi/frases/`, enlace "Editar frases de Lachi →" en Apariencia): agregar, editar texto/momento, activar/desactivar y eliminar; **cualquier usuario autenticado** (administradores y empleados) puede editarlas y las ven todos. Se inyectan en cada página con `{% lachi_phrases %}` + `json_script#lachi-phrases` (una consulta pequeña, sin peticiones extra). En `lachi.js` las frases fijas quedan sólo como respaldo si un momento se queda sin frases activas. El saludo por hora sigue automático (no editable).
+- Pruebas: `accounts/tests_lachi.py`. Versiones: `lachi.js?v=3`, `workflow-2026.css?v=58`.
+
+**Fases siguientes propuestas**: (2) más personajes originales seleccionables y frases por horario; (3) consejos de uso tipo Clippy. Evitar personajes de Disney/videojuegos (derechos de autor).
+
 ### 5.3 Usuarios y Permisos
 - Sistema de autenticación de Django
 - Perfiles de usuario con permisos

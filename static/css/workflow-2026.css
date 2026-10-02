@@ -1222,3 +1222,155 @@ img, video, canvas, svg, input, select, textarea {
 @media (max-width: 600px) {
     .appearance-panel { left: 12px; right: 12px; width: auto; }
 }
+
+/* Lachi, la mascota (grano de café). Marcado en templates/includes/lachi.html, lógica en static/js/lachi.js. */
+.lachi {
+    position: fixed; z-index: 900; right: 18px; bottom: calc(14px + env(safe-area-inset-bottom));
+    display: grid; justify-items: end; gap: 6px; pointer-events: none;
+    transition: opacity .25s ease, transform .35s cubic-bezier(.3, 1.4, .5, 1);
+}
+.lachi.is-hidden-by-user { display: none; }
+.lachi-button {
+    width: 78px; min-height: 0; padding: 0; background: none; border: 0; box-shadow: none;
+    cursor: pointer; pointer-events: auto; -webkit-tap-highlight-color: transparent;
+}
+.lachi-button:hover, .lachi-button:focus { background: none; box-shadow: none; transform: none; }
+.lachi-button:focus-visible { outline: 3px solid var(--accent-soft); outline-offset: 4px; border-radius: 50%; }
+.lachi-figure { display: block; width: 100%; height: auto; overflow: visible; filter: drop-shadow(0 6px 8px rgb(60 35 20 / 28%)); }
+.lachi-bubble {
+    position: relative; max-width: min(240px, calc(100vw - 40px)); margin: 0; padding: 9px 13px;
+    color: var(--text); background: var(--surface); border: 2px solid #8d5a39; border-radius: 16px 16px 4px 16px;
+    box-shadow: 0 10px 24px var(--shadow); font-size: .86rem; font-weight: 700; line-height: 1.25;
+    pointer-events: auto; animation: lachi-bubble-in .28s cubic-bezier(.3, 1.4, .5, 1) both;
+}
+.lachi-bubble::after {
+    content: ""; position: absolute; right: 22px; bottom: -9px; width: 14px; height: 14px;
+    background: var(--surface); border-right: 2px solid #8d5a39; border-bottom: 2px solid #8d5a39; transform: rotate(45deg);
+}
+
+/* Piezas que se animan: cada una gira sobre su propio punto (hombros, centro de ojos, pies). */
+.lachi-body, .lachi-arm, .lachi-eyes-open, .lachi-legs { transform-box: fill-box; }
+.lachi-body { transform-origin: 50% 100%; animation: lachi-breathe 3.2s ease-in-out infinite; }
+.lachi-eyes-open { transform-origin: center; animation: lachi-blink 5.5s infinite; }
+.lachi-arm-left { transform-origin: 100% 100%; animation: lachi-arm-idle 3.2s ease-in-out infinite; }
+.lachi-arm-right { transform-origin: 0% 100%; animation: lachi-arm-idle 3.2s ease-in-out infinite reverse; }
+.lachi-pupils { transition: transform .12s linear; }
+.lachi-steam { animation: lachi-steam 2.6s ease-in-out infinite; }
+.lachi.is-sleeping .lachi-steam { display: none; }
+.lachi-eyes-closed, .lachi-eyes-happy, .lachi-mouth-o, .lachi-zzz { display: none; }
+.lachi-brows path { transform-box: fill-box; transform-origin: center; transition: transform .25s ease; }
+
+/* Estados de ánimo */
+.lachi.is-waving .lachi-arm-right { animation: lachi-wave .5s ease-in-out 4; }
+.lachi.is-celebrating .lachi-figure { animation: lachi-jump .55s ease-out 3; }
+.lachi.is-celebrating .lachi-arm-left { animation: lachi-cheer-left .55s ease-in-out 3; }
+.lachi.is-celebrating .lachi-arm-right { animation: lachi-cheer-right .55s ease-in-out 3; }
+.lachi.is-celebrating .lachi-eyes-open { display: none; }
+.lachi.is-celebrating .lachi-eyes-happy { display: inline; }
+.lachi.is-alert .lachi-figure { animation: lachi-hop .35s ease-out 4; }
+.lachi.is-alert .lachi-arm-right { animation: lachi-wave .35s ease-in-out 6; }
+.lachi.is-alert .lachi-brow-left { transform: translateY(-4px) rotate(-8deg); }
+.lachi.is-alert .lachi-brow-right { transform: translateY(-4px) rotate(8deg); }
+.lachi.is-alert .lachi-mouth-smile { display: none; }
+.lachi.is-alert .lachi-mouth-o { display: inline; }
+.lachi.is-worried .lachi-figure { animation: lachi-shake .4s ease-in-out 3; }
+.lachi.is-worried .lachi-brow-left { transform: rotate(14deg); }
+.lachi.is-worried .lachi-brow-right { transform: rotate(-14deg); }
+.lachi.is-worried .lachi-mouth-smile { display: none; }
+.lachi.is-worried .lachi-mouth-o { display: inline; }
+.lachi.is-sleeping .lachi-figure { transform: rotate(-8deg); transition: transform .6s ease; }
+.lachi.is-sleeping .lachi-body { animation-duration: 5s; }
+.lachi.is-sleeping .lachi-arm { animation: none; }
+.lachi.is-sleeping .lachi-eyes-open { display: none; }
+.lachi.is-sleeping .lachi-eyes-closed { display: inline; }
+.lachi.is-sleeping .lachi-mouth-smile { display: none; }
+.lachi.is-sleeping .lachi-mouth-o { display: inline; transform: scale(.6); transform-box: fill-box; transform-origin: center; }
+.lachi.is-sleeping .lachi-zzz { display: inline; animation: lachi-zzz 2.4s ease-in-out infinite; }
+
+@keyframes lachi-breathe { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.02, .975); } }
+@keyframes lachi-blink { 0%, 93%, 100% { transform: scaleY(1); } 95% { transform: scaleY(.1); } }
+@keyframes lachi-arm-idle { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(-6deg); } }
+@keyframes lachi-cheer-left { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(22deg); } }
+@keyframes lachi-cheer-right { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(-22deg); } }
+@keyframes lachi-wave { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(-38deg); } }
+@keyframes lachi-jump { 0%, 100% { transform: translateY(0); } 40% { transform: translateY(-16px) rotate(-4deg); } 70% { transform: translateY(0) scale(1.04, .95); } }
+@keyframes lachi-hop { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+@keyframes lachi-shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-4px) rotate(-3deg); } 75% { transform: translateX(4px) rotate(3deg); } }
+@keyframes lachi-steam { 0%, 100% { opacity: .35; transform: translateY(2px); } 50% { opacity: .95; transform: translateY(-3px); } }
+@keyframes lachi-zzz { 0%, 100% { opacity: .3; transform: translateY(2px); } 50% { opacity: 1; transform: translateY(-4px); } }
+@keyframes lachi-bubble-in { from { opacity: 0; transform: translateY(8px) scale(.9); } to { opacity: 1; transform: none; } }
+
+/* No estorbar: se esconde con diálogos abiertos, calculadora, o teclado en pantalla táctil. */
+body:has(dialog[open]) .lachi,
+body:has(#calculator:not([hidden]):not(.is-hidden)) .lachi { opacity: 0; pointer-events: none; }
+body:has(dialog[open]) .lachi *, body:has(#calculator:not([hidden]):not(.is-hidden)) .lachi * { pointer-events: none; }
+@media (pointer: coarse) {
+    body:has(:is(input, textarea, select):focus) .lachi { opacity: 0; }
+    body:has(:is(input, textarea, select):focus) .lachi * { pointer-events: none; }
+}
+/* Celular y tableta táctil: asomándose por la orilla para no tapar botones; sale completo cuando habla. */
+@media (max-width: 600px), (pointer: coarse) {
+    .lachi { right: 6px; }
+    .lachi-button { width: 66px; }
+    .lachi:not(.is-talking):not(.is-sleeping) { transform: translateX(52%) rotate(-14deg); }
+    .lachi:not(.is-talking).is-sleeping { transform: translateX(40%); }
+}
+@media (max-width: 600px) {
+    .lachi-button { width: 58px; }
+    .lachi-bubble { font-size: .8rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .lachi, .lachi *, .lachi-figure { animation: none !important; transition: none !important; }
+}
+
+/* Interruptor "Mostrar a Lachi" en el panel Apariencia. */
+.lachi-option { cursor: pointer; }
+.lachi-option-switch {
+    position: relative; flex: 0 0 38px; width: 38px; height: 22px;
+    background: var(--input-border); border-radius: 999px; transition: background .2s ease;
+}
+.lachi-option-switch::after {
+    content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px;
+    background: #fff; border-radius: 50%; box-shadow: 0 1px 3px rgb(0 0 0 / 25%); transition: transform .2s ease;
+}
+.lachi-option:has(input:checked) .lachi-option-switch { background: var(--accent); }
+.lachi-option:has(input:checked) .lachi-option-switch::after { transform: translateX(16px); }
+
+/* Looks de Lachi (cada usuario elige uno en Apariencia). */
+.lachi-look-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.lachi-look-options .appearance-choice-content { justify-content: center; min-height: 42px; padding: 6px 4px; font-size: .8rem; font-weight: 700; }
+.lachi-phrases-link { justify-self: start; color: var(--accent); font-size: .82rem; font-weight: 800; text-decoration: none; }
+.lachi-phrases-link:hover { text-decoration: underline; }
+/* Peluche: no tiene brazos y está sentado en un platito; se mueve el peluche, no el plato. */
+.lachi-plush { transform-box: fill-box; transform-origin: 50% 100%; }
+.lachi-look-peluche .lachi-brows { opacity: 0; transition: opacity .2s ease; }
+.lachi-look-peluche.is-alert .lachi-brows, .lachi-look-peluche.is-worried .lachi-brows { opacity: 1; }
+.lachi-look-peluche.is-celebrating .lachi-figure, .lachi-look-peluche.is-alert .lachi-figure, .lachi-look-peluche.is-worried .lachi-figure { animation: none; }
+.lachi-look-peluche.is-celebrating .lachi-plush { animation: lachi-jump .55s ease-out 3; }
+.lachi-look-peluche.is-alert .lachi-plush { animation: lachi-hop .35s ease-out 4; }
+.lachi-look-peluche.is-worried .lachi-plush { animation: lachi-shake .4s ease-in-out 3; }
+.lachi-look-peluche.is-waving .lachi-plush { animation: lachi-sway .6s ease-in-out 4; }
+.lachi-look-peluche.is-sleeping .lachi-figure { transform: none; }
+.lachi-look-peluche.is-sleeping .lachi-plush { transform: rotate(-7deg); }
+@keyframes lachi-sway { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-7deg); } 75% { transform: rotate(7deg); } }
+
+/* Pantalla "Frases de Lachi". */
+.lachi-phrases-page { width: min(100%, 900px); margin-inline: auto; }
+.lachi-phrase-new { display: grid; grid-template-columns: minmax(0, 1fr) minmax(160px, 220px) auto; align-items: end; gap: 10px; }
+.lachi-phrase-field { display: grid; gap: 5px; min-width: 0; }
+.lachi-phrase-field > label { font-size: .78rem; font-weight: 800; }
+.lachi-phrase-row .danger { color: #fff; }
+.lachi-phrase-group { margin-top: 18px; }
+.lachi-phrase-group h2 { margin: 0 0 8px; font-size: 1rem; }
+.lachi-phrase-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.lachi-phrase-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(150px, 200px) auto auto auto; align-items: center; gap: 8px; padding: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
+.lachi-phrase-row.is-inactive { opacity: .6; }
+.lachi-phrase-row input[type="text"], .lachi-phrase-row select { width: 100%; min-width: 0; }
+.lachi-phrase-active { display: inline-flex; align-items: center; gap: 5px; font-size: .78rem; font-weight: 700; white-space: nowrap; }
+.lachi-phrase-empty { margin: 0; color: var(--muted); font-size: .85rem; }
+.lachi-phrase-row form { display: contents; }
+@media (max-width: 700px) {
+    .lachi-phrase-new { grid-template-columns: 1fr; }
+    .lachi-phrase-row { grid-template-columns: minmax(0, 1fr) auto; }
+    .lachi-phrase-row > :first-child, .lachi-phrase-row select { grid-column: 1 / -1; }
+}

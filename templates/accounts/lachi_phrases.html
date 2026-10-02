@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Frases de Lachi | Suerte Café{% endblock %}
+
+{% block content %}
+<div class="lachi-phrases-page">
+    <div class="page-heading">
+        <div>
+            <p class="eyebrow">Mascota</p>
+            <h1>Frases de Lachi</h1>
+            <p>Lachi elige al azar entre las frases activas del momento que corresponda. Las ven todos los usuarios.</p>
+        </div>
+    </div>
+
+    <section class="filter-panel">
+        <h2>Agregar frase</h2>
+        <form method="post" class="lachi-phrase-new">
+            {% csrf_token %}
+            <div class="lachi-phrase-field"><label for="{{ form.text.id_for_label }}">{{ form.text.label }}</label>{{ form.text }}</div>
+            <div class="lachi-phrase-field"><label for="{{ form.moment.id_for_label }}">{{ form.moment.label }}</label>{{ form.moment }}</div>
+            <input type="hidden" name="is_active" value="on">
+            <button type="submit">Agregar</button>
+            {{ form.text.errors }}
+        </form>
+    </section>
+
+    {% for group in groups %}
+        <section class="lachi-phrase-group">
+            <h2>{{ group.label }}</h2>
+            {% if group.phrases %}
+                <ul class="lachi-phrase-list">
+                    {% for phrase, phrase_form in group.phrases %}
+                        <li class="lachi-phrase-row{% if not phrase.is_active %} is-inactive{% endif %}">
+                            <form method="post" action="{% url 'accounts:lachi_phrase_edit' phrase.id %}">
+                                {% csrf_token %}
+                                {{ phrase_form.text }}
+                                {{ phrase_form.moment }}
+                                <label class="lachi-phrase-active">{{ phrase_form.is_active }} Activa</label>
+                                <button type="submit" class="small-action">Guardar</button>
+                            </form>
+                            <form method="post" action="{% url 'accounts:lachi_phrase_delete' phrase.id %}" onsubmit="return confirm('¿Eliminar esta frase?');">
+                                {% csrf_token %}
+                                <button type="submit" class="small-action danger">Eliminar</button>
+                            </form>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="lachi-phrase-empty">Sin frases propias: Lachi usará las de fábrica para este momento.</p>
+            {% endif %}
+        </section>
+    {% endfor %}
+</div>
+{% endblock %}

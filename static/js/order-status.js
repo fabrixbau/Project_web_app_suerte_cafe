@@ -10,6 +10,7 @@
         document.body.appendChild(container);
         document.body.classList.add("feedback-frame-error");
         window.setTimeout(() => document.body.classList.remove("feedback-frame-error"), 1500);
+        document.dispatchEvent(new CustomEvent("app-error", {detail: {message}}));
     }
 
     function updateMatchingButtons(action, data) {
@@ -49,6 +50,7 @@
             }
             if (!response.ok || !data.ok) throw new Error(data.error || "Intenta nuevamente.");
             updateMatchingButtons(form.action, data);
+            document.dispatchEvent(new CustomEvent("order-status-changed", {detail: data}));
         } catch (error) {
             showError(error.message || "No fue posible actualizar el pedido.");
         } finally {

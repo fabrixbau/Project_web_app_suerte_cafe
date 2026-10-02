@@ -17,6 +17,11 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
     window.setTimeout(function () {
       return document.body.classList.remove("feedback-frame-error");
     }, 1500);
+    document.dispatchEvent(new CustomEvent("app-error", {
+      detail: {
+        message
+      }
+    }));
   }
   function updateMatchingButtons(action, data) {
     document.querySelectorAll(".status-update-form").forEach(function (form) {
@@ -86,6 +91,9 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
             throw new Error(data.error || "Intenta nuevamente.");
           case 9:
             updateMatchingButtons(form.action, data);
+            document.dispatchEvent(new CustomEvent("order-status-changed", {
+              detail: data
+            }));
             _context.n = 11;
             break;
           case 10:

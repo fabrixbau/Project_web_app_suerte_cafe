@@ -1,0 +1,9 @@
+{# Lachi, la mascota de Suerte Café. Cada usuario elige su look (Profile.mascot_look); las frases salen de LachiPhrase. #}
+{% load lachi %}{% lachi_look user as look %}{% lachi_phrases as phrases %}
+<div class="lachi lachi-look-{{ look }} is-hidden-by-user" data-lachi data-lachi-look="{{ look }}" data-lachi-look-url="{% url 'accounts:lachi_look' %}" data-lachi-user="{{ user.first_name|default:user.username }}">
+    <p class="lachi-bubble" data-lachi-bubble role="status" aria-live="polite" hidden></p>
+    <button type="button" class="lachi-button" data-lachi-button aria-label="Lachi, la mascota de Suerte Café">
+        {% with "includes/lachi_"|add:look|add:".html" as figure %}{% include figure %}{% endwith %}
+    </button>
+</div>
+{{ phrases|json_script:"lachi-phrases" }}
