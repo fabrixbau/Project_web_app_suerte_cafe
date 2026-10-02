@@ -381,6 +381,16 @@ Todo en `static/css/workflow-2026.css` (subido a `?v=52` en `base.html` y `auth_
 
 **Fases siguientes propuestas**: (2) más personajes originales seleccionables y frases por horario; (3) consejos de uso tipo Clippy. Evitar personajes de Disney/videojuegos (derechos de autor).
 
+### 5.10 Nuevo pedido: − # + Personalizar dentro de las sugerencias de la lupa (2026-10-02)
+
+Portado del mismo cambio en Super Cocina (allí en `live-search.js`). En `/orders/new/`, cada sugerencia de la lupa (`product-search.js`, ahora `?v=5`, con su `legacy/product-search.js` regenerado sólo para ese archivo vía `npx babel static/js/product-search.js --out-file static/js/legacy/product-search.js`) trae a la derecha `−`, contador, `+` y `Personalizar` (este último sólo si la tarjeta lo tiene, es decir `product.has_options`).
+
+- **Sin lógica nueva**: cada botón hace `.click()` sobre el botón real de la tarjeta (`.decrease-quantity`, `.increase-quantity`, `[data-customize-product]`); un `MutationObserver` sobre `[data-product-total-quantity]` refleja el contador. Mientras se reenvía el clic (`proxying`), el listener de "clic fuera" no cierra la lista.
+- `+`/`−` dejan la lista abierta; `Personalizar` la cierra y abre el diálogo del personalizador.
+- Al agregar el primer producto en "Comer aquí", `order-flow-focus.js` compacta el mapa de mesas y la página se recorría, sacando la lupa de la pantalla; tras cada `+`/`−` se mide cuánto se movió el input y se compensa con `window.scrollBy` para que la lista quede en el mismo lugar.
+- Estilos `.product-search-row/-controls/-control/-count` al final de `workflow-2026.css` (`?v=61`); en celular los botones bajan debajo del nombre y el nombre puede ocupar dos líneas.
+- Verificado con Playwright en 1440×900, 1180×820 táctil y 390×844: + suma (lista sigue abierta), − resta, contador = tarjeta, Personalizar abre su diálogo.
+
 ### 5.3 Usuarios y Permisos
 - Sistema de autenticación de Django
 - Perfiles de usuario con permisos

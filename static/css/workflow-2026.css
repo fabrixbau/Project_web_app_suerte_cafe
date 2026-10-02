@@ -1374,3 +1374,18 @@ body:has(dialog[open]) .lachi *, body:has(#calculator:not([hidden]):not(.is-hidd
     .lachi-phrase-row { grid-template-columns: minmax(0, 1fr) auto; }
     .lachi-phrase-row > :first-child, .lachi-phrase-row select { grid-column: 1 / -1; }
 }
+
+/* Nuevo pedido: cada sugerencia de la lupa trae − # + y Personalizar (presionan los botones
+   reales de la tarjeta). Si no caben junto al nombre, bajan a una segunda línea. */
+.product-search-row { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; padding-right: 6px; border-radius: 8px; }
+.product-search-row:hover, .product-search-row:has(.product-search-suggestion.is-active) { background: var(--accent-soft); }
+.product-search-row > .product-search-suggestion { flex: 1 1 150px; width: auto; min-width: 0; background: transparent; }
+.product-search-controls { display: flex; flex: 0 0 auto; align-items: center; gap: 5px; margin-left: auto; }
+.product-search-control {
+    display: inline-grid; place-items: center; min-width: 34px; height: 34px; min-height: 0; padding: 0 8px;
+    color: #fff; background: var(--accent); border: 0; border-radius: 9px; box-shadow: none;
+    font-size: 1.05rem; font-weight: 900; line-height: 1; cursor: pointer;
+}
+.product-search-control.is-customize { padding-inline: 10px; color: var(--accent); background: var(--accent-soft); font-size: .76rem; font-weight: 800; }
+.product-search-count { min-width: 22px; color: var(--text); font-size: .95rem; font-weight: 900; text-align: center; }
+.product-search-row .product-search-suggestion strong { overflow: visible; white-space: normal; overflow-wrap: anywhere; }

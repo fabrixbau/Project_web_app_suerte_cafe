@@ -26,11 +26,21 @@ function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length)
   });
   var visibleSuggestions = [];
   var activeIndex = -1;
+  var observers = [];
+  // Mientras un botón de la sugerencia reenvía su clic a la tarjeta, ese clic no cierra la lista.
+  var proxying = false;
+  function stopObserving() {
+    observers.forEach(function (observer) {
+      return observer.disconnect();
+    });
+    observers = [];
+  }
   function normalize(value) {
     var text = String(value || "").toLocaleLowerCase("es-MX");
     return text.normalize ? text.normalize("NFD").replace(/[\u0300-\u036f]/g, "") : text;
   }
   function clearSuggestions() {
+    stopObserving();
     suggestions.innerHTML = "";
     suggestions.hidden = true;
     input.setAttribute("aria-expanded", "false");
@@ -99,7 +109,70 @@ function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length)
       }
     }, 0);
   }
+
+  // − # + y Personalizar de cada sugerencia: presionan los botones reales de la tarjeta del
+  // producto, así que agregan al pedido exactamente igual que el catálogo.
+  function controlsFor(product) {
+    var decrease = product.card.querySelector(".decrease-quantity");
+    var increase = product.card.querySelector(".increase-quantity");
+    var total = product.card.querySelector("[data-product-total-quantity]");
+    var customize = product.card.querySelector("[data-customize-product]");
+    if (!decrease || !increase || !total) return null;
+    var box = document.createElement("div");
+    box.className = "product-search-controls";
+    var control = function control(text, label, target, keepOpen) {
+      var button = document.createElement("button");
+      button.type = "button";
+      button.className = "product-search-control";
+      button.textContent = text;
+      button.setAttribute("aria-label", label + " " + product.name);
+      button.addEventListener("mousedown", function (event) {
+        return event.preventDefault();
+      });
+      button.addEventListener("click", function (event) {
+        event.stopPropagation();
+        if (!keepOpen) clearSuggestions();
+        // Agregar el primer producto compacta el mapa de mesas y recorre la página;
+        // se compensa el desplazamiento para que la lupa y su lista no se muevan.
+        var topBefore = input.getBoundingClientRect().top;
+        proxying = true;
+        try {
+          target.click();
+        } finally {
+          proxying = false;
+        }
+        if (keepOpen) {
+          window.requestAnimationFrame(function () {
+            var shift = input.getBoundingClientRect().top - topBefore;
+            if (Math.abs(shift) > 1) window.scrollBy(0, shift);
+          });
+        }
+      });
+      return button;
+    };
+    var count = document.createElement("strong");
+    count.className = "product-search-count";
+    var sync = function sync() {
+      count.textContent = total.textContent.trim() || "0";
+    };
+    sync();
+    var observer = new MutationObserver(sync);
+    observer.observe(total, {
+      subtree: true,
+      childList: true,
+      characterData: true
+    });
+    observers.push(observer);
+    box.append(control("−", "Quitar uno de", decrease, true), count, control("+", "Agregar uno de", increase, true));
+    if (customize) {
+      var button = control("Personalizar", "Personalizar", customize, false);
+      button.classList.add("is-customize");
+      box.appendChild(button);
+    }
+    return box;
+  }
   function renderSuggestions(matches) {
+    stopObserving();
     suggestions.innerHTML = "";
     visibleSuggestions = matches.slice(0, 8);
     visibleSuggestions.forEach(function (product) {
@@ -121,7 +194,15 @@ function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length)
       option.addEventListener("click", function () {
         return choose(product);
       });
-      suggestions.appendChild(option);
+      var controls = controlsFor(product);
+      if (controls) {
+        var row = document.createElement("div");
+        row.className = "product-search-row";
+        row.append(option, controls);
+        suggestions.appendChild(row);
+      } else {
+        suggestions.appendChild(option);
+      }
     });
     suggestions.hidden = visibleSuggestions.length === 0;
     input.setAttribute("aria-expanded", String(visibleSuggestions.length > 0));
@@ -180,6 +261,7 @@ function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length)
     }
   });
   document.addEventListener("click", function (event) {
+    if (proxying) return;
     if (!panel.contains(event.target) && event.target !== toggle) clearSuggestions();
   });
   window.addEventListener("scroll", function (event) {
