@@ -9,7 +9,17 @@
         return;
     }
     
+    function comparableHtml(html) {
+        const template = document.createElement("template");
+        template.innerHTML = html;
+        // Django masks the CSRF token differently on every response. It does
+        // not mean the orders changed and must not cause a full table redraw.
+        template.content.querySelectorAll('input[name="csrfmiddlewaretoken"]').forEach((input) => input.remove());
+        return template.innerHTML;
+    }
+
     let currentHtml = body.innerHTML;
+    let currentComparableHtml = comparableHtml(currentHtml);
     let busy = false;
     async function refreshOrders() {
         if (busy || document.hidden) return;
@@ -18,9 +28,11 @@
             const response = await fetch(`${body.dataset.liveOrdersUrl}${window.location.search}`, {headers: {"X-Requested-With": "XMLHttpRequest"}});
             if (!response.ok) return;
             const payload = await response.json();
-            if (payload.html !== currentHtml) {
+            const nextComparableHtml = comparableHtml(payload.html);
+            if (nextComparableHtml !== currentComparableHtml) {
                 body.innerHTML = payload.html;
                 currentHtml = payload.html;
+                currentComparableHtml = nextComparableHtml;
                 document.dispatchEvent(new CustomEvent("orders-live-updated"));
             }
         } catch (_) {
