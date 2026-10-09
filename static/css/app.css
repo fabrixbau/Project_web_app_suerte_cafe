@@ -144,6 +144,7 @@ body {
     min-height: 64px;
     padding: 12px 24px;
     position: relative;
+    z-index: 100;
     background: var(--surface);
     border-bottom: 1px solid var(--border);
 }
@@ -2251,7 +2252,7 @@ textarea:focus {
 
 .user-menu-panel {
     position: absolute;
-    z-index: 1100;
+    z-index: 1200;
     top: calc(100% + 8px);
     right: 22px;
     width: 210px;

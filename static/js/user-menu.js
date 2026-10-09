@@ -8,10 +8,17 @@
         toggle.setAttribute("aria-expanded", "false");
     }
 
-    toggle.addEventListener("click", () => {
+    function toggleMenu(event) {
+        event.preventDefault();
+        event.stopPropagation();
         const willOpen = panel.hidden;
         panel.hidden = !willOpen;
         toggle.setAttribute("aria-expanded", String(willOpen));
+    }
+
+    toggle.addEventListener("click", toggleMenu);
+    toggle.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") toggleMenu(event);
     });
 
     document.addEventListener("click", (event) => {
