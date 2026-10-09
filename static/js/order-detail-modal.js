@@ -32,6 +32,9 @@
             const detail = documentResponse.querySelector(".order-detail-layout");
             if (!detail) throw new Error("El detalle recibido no es válido.");
             content.replaceChildren(detail);
+            if (typeof window.initializeCashierCheckout === "function") {
+                window.initializeCashierCheckout(content);
+            }
         } catch (error) {
             if (error.name === "AbortError") return;
             content.innerHTML = "";

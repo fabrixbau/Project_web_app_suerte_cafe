@@ -73,6 +73,10 @@ class Product(models.Model):
     image_zoom = models.DecimalField(max_digits=3, decimal_places=2, default=1, validators=[MinValueValidator(1), MaxValueValidator(3)])
     description = models.TextField(blank=True)
     is_available = models.BooleanField(default=True)
+    is_visible_to_customers = models.BooleanField(
+        default=True,
+        help_text="Controla si aparece en el menú público del QR.",
+    )
     preparation_station = models.CharField(
         max_length=10,
         choices=Category.PreparationStation.choices,

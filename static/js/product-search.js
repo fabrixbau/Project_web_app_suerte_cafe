@@ -41,6 +41,16 @@
         searchControl.classList.remove("opens-up");
     }
 
+    function closeSearch() {
+        panel.hidden = true;
+        toggle.classList.remove("is-selected");
+        input.value = "";
+        clearSuggestions();
+        restoreProducts();
+        const firstCategory = categoryButtons[0];
+        if (firstCategory) firstCategory.click();
+    }
+
     function positionSuggestions() {
         if (suggestions.hidden) return;
         searchControl.classList.remove("opens-up");
@@ -187,7 +197,10 @@
         showResults(input.value);
     }
 
-    toggle.addEventListener("click", openSearch);
+    toggle.addEventListener("click", () => {
+        if (panel.hidden) openSearch();
+        else closeSearch();
+    });
     categoryButtons.forEach((button) => button.addEventListener("click", () => {
         toggle.classList.remove("is-selected");
         panel.hidden = true;
@@ -213,12 +226,12 @@
             if (activeIndex >= 0) choose(visibleSuggestions[activeIndex]);
             else { showResults(input.value); clearSuggestions(); }
         } else if (event.key === "Escape") {
-            clearSuggestions();
+            closeSearch();
         }
     });
     document.addEventListener("click", (event) => {
         if (proxying) return;
-        if (!panel.contains(event.target) && event.target !== toggle) clearSuggestions();
+        if (!panel.contains(event.target) && event.target !== toggle && !toggle.contains(event.target)) closeSearch();
     });
     window.addEventListener("scroll", (event) => {
         const target = event.target;

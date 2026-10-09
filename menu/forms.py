@@ -82,6 +82,7 @@ class ProductForm(forms.ModelForm):
             "image_zoom",
             "description",
             "is_available",
+            "is_visible_to_customers",
             "preparation_station",
             "packaging_type",
         ]
@@ -92,6 +93,7 @@ class ProductForm(forms.ModelForm):
             "image": "Imagen",
             "description": "Descripción",
             "is_available": "Disponible",
+            "is_visible_to_customers": "Mostrar a clientes del QR",
             "preparation_station": "Barra de preparación (opcional)",
             "packaging_type": "Envase específico (opcional)",
         }

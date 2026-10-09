@@ -77,6 +77,74 @@ class CreateOrderTests(TestCase):
         self.assertEqual(first_order.daily_number, 1)
         self.assertEqual(second_order.daily_number, 2)
 
+    def test_public_order_uses_the_same_daily_sequence_and_starts_unpaid(self):
+        internal = create_order(
+            user=self.user,
+            order_type=Order.OrderType.EAT_IN,
+            items=[{"product_id": self.product.id, "quantity": 1}],
+        )
+        public = create_order(
+            user=None,
+            order_type=Order.OrderType.DELIVERY,
+            items=[{"product_id": self.product.id, "quantity": 1}],
+            customer_data={"customer_name": "Ana", "phone": "5512345678", "payment_method": "card"},
+            public_order=True,
+        )
+
+        self.assertEqual((internal.daily_number, public.daily_number), (1, 2))
+        self.assertEqual(public.source, Order.Source.PUBLIC_QR)
+        self.assertEqual(public.payment_status, Order.PaymentStatus.PENDING)
+        self.assertIsNone(public.created_by)
+
+    def test_public_qr_page_is_available_without_login(self):
+        response = self.client.get(reverse("orders:public_order"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Comer")
+
+    def test_public_delivery_creates_an_unpaid_order(self):
+        response = self.client.post(reverse("orders:public_order"), {
+            "order_type": Order.OrderType.DELIVERY,
+            "customer_name": "Ana Cliente",
+            "phone": "55 1234 5678",
+            "notes": "Tocar timbre",
+            "payment_method": Order.PaymentMethod.TRANSFER,
+            "cash_received": "",
+            "tip_amount": "0",
+            "packaging_items": "[]",
+            "custom_items": "[]",
+            f"quantity_{self.product.id}": "1",
+        })
+
+        order = Order.objects.get(customer_name="Ana Cliente")
+        self.assertRedirects(response, reverse("orders:public_success", args=[order.id]))
+        self.assertEqual(order.payment_status, Order.PaymentStatus.PENDING)
+        self.assertEqual(order.source, Order.Source.PUBLIC_QR)
+
+    def test_cashier_can_confirm_payment_for_a_public_order(self):
+        order = create_order(
+            user=None,
+            order_type=Order.OrderType.EAT_IN,
+            items=[{"product_id": self.product.id, "quantity": 1}],
+            customer_data={"customer_name": "Ana", "payment_method": "card"},
+            public_order=True,
+        )
+        cashier = get_user_model().objects.create_superuser(
+            username="cajero_admin", password="clave-segura-123"
+        )
+        self.client.force_login(cashier)
+
+        response = self.client.post(reverse("orders:checkout", args=[order.id]), {
+            "table_reference": "A1",
+            "payment_method": Order.PaymentMethod.CARD,
+            "cash_received": "",
+        })
+
+        order.refresh_from_db()
+        self.assertRedirects(response, reverse("orders:detail", args=[order.id]))
+        self.assertEqual(order.payment_status, Order.PaymentStatus.PAID)
+        self.assertEqual(order.table_reference, "A1")
+
     def test_rejects_empty_order(self):
         with self.assertRaises(ValidationError):
             create_order(

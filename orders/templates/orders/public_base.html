@@ -1,0 +1,15 @@
+{% load static compat %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Ordenar | Suerte Café{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/app.css' %}?v=20260930-21">
+    <link rel="stylesheet" href="{% static 'css/workflow-2026.css' %}?v=65">
+</head>
+<body class="public-order-page {% block body_class %}{% endblock %}">
+    <main class="public-order-shell">{% block content %}{% endblock %}</main>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

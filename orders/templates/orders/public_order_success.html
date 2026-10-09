@@ -1,0 +1,17 @@
+{% extends base_template %}
+
+{% block title %}Pedido recibido | Suerte Café{% endblock %}
+
+{% block content %}
+<section class="public-order-success">
+    <p class="eyebrow">Pedido recibido</p>
+    <h1>Tu folio es {{ order.formatted_number }}</h1>
+    {% if order.order_type == "eat_in" %}
+        <p>Acude a caja con este folio o con el nombre registrado para pagar y recibir asignación de mesa.</p>
+    {% else %}
+        <p>Recibimos tu solicitud de entrega. Te llamaremos para confirmar dirección, pago y tiempo estimado.</p>
+    {% endif %}
+    <div class="public-order-success-total"><span>Total estimado</span><strong>${{ order.total }}</strong></div>
+    <a class="action-link action-link-primary" href="{% url 'orders:public_order' %}">Hacer otro pedido</a>
+</section>
+{% endblock %}

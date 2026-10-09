@@ -70,7 +70,7 @@
     <div class="menu-product-table">
         <table>
             <thead>
-                <tr><th>Producto</th><th>Categoría</th><th>Precio</th><th>Disponibilidad</th><th>Acciones</th></tr>
+            <tr><th>Producto</th><th>Categoría</th><th>Precio</th><th>Disponibilidad interna</th><th>Clientes QR</th><th>Acciones</th></tr>
             </thead>
             <tbody>
                 {% for product in products %}
@@ -87,6 +87,20 @@
                         </td>
                         <td><span class="category-inline-icon">{{ product.category.name|category_icon }}</span> {{ product.category.name }}</td>
                         <td><strong>${{ product.price }}</strong></td>
+                        <td>
+                            {% if perms.menu.change_product %}
+                                <form method="post" action="{% url 'menu:product_toggle_customer_visibility' product.id %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                    <button type="submit" class="availability-toggle customer-visibility-toggle {% if product.is_visible_to_customers %}is-available{% else %}is-unavailable{% endif %}">
+                                        <span class="availability-switch" aria-hidden="true"><span></span></span>
+                                        <span class="availability-label">{% if product.is_visible_to_customers %}Visible QR{% else %}Oculto QR{% endif %}</span>
+                                    </button>
+                                </form>
+                            {% else %}
+                                {% if product.is_visible_to_customers %}Visible QR{% else %}Oculto QR{% endif %}
+                            {% endif %}
+                        </td>
                         <td>
                             {% if perms.menu.change_product %}
                                 <form method="post" action="{% url 'menu:product_toggle_availability' product.id %}">
@@ -114,7 +128,7 @@
                         </td>
                     </tr>
                 {% empty %}
-                    <tr><td colspan="5">No se encontraron productos.</td></tr>
+                    <tr><td colspan="6">No se encontraron productos.</td></tr>
                 {% endfor %}
             </tbody>
         </table>

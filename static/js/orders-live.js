@@ -28,6 +28,9 @@
             const response = await fetch(`${body.dataset.liveOrdersUrl}${window.location.search}`, {headers: {"X-Requested-With": "XMLHttpRequest"}});
             if (!response.ok) return;
             const payload = await response.json();
+            if (typeof window.updateOrderNotificationCount === "function") {
+                window.updateOrderNotificationCount(payload.notification_count);
+            }
             const nextComparableHtml = comparableHtml(payload.html);
             if (nextComparableHtml !== currentComparableHtml) {
                 body.innerHTML = payload.html;

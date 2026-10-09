@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth import get_user_model
 
-from .models import DailyReconciliation, DeliveryCustomer, Expense, Order, normalize_customer_name
+from .models import DailyReconciliation, DeliveryCustomer, Expense, Order, format_customer_name, normalize_customer_name
 
 
 class DeliveryCustomerForm(forms.ModelForm):
@@ -18,7 +18,7 @@ class DeliveryCustomerForm(forms.ModelForm):
             "notes": "Notas del cliente",
         }
         widgets = {
-            "name": forms.TextInput(attrs={"placeholder": "Nombre del cliente"}),
+            "name": forms.TextInput(attrs={"placeholder": "Nombre del cliente", "data-capitalize-first": "true"}),
             "phone": forms.TextInput(attrs={"placeholder": "Ej. 55 1234 5678"}),
             "street": forms.TextInput(attrs={"placeholder": "Nombre de la calle"}),
             "exterior_number": forms.TextInput(attrs={"placeholder": "Núm. exterior"}),
@@ -28,7 +28,7 @@ class DeliveryCustomerForm(forms.ModelForm):
         }
 
     def clean_name(self):
-        name = " ".join(self.cleaned_data["name"].split())
+        name = format_customer_name(self.cleaned_data["name"])
         duplicate = DeliveryCustomer.objects.filter(
             normalized_name=normalize_customer_name(name)
         ).exclude(pk=self.instance.pk)
@@ -112,7 +112,7 @@ class OrderCreateForm(forms.ModelForm):
             "notes": "Notas adicionales",
         }
         widgets = {
-            "customer_name": forms.TextInput(attrs={"placeholder": "Nombre del cliente"}),
+            "customer_name": forms.TextInput(attrs={"placeholder": "Nombre del cliente", "data-capitalize-first": "true"}),
             "phone": forms.TextInput(attrs={"placeholder": "Ej. 55 1234 5678"}),
             "table_reference": forms.TextInput(attrs={"placeholder": "Ej. Mesa 4"}),
             "street": forms.TextInput(attrs={"placeholder": "Nombre de la calle"}),
@@ -137,6 +137,9 @@ class OrderCreateForm(forms.ModelForm):
                 )
 
         return cleaned_data
+
+    def clean_customer_name(self):
+        return format_customer_name(self.cleaned_data.get("customer_name", ""))
 
 
 class OrderInformationEditForm(OrderCreateForm):
@@ -169,6 +172,27 @@ class OrderInformationEditForm(OrderCreateForm):
             "status": "Estado",
         }
 
+
+class CashierCheckoutForm(forms.Form):
+    table_reference = forms.CharField(required=False, label="Mesa asignada")
+    payment_method = forms.ChoiceField(
+        label="Método de pago",
+        choices=Order.PaymentMethod.choices,
+        widget=forms.HiddenInput(),
+    )
+    cash_received = forms.DecimalField(
+        required=False,
+        min_value=0,
+        decimal_places=2,
+        label="Recibido en efectivo",
+        widget=forms.NumberInput(attrs={"min": "0", "step": "0.50", "inputmode": "decimal"}),
+    )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if cleaned_data.get("payment_method") == Order.PaymentMethod.CASH and cleaned_data.get("cash_received") is None:
+            self.add_error("cash_received", "Indica con cuánto efectivo paga el cliente.")
+        return cleaned_data
 
 class OrderFilterForm(forms.Form):
     date = forms.DateField(

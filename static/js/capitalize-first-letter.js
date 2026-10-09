@@ -1,7 +1,6 @@
 (() => {
   const isEligible = (field) => {
-    if (!field || field.dataset.noCapitalize !== undefined) return false;
-    if (field.tagName === "TEXTAREA") return true;
+    if (!field || field.dataset.noCapitalize !== undefined || field.dataset.capitalizeFirst === undefined) return false;
     return field.tagName === "INPUT" && (field.type === "text" || !field.getAttribute("type"));
   };
 

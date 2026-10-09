@@ -383,6 +383,30 @@ def product_toggle_availability(request, product_id):
 
 
 @login_required
+@permission_required("menu.change_product", raise_exception=True)
+@require_POST
+def product_toggle_customer_visibility(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+    product.is_visible_to_customers = not product.is_visible_to_customers
+    product.save(update_fields=["is_visible_to_customers"])
+    label = "Visible en QR" if product.is_visible_to_customers else "Oculto en QR"
+
+    if request.headers.get("x-requested-with") == "XMLHttpRequest":
+        return JsonResponse({
+            "success": True,
+            "is_available": product.is_visible_to_customers,
+            "label": label,
+        })
+    messages.success(request, f"{product.name} ahora está {label.lower()}.")
+    next_url = request.POST.get("next")
+    if next_url and url_has_allowed_host_and_scheme(
+        next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+    ):
+        return redirect(next_url)
+    return redirect("menu:configuration")
+
+
+@login_required
 @permission_required("menu.delete_product", raise_exception=True)
 def product_delete(request, product_id):
     product = get_object_or_404(

@@ -20,6 +20,7 @@
     const stickyChangeRow = document.querySelector("[data-sticky-change-row]");
     const stickyChangeValue = document.querySelector("[data-sticky-change]");
     const stickyTotalValue = document.querySelector("[data-sticky-total]");
+    const publicTransferNote = document.querySelector("[data-public-transfer-note]");
     const money = new Intl.NumberFormat("es-MX", {style: "currency", currency: "MXN", currencyDisplay: "symbol"});
     let cashEditorCollapsed = false;
 
@@ -49,7 +50,8 @@
             button.setAttribute("aria-pressed", String(selected));
         });
         cashPanel.hidden = method !== "cash" || cashEditorCollapsed;
-        tipPanel.hidden = !method;
+        if (tipPanel) tipPanel.hidden = !method;
+        if (publicTransferNote) publicTransferNote.hidden = method !== "transfer";
         const received = Number.parseFloat(customCash?.value) || 0;
         const tip = Number.parseFloat(customTip?.value) || 0;
         if (receivedInput) receivedInput.value = method === "cash" && received ? received.toFixed(2) : "";

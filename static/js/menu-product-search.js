@@ -159,6 +159,6 @@
     window.addEventListener("scroll", () => {
         if (list.hidden) return;
         const rect = input.getBoundingClientRect();
-        if (rect.bottom <= 0 || rect.top >= window.innerHeight) closeList();
+        if (rect.bottom <= 0 || rect.top >= window.innerHeight) closeCompactSearch();
     }, true);
 })();

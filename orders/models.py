@@ -12,6 +12,11 @@ def normalize_customer_name(value):
     return " ".join((value or "").split()).casefold()
 
 
+def format_customer_name(value):
+    clean_value = " ".join((value or "").split())
+    return clean_value[:1].upper() + clean_value[1:] if clean_value else ""
+
+
 class DeliveryCustomer(models.Model):
     name = models.CharField(max_length=150)
     normalized_name = models.CharField(max_length=150, unique=True, editable=False)
@@ -28,7 +33,7 @@ class DeliveryCustomer(models.Model):
         ordering = ["name"]
 
     def save(self, *args, **kwargs):
-        self.name = " ".join(self.name.split())
+        self.name = format_customer_name(self.name)
         self.normalized_name = normalize_customer_name(self.name)
         super().save(*args, **kwargs)
 
@@ -88,6 +93,10 @@ class DailyOrderCounter(models.Model):
 
 
 class Order(models.Model):
+    class Source(models.TextChoices):
+        INTERNAL = "internal", "Captura interna"
+        PUBLIC_QR = "public_qr", "Pedido QR"
+
     class OrderType(models.TextChoices):
         EAT_IN = "eat_in", "Comer aquí"
         DELIVERY = "delivery", "Entrega"
@@ -107,6 +116,10 @@ class Order(models.Model):
         CARD = "card", "Tarjeta"
         TRANSFER = "transfer", "Transferencia"
 
+    class PaymentStatus(models.TextChoices):
+        PENDING = "pending", "Pendiente de pago"
+        PAID = "paid", "Pagado"
+
     daily_number = models.PositiveIntegerField(editable=False)
     operating_date = models.DateField(default=timezone.localdate)
 
@@ -119,6 +132,18 @@ class Order(models.Model):
     employee_name_snapshot = models.CharField(
         max_length=150,
         blank=True,
+    )
+    source = models.CharField(
+        max_length=20,
+        choices=Source.choices,
+        default=Source.INTERNAL,
+    )
+    delivery_customer = models.ForeignKey(
+        DeliveryCustomer,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="orders",
     )
 
     order_type = models.CharField(
@@ -144,6 +169,7 @@ class Order(models.Model):
     hot_bar_completed_at = models.DateTimeField(null=True, blank=True)
 
     customer_name = models.CharField(max_length=150, blank=True)
+    needs_attention = models.BooleanField(default=False)
     phone = models.CharField(max_length=30, blank=True)
     table_reference = models.CharField(max_length=100, blank=True)
 
@@ -172,6 +198,16 @@ class Order(models.Model):
         choices=PaymentMethod.choices,
         default=PaymentMethod.CASH,
     )
+    payment_status = models.CharField(
+        max_length=20,
+        choices=PaymentStatus.choices,
+        default=PaymentStatus.PAID,
+    )
+    cash_tendered = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True,
+        help_text="Monto indicado por el cliente antes de cobrar.",
+    )
+    payment_confirmed_at = models.DateTimeField(null=True, blank=True)
     cash_received = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     tip_amount = models.DecimalField(
         max_digits=10,
@@ -192,6 +228,10 @@ class Order(models.Model):
     def __str__(self):
         return f"#{self.daily_number:03d} - {self.operating_date}"
 
+    def save(self, *args, **kwargs):
+        self.customer_name = format_customer_name(self.customer_name)
+        super().save(*args, **kwargs)
+
     @property
     def formatted_number(self):
         return f"#{self.daily_number:03d}"
@@ -206,6 +246,10 @@ class Order(models.Model):
         if self.payment_method != self.PaymentMethod.CASH or self.cash_received is None:
             return Decimal("0.00")
         return max(self.cash_received - self.charged_total, Decimal("0.00"))
+
+    @property
+    def is_public_order(self):
+        return self.source == self.Source.PUBLIC_QR
 
     def update_overall_status(self):
         """Completa la orden cuando todas las barras que sí tienen productos terminaron."""

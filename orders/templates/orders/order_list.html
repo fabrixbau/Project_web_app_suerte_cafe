@@ -8,6 +8,10 @@
     <div>
         <p class="eyebrow">Administración</p>
         <h1>Pedidos <span class="live-orders-indicator"><i></i> En vivo</span></h1>
+        <p class="orders-attention-summary{% if not pending_order_notifications %} is-hidden{% endif %}" data-order-notification-summary>
+            <span class="order-notification-badge" data-order-notification-count>{{ pending_order_notifications }}</span>
+            <strong data-order-notification-label>{{ pending_order_notifications }} pedido{{ pending_order_notifications|pluralize:"s" }} por atender</strong>
+        </p>
     </div>
     <a class="action-link action-link-primary" href="{% url 'orders:create' %}">+ Nuevo pedido</a>
 </div>
@@ -49,8 +53,8 @@
 
         <tbody id="orders-table-body" data-live-orders-url="{% url 'orders:live' %}">
             {% for order in page %}
-                <tr class="order-row order-row-{{ order.order_type }}" data-detail-url="{% url 'orders:detail' order.id %}" tabindex="0" aria-label="Abrir detalle del pedido {{ order.formatted_number }}">
-                    <td><a class="order-detail-trigger" href="{% url 'orders:detail' order.id %}">{{ order.formatted_number }}</a></td>
+                <tr class="order-row order-row-{{ order.order_type }}{% if order.needs_attention %} is-needs-attention{% endif %}" data-detail-url="{% url 'orders:detail' order.id %}" tabindex="0" aria-label="Abrir detalle del pedido {{ order.formatted_number }}">
+                    <td>{% if order.needs_attention %}<span class="order-row-alert">Nuevo pedido</span>{% endif %}<a class="order-detail-trigger" href="{% url 'orders:detail' order.id %}">{{ order.formatted_number }}</a></td>
                     <td><span class="order-datetime">{{ order.operating_date|date:"d M" }} <b>{{ order.created_at|date:"H:i" }}</b></span></td>
                     <td>{{ order.customer_name|default:"Sin nombre" }}</td>
                     <td>{{ order.get_order_type_display }}</td>
@@ -66,6 +70,7 @@
                     <td>${{ order.total }}</td>
                     <td>{{ order.employee_name_snapshot }}</td>
                     <td>
+                        {% if order.payment_status == "pending" %}<span class="payment-state payment-state-pending">Falta pago</span>{% endif %}
                         <form method="post" action="{% url 'orders:status_update' order.id %}" class="status-update-form">
                             {% csrf_token %}
                             <input type="hidden" name="next" value="{{ request.get_full_path }}">
@@ -113,4 +118,4 @@
 {% endblock %}
 
 {% load compat %}
-{% block extra_js %}<script src="{% compatible_js 'order-status.js' %}?v=4"></script><script src="{% compatible_js 'order-detail-modal.js' %}?v=3"></script><script src="{% compatible_js 'orders-live.js' %}?v=3"></script>{% endblock %}
+{% block extra_js %}<script src="{% compatible_js 'order-status.js' %}?v=4"></script><script src="{% static 'js/cashier-checkout.js' %}?v=1"></script><script src="{% compatible_js 'order-detail-modal.js' %}?v=4"></script><script src="{% compatible_js 'orders-live.js' %}?v=3"></script>{% endblock %}

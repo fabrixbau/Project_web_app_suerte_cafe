@@ -1,10 +1,10 @@
-{% extends "base.html" %}
+{% extends base_template|default:"base.html" %}
 {% load l10n static menu_extras %}
 
 {% block title %}Nuevo pedido | Suerte Café{% endblock %}
 
 {% block content %}
-<form method="post" class="order-workspace">
+<form method="post" class="order-workspace{% if public_order %} public-order-workspace{% endif %}">
     {% csrf_token %}
     {{ form.packaging_items }}
     {{ form.payment_method }}
@@ -29,8 +29,8 @@
     <div class="order-builder">
         <div class="order-heading">
             <div>
-                <p class="eyebrow">Tomar orden</p>
-                <h1>Nuevo pedido</h1>
+                <p class="eyebrow">{% if public_order %}Ordena desde aquí{% else %}Tomar orden{% endif %}</p>
+                <h1>{% if public_order %}Suerte Café{% else %}Nuevo pedido{% endif %}</h1>
             </div>
 
             <div class="order-type-selector" aria-label="Tipo de pedido">
@@ -43,10 +43,10 @@
                     <img src="{% static 'img/ui/icons/truck.svg' %}" alt="">
                     Entrega
                 </button>
-                <button type="button" class="order-type-option" data-order-type="pickup">
+                {% if not public_order %}<button type="button" class="order-type-option" data-order-type="pickup">
                     <img src="{% static 'img/ui/icons/shopping-bag.svg' %}" alt="">
                     Recoger
-                </button>
+                </button>{% endif %}
             </div>
         </div>
 
@@ -58,12 +58,12 @@
                 <div><h2>Datos del pedido</h2><p>Identifica al cliente y agrega solamente la información necesaria.</p></div>
             </header>
             <div class="customer-fields-grid">
-                <div class="field-group customer-name-field" data-delivery-customer-lookup="{% url 'orders:delivery_customer_lookup' %}">
+                <div class="field-group customer-name-field"{% if not public_order %} data-delivery-customer-lookup="{% url 'orders:delivery_customer_lookup' %}"{% endif %}>
                     {{ form.customer_name.label_tag }}
                     {{ form.customer_name }}
                     {{ form.customer_name.errors }}
-                    <small class="customer-lookup-status" aria-live="polite"></small>
-                    <div class="customer-match-list" data-customer-match-list role="listbox" aria-label="Clientes encontrados" hidden></div>
+                    {% if not public_order %}<small class="customer-lookup-status" aria-live="polite"></small>
+                    <div class="customer-match-list" data-customer-match-list role="listbox" aria-label="Clientes encontrados" hidden></div>{% endif %}
                 </div>
 
                 <div id="phone-fields" class="field-group phone-field">
@@ -72,11 +72,11 @@
                     {{ form.phone.errors }}
                 </div>
 
-                <div id="eat-in-fields" class="field-group table-field table-map-field">
+                {% if not public_order %}<div id="eat-in-fields" class="field-group table-field table-map-field">
                     {% include "orders/_table_map.html" with table_field=form.table_reference %}
-                </div>
+                </div>{% endif %}
 
-                <div id="delivery-fields" class="delivery-fields delivery-address-card">
+                {% if not public_order %}<div id="delivery-fields" class="delivery-fields delivery-address-card">
                     <div class="delivery-address-heading"><strong>Dirección de entrega</strong><span>Todos estos campos son opcionales</span></div>
                     <div class="field-group street-field">
                         {{ form.street.label_tag }}
@@ -98,7 +98,7 @@
                         {{ form.interior_number }}
                         {{ form.interior_number.errors }}
                     </div>
-                </div>
+                </div>{% elif public_order %}<p id="delivery-fields" class="public-delivery-note" hidden>Al enviar tu pedido te llamaremos para confirmar dirección, pago y tiempo estimado.</p>{% endif %}
 
                 <div class="field-group notes-field">
                     {{ form.notes.label_tag }}
@@ -197,7 +197,7 @@
 
     <aside class="current-order-panel">
         <div class="ticket-sticky-checkout">
-            <button type="submit" class="finish-order-button">Finalizar pedido</button>
+            <button type="submit" class="finish-order-button">{% if public_order %}Enviar pedido{% else %}Finalizar pedido{% endif %}</button>
             <p class="ticket-sticky-total" aria-live="polite">
                 <span>Total</span>
                 <strong data-sticky-total>$0.00</strong>
@@ -208,7 +208,7 @@
             </p>
         </div>
 
-        <section class="payment-panel" aria-labelledby="payment-title">
+        {% if not public_order %}<section class="payment-panel" aria-labelledby="payment-title">
             <div class="payment-heading"><strong id="payment-title">Método de pago</strong><span>Obligatorio</span></div>
             <div class="payment-methods" role="group" aria-label="Método de pago">
                 <button type="button" data-payment-method="cash">Efectivo</button>
@@ -229,7 +229,7 @@
         <section class="tip-payment-fields checkout-detail" data-tip-payment hidden>
             <label>Propina (opcional)<input type="number" min="0" step="0.50" data-tip-custom value="0"></label>
             <p><span>Total a cobrar</span><strong data-charged-total>$0.00</strong></p>
-        </section>
+        </section>{% endif %}
         <div class="current-order-heading">
             <h2>Pedido actual</h2>
             <div class="current-order-heading-actions">
@@ -276,7 +276,7 @@
 
 {% block extra_js %}
 {% load compat %}
-<script src="{% compatible_js 'order-draft.js' %}?v=2"></script>
+{% if not public_order %}<script src="{% compatible_js 'order-draft.js' %}?v=2"></script>{% endif %}
 {% if not legacy_ios9 %}<script>
     const orderType = document.querySelector("#id_order_type");
     const orderTypeButtons = document.querySelectorAll(".order-type-option");
@@ -287,8 +287,8 @@
     function updateCustomerFields() {
         const selectedType = orderType.value || "eat_in";
         orderType.value = selectedType;
-        eatInFields.hidden = selectedType !== "eat_in";
-        deliveryFields.hidden = selectedType !== "delivery";
+        if (eatInFields) eatInFields.hidden = selectedType !== "eat_in";
+        if (deliveryFields) deliveryFields.hidden = selectedType !== "delivery";
         phoneFields.hidden = !["delivery", "pickup"].includes(selectedType);
         orderTypeButtons.forEach((button) => {
             button.classList.toggle("is-selected", button.dataset.orderType === selectedType);
@@ -457,11 +457,11 @@
     window.refreshBaseOrderSummary = updateOrderSummary;
     updateOrderSummary();
 </script>{% else %}<script src="{% static 'js/legacy/order-create-page.js' %}?v=1"></script>{% endif %}
-<script src="{% compatible_js 'customer-autocomplete.js' %}?v=2"></script>
+{% if not public_order %}<script src="{% compatible_js 'customer-autocomplete.js' %}?v=2"></script>{% endif %}
 <script src="{% compatible_js 'product-customizer.js' %}?v=7"></script>
 <script src="{% compatible_js 'packaging-charge.js' %}?v=3"></script>
-<script src="{% compatible_js 'payment.js' %}?v=6"></script>
-<script src="{% compatible_js 'table-map.js' %}?v=3"></script>
+{% if not public_order %}<script src="{% compatible_js 'payment.js' %}?v=7"></script>{% endif %}
+{% if not public_order %}<script src="{% compatible_js 'table-map.js' %}?v=3"></script>{% endif %}
 <script src="{% compatible_js 'order-flow-focus.js' %}?v=3"></script>
 <script src="{% compatible_js 'order-comment.js' %}?v=2"></script>
 <script src="{% compatible_js 'product-search.js' %}?v=5"></script>

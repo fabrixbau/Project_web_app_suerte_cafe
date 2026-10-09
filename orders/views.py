@@ -31,10 +31,11 @@ from .forms import (
     ExpenseForm,
     OrderFilterForm,
     OrderInformationEditForm,
+    CashierCheckoutForm,
     SalesReportFilterForm,
 )
 from .models import DailyReconciliation, DeliveryCustomer, Expense, Order, OrderItem, normalize_customer_name
-from .services import create_order, update_complete_order
+from .services import create_order, save_delivery_customer, update_complete_order
 
 
 def packaging_context(order=None, posted_value=None):
@@ -215,12 +216,23 @@ def order_detail(request, order_id):
         ),
         id=order_id,
     )
+    # Abrir el pedido es el acuse de la alerta: deja de contar como pendiente.
+    if order.needs_attention:
+        order.needs_attention = False
+        order.save(update_fields=["needs_attention", "updated_at"])
 
 
     return render(
         request,
         "orders/order_detail.html",
-        {"order": order},
+        {
+            "order": order,
+            "checkout_form": CashierCheckoutForm(initial={
+                "table_reference": order.table_reference,
+                "payment_method": order.payment_method,
+                "cash_received": order.cash_tendered or order.total,
+            }),
+        },
     )
 
 
@@ -531,6 +543,122 @@ def order_create(request):
     )
 
 
+def public_order(request):
+    """General QR entrance. Public orders share the same numbered queue."""
+    available_options = ProductOption.objects.filter(is_available=True).order_by("sort_order", "id")
+    products = list(Product.objects.filter(
+        is_available=True,
+        is_visible_to_customers=True,
+    ).select_related(
+        "category", "category__default_packaging_type", "packaging_type"
+    ).prefetch_related(Prefetch("option_groups__options", queryset=available_options, to_attr="available_options")).order_by("category__name", "name"))
+    product_customizations = prepare_product_customizations(products)
+    # El cliente no cobra ni define el cobro: caja lo confirma después.
+    public_post = request.POST.copy() if request.method == "POST" else None
+    if public_post is not None:
+        public_post["payment_method"] = Order.PaymentMethod.CASH
+        public_post["cash_received"] = ""
+        public_post["tip_amount"] = "0"
+    form = OrderCreateForm(public_post, initial={"order_type": Order.OrderType.EAT_IN})
+    items = []
+
+    if request.method == "POST":
+        form_is_valid = form.is_valid()
+        for product in products:
+            try:
+                quantity = int(request.POST.get(f"quantity_{product.id}", "0") or 0)
+            except (TypeError, ValueError):
+                quantity = 0
+                form.add_error(None, f"Cantidad inválida para {product.name}.")
+            product.selected_quantity = max(0, quantity)
+            if quantity > 0:
+                items.append({"product_id": product.id, "quantity": quantity})
+
+        item_errors = []
+        items.extend(parse_custom_items(request, item_errors))
+        packaging_items = parse_packaging_items(request, item_errors)
+        for error in item_errors:
+            form.add_error(None, error)
+        if not items:
+            form.add_error(None, "Selecciona al menos un producto.")
+        if form.cleaned_data.get("order_type") == Order.OrderType.DELIVERY and not form.cleaned_data.get("phone"):
+            form.add_error("phone", "El celular es obligatorio para entregas.")
+
+        if form_is_valid and not form.errors:
+            customer_data = form.cleaned_data.copy()
+            order_type = customer_data.pop("order_type")
+            customer_data.pop("packaging_items", None)
+            for field in ("table_reference", "street", "exterior_number", "interior_number", "neighborhood"):
+                customer_data[field] = ""
+            try:
+                order = create_order(
+                    user=None, order_type=order_type, items=items,
+                    customer_data=customer_data, packaging_items=packaging_items,
+                    public_order=True,
+                )
+            except ValidationError as error:
+                for error_message in error.messages:
+                    form.add_error(None, error_message)
+            else:
+                # A phone match is private: it is visible only to the cashier.
+                phone_digits = "".join(character for character in order.phone if character.isdigit())
+                if order.order_type == Order.OrderType.DELIVERY and phone_digits:
+                    for customer in DeliveryCustomer.objects.exclude(phone=""):
+                        if "".join(character for character in customer.phone if character.isdigit()) == phone_digits:
+                            order.delivery_customer = customer
+                            order.save(update_fields=["delivery_customer", "updated_at"])
+                            break
+                return redirect("orders:public_success", order_id=order.id)
+    else:
+        for product in products:
+            product.selected_quantity = 0
+
+    return render(request, "orders/order_create.html", {
+        "form": form, "products": products, "product_customizations": product_customizations,
+        "custom_items_value": request.POST.get("custom_items", "[]"),
+        "public_order": True, "base_template": "orders/public_base.html",
+        **packaging_context(posted_value=request.POST.get("packaging_items") if request.method == "POST" else None),
+    })
+
+
+def public_order_success(request, order_id):
+    order = get_object_or_404(Order, id=order_id, source=Order.Source.PUBLIC_QR)
+    return render(request, "orders/public_order_success.html", {"order": order, "base_template": "orders/public_base.html"})
+
+
+@login_required
+@permission_required("orders.change_order", raise_exception=True)
+@require_POST
+def order_checkout(request, order_id):
+    order = get_object_or_404(Order, id=order_id)
+    form = CashierCheckoutForm(request.POST)
+    if not form.is_valid():
+        messages.error(request, "Revisa los datos de cobro antes de confirmar el pago.")
+        return redirect("orders:detail", order_id=order.id)
+
+    with transaction.atomic():
+        order = Order.objects.select_for_update().get(id=order_id)
+        payment_method = form.cleaned_data["payment_method"]
+        received = form.cleaned_data.get("cash_received")
+        if order.order_type == Order.OrderType.DELIVERY and not order.street.strip():
+            messages.error(request, "Registra y confirma la dirección de entrega antes de marcar el pago.")
+            return redirect("orders:detail", order_id=order.id)
+        if payment_method == Order.PaymentMethod.CASH and received < order.charged_total:
+            messages.error(request, "El efectivo recibido no cubre el total del pedido.")
+            return redirect("orders:detail", order_id=order.id)
+        if order.order_type == Order.OrderType.EAT_IN:
+            order.table_reference = form.cleaned_data.get("table_reference", "").strip()
+        order.payment_method = payment_method
+        order.cash_received = received if payment_method == Order.PaymentMethod.CASH else None
+        order.payment_status = Order.PaymentStatus.PAID
+        order.payment_confirmed_at = timezone.now()
+        order.save(update_fields=["table_reference", "payment_method", "cash_received", "payment_status", "payment_confirmed_at", "updated_at"])
+        if order.order_type == Order.OrderType.DELIVERY and order.customer_name.strip() and order.street.strip():
+            save_delivery_customer(order)
+    messages.success(request, f"Pago del pedido {order.formatted_number} confirmado.")
+    return redirect("orders:detail", order_id=order.id)
+
+
 @login_required
 def order_list(request):
     orders = Order.objects.select_related(
@@ -621,7 +749,39 @@ def orders_live(request):
     else:
         orders = orders.filter(operating_date=timezone.localdate())
     page = Paginator(orders, 20).get_page(request.GET.get("page"))
-    return JsonResponse({"html": render_to_string("orders/_order_rows.html", {"page": page}, request=request)})
+    return JsonResponse({
+        "html": render_to_string("orders/_order_rows.html", {"page": page}, request=request),
+        "notification_count": order_notification_count(),
+    })
+
+
+def order_notification_count():
+    return Order.objects.filter(
+        operating_date=timezone.localdate(),
+        needs_attention=True,
+    ).count()
+
+
+@login_required
+def order_notifications(request):
+    return JsonResponse({"count": order_notification_count()})
+
+
+@login_required
+@permission_required("orders.change_order", raise_exception=True)
+@require_POST
+def order_attention_toggle(request, order_id):
+    order = get_object_or_404(Order, id=order_id)
+    order.needs_attention = not order.needs_attention
+    order.save(update_fields=["needs_attention", "updated_at"])
+    if request.headers.get("x-requested-with") == "XMLHttpRequest":
+        return JsonResponse({"needs_attention": order.needs_attention, "count": order_notification_count()})
+    next_url = request.POST.get("next")
+    if next_url and url_has_allowed_host_and_scheme(
+        next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+    ):
+        return redirect(next_url)
+    return redirect("orders:detail", order_id=order.id)
 
 
 @login_required

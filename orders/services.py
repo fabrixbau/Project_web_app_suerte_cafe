@@ -50,16 +50,16 @@ def replace_packaging_items(order, packaging_items):
     return total
 
 
-def load_configurable_products(product_ids):
+def load_configurable_products(product_ids, *, public_order=False):
     available_options = ProductOption.objects.filter(is_available=True).order_by(
         "sort_order", "id"
     )
+    product_filters = {"id__in": product_ids, "is_available": True}
+    if public_order:
+        product_filters["is_visible_to_customers"] = True
     return {
         product.id: product
-        for product in Product.objects.filter(
-            id__in=product_ids,
-            is_available=True,
-        ).select_related("category").prefetch_related(
+        for product in Product.objects.filter(**product_filters).select_related("category").prefetch_related(
             Prefetch(
                 "option_groups__options",
                 queryset=available_options,
@@ -185,7 +185,7 @@ def save_delivery_customer(order):
 
 
 @transaction.atomic
-def create_order(*, user, order_type, items, customer_data=None, packaging_items=None):
+def create_order(*, user, order_type, items, customer_data=None, packaging_items=None, public_order=False):
     if not items:
         raise ValidationError("El pedido debe contener productos.")
 
@@ -222,7 +222,7 @@ def create_order(*, user, order_type, items, customer_data=None, packaging_items
     counter.last_number += 1
     counter.save(update_fields=["last_number"])
 
-    employee_name = user.username
+    employee_name = user.username if user is not None else "Pedido QR"
 
     order = Order.objects.create(
         daily_number=counter.last_number,
@@ -230,10 +230,15 @@ def create_order(*, user, order_type, items, customer_data=None, packaging_items
         created_by=user,
         employee_name_snapshot=employee_name,
         order_type=order_type,
+        source=Order.Source.PUBLIC_QR if public_order else Order.Source.INTERNAL,
+        payment_status=Order.PaymentStatus.PENDING if public_order else Order.PaymentStatus.PAID,
+        needs_attention=public_order,
         **clean_customer_data,
     )
 
-    products = load_configurable_products({item["product_id"] for item in items})
+    products = load_configurable_products(
+        {item["product_id"] for item in items}, public_order=public_order
+    )
     if len(products) != len({item["product_id"] for item in items}):
         raise ValidationError("Uno de los productos no existe o no está disponible.")
 
@@ -278,7 +283,10 @@ def create_order(*, user, order_type, items, customer_data=None, packaging_items
     if not payment_was_supplied:
         order.payment_method = Order.PaymentMethod.CASH
         order.cash_received = order.total
-    if order.payment_method == Order.PaymentMethod.CASH:
+    if public_order:
+        order.cash_tendered = order.cash_received
+        order.cash_received = None
+    elif order.payment_method == Order.PaymentMethod.CASH:
         if order.cash_received is None:
             raise ValidationError("Indica con cuánto efectivo paga el cliente.")
         if order.cash_received < order.charged_total:
@@ -286,9 +294,10 @@ def create_order(*, user, order_type, items, customer_data=None, packaging_items
     else:
         order.cash_received = None
     order.save(update_fields=[
-        "packaging_fee", "total", "payment_method", "cash_received", "tip_amount"
+        "packaging_fee", "total", "payment_method", "cash_received", "cash_tendered", "tip_amount"
     ])
-    save_delivery_customer(order)
+    if not public_order:
+        save_delivery_customer(order)
 
     return order
 

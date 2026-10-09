@@ -49,6 +49,11 @@ urlpatterns = [
         name="product_toggle_availability",
     ),
     path(
+        "products/<int:product_id>/customer-visibility/",
+        views.product_toggle_customer_visibility,
+        name="product_toggle_customer_visibility",
+    ),
+    path(
         "products/<int:product_id>/delete/",
         views.product_delete,
         name="product_delete",

@@ -5,6 +5,8 @@ from . import views
 app_name = "orders"
 
 urlpatterns = [
+    path("ordenar/", views.public_order, name="public_order"),
+    path("ordenar/confirmado/<int:order_id>/", views.public_order_success, name="public_success"),
     path("new/", views.order_create, name="create"),
     path(
         "delivery-customer/",
@@ -23,6 +25,9 @@ urlpatterns = [
     path("kitchen/live/", views.kitchen_live, name="kitchen_live"),
     path("", views.order_list, name="list"),
     path("live/", views.orders_live, name="live"),
+    path("notifications/", views.order_notifications, name="notifications"),
+    path("<int:order_id>/attention/", views.order_attention_toggle, name="attention_toggle"),
+    path("<int:order_id>/cobrar/", views.order_checkout, name="checkout"),
     path(
         "<int:order_id>/status/",
         views.order_status_update,

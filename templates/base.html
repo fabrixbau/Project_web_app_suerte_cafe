@@ -24,7 +24,7 @@
         rel="stylesheet"
         href="{% static 'css/app.css' %}?v=20260930-21"
     >
-    <link rel="stylesheet" href="{% static 'css/workflow-2026.css' %}?v=64">
+    <link rel="stylesheet" href="{% static 'css/workflow-2026.css' %}?v=65">
     {% if legacy_ios9 %}<link rel="stylesheet" href="{% static 'css/legacy-ios9.css' %}?v=4">{% endif %}
 </head>
 
@@ -49,10 +49,11 @@
 
                 <a
                     href="{% url 'orders:list' %}"
+                    data-order-notifications-url="{% url 'orders:notifications' %}"
                     class="{% if request.resolver_match.namespace == 'orders' and request.resolver_match.url_name != 'create' and request.resolver_match.url_name != 'reports' and request.resolver_match.url_name != 'kitchen' %}active{% endif %}"
                 >
                     <img class="nav-icon" src="{% static 'img/ui/icons/clipboard-list.svg' %}" alt="">
-                    Pedidos
+                    Pedidos <span class="order-notification-badge{% if not pending_order_notifications %} is-hidden{% endif %}" data-order-notification-count>{{ pending_order_notifications }}</span>
                 </a>
 
                 <a
@@ -315,6 +316,7 @@
 <script src="{% compatible_js 'modern-select.js' %}?v=6"></script>
 <script src="{% compatible_js 'number-input.js' %}?v=2"></script>
 <script src="{% compatible_js 'notifications.js' %}?v=3"></script>
+{% if user.is_authenticated %}<script src="{% static 'js/order-notifications.js' %}?v=1"></script>{% endif %}
 <script src="{% compatible_js 'sidebar.js' %}?v=3"></script>
 {% if user.is_authenticated and not legacy_ios9 %}{% include "includes/lachi.html" %}<script src="{% static 'js/lachi.js' %}?v=5"></script>{% endif %}
 <script src="{% compatible_js 'capitalize-first-letter.js' %}?v=1"></script>

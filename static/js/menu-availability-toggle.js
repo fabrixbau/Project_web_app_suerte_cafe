@@ -1,5 +1,5 @@
 (() => {
-    const forms = document.querySelectorAll(".menu-product-table form[action*='/availability/']");
+    const forms = document.querySelectorAll(".menu-product-table form[action*='/availability/'], .menu-product-table form[action*='/customer-visibility/']");
 
     forms.forEach((form) => {
         const button = form.querySelector(".availability-toggle");
