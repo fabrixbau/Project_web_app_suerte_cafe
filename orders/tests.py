@@ -1,3 +1,4 @@
+import json
 from decimal import Decimal
 from datetime import timedelta
 
@@ -213,6 +214,54 @@ class CreateOrderTests(TestCase):
             hot_order_ids,
             [pending_old.id, pending_new.id, completed_old.id, completed_new.id],
         )
+
+    def test_kitchen_groups_open_orders_for_the_same_table_and_closes_them_together(self):
+        first = create_order(
+            user=self.user,
+            order_type=Order.OrderType.EAT_IN,
+            customer_data={"table_reference": "A1"},
+            items=[{"product_id": self.product.id, "quantity": 1}],
+        )
+        second = create_order(
+            user=self.user,
+            order_type=Order.OrderType.EAT_IN,
+            customer_data={"table_reference": "A1"},
+            items=[{"product_id": self.product.id, "quantity": 2}],
+        )
+
+        rows = build_kitchen_context("hot")["hot_rows"]
+        self.assertEqual(len(rows), 1)
+        self.assertTrue(rows[0]["is_table_group"])
+        self.assertEqual(set(rows[0]["order_ids"]), {first.id, second.id})
+        self.assertEqual(rows[0]["hot_quantity"], 3)
+
+        self.client.force_login(self.user)
+        response = self.client.post(
+            reverse("orders:update_bar_status", args=[first.id]),
+            data=json.dumps({
+                "bar": "hot",
+                "status": Order.BarStatus.COMPLETED,
+                "order_ids": [first.id, second.id],
+            }),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(Order.objects.filter(
+            id__in=[first.id, second.id], hot_bar_status=Order.BarStatus.COMPLETED,
+        ).count() == 2)
+
+        third = create_order(
+            user=self.user,
+            order_type=Order.OrderType.EAT_IN,
+            customer_data={"table_reference": "A1"},
+            items=[{"product_id": self.product.id, "quantity": 1}],
+        )
+        pending_rows = [
+            row for row in build_kitchen_context("hot")["hot_rows"]
+            if row["order"].hot_bar_status == Order.BarStatus.PENDING
+        ]
+        self.assertEqual(len(pending_rows), 1)
+        self.assertEqual(pending_rows[0]["order_ids"], [third.id])
 
     def test_rejects_unavailable_product(self):
         self.product.is_available = False

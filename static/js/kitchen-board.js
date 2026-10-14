@@ -158,7 +158,11 @@
             const response = await fetch(button.dataset.barStatusUrl, {
                 method: "POST",
                 headers: {"Content-Type": "application/json", "X-CSRFToken": decodeURIComponent(csrfToken()), "X-Requested-With": "XMLHttpRequest"},
-                body: JSON.stringify({bar: button.dataset.station, status: button.dataset.nextStatus}),
+                body: JSON.stringify({
+                    bar: button.dataset.station,
+                    status: button.dataset.nextStatus,
+                    order_ids: (button.dataset.barOrderIds || "").split(",").filter(Boolean),
+                }),
             });
             const payload = await response.json();
             if (!response.ok || !payload.success) throw new Error(payload.error || "No fue posible actualizar la barra.");

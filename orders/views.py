@@ -810,7 +810,73 @@ def build_kitchen_context(filter_mode=None):
             "hot_items": hot_items,
             "cold_quantity": sum(item.quantity for item in cold_items),
             "hot_quantity": sum(item.quantity for item in hot_items),
+            "order_ids": [order.id],
+            "order_numbers_display": order.formatted_number,
+            "ticket_key": f"order:{order.id}",
+            "ticket_label": order.formatted_number,
+            "display_total": order.total,
+            "display_customer": order.customer_name or "Sin nombre",
+            "display_notes": order.notes,
+            "payment_pending": order.payment_status == Order.PaymentStatus.PENDING,
+            "is_table_group": False,
         })
+
+    def grouped_table_rows(station):
+        item_key = f"{station}_items"
+        quantity_key = f"{station}_quantity"
+        pending_groups = {}
+        standalone_rows = []
+
+        for row in rows:
+            order = row["order"]
+            table_reference = order.table_reference.strip()
+            is_open_table = (
+                bool(table_reference)
+                and order.order_type == Order.OrderType.EAT_IN
+                and getattr(order, f"{station}_bar_status") == Order.BarStatus.PENDING
+            )
+            if is_open_table:
+                pending_groups.setdefault(table_reference.casefold(), []).append(row)
+            else:
+                standalone_rows.append(row)
+
+        grouped_rows = []
+        for table_rows in pending_groups.values():
+            if len(table_rows) == 1:
+                grouped_rows.append(table_rows[0])
+                continue
+
+            table_rows.sort(key=lambda row: row["order"].created_at)
+            anchor = table_rows[0]["order"]
+            order_ids = [row["order"].id for row in table_rows]
+            order_numbers = [row["order"].formatted_number for row in table_rows]
+            customers = list(dict.fromkeys(
+                row["order"].customer_name.strip() for row in table_rows if row["order"].customer_name.strip()
+            ))
+            notes = [
+                f"{row['order'].formatted_number}: {row['order'].notes.strip()}"
+                for row in table_rows if row["order"].notes.strip()
+            ]
+            grouped_rows.append({
+                "order": anchor,
+                item_key: [item for row in table_rows for item in row[item_key]],
+                quantity_key: sum(row[quantity_key] for row in table_rows),
+                "order_ids": order_ids,
+                "order_numbers_display": " · ".join(order_numbers),
+                "ticket_key": f"table:{station}:{'-'.join(map(str, order_ids))}",
+                "ticket_label": f"Mesa {anchor.table_reference} · {' · '.join(order_numbers)}",
+                "display_total": sum((row["order"].total for row in table_rows), Decimal("0.00")),
+                "display_customer": " · ".join(customers) if customers else "Sin nombre",
+                "display_notes": " · ".join(notes),
+                "payment_pending": any(row["order"].payment_status == Order.PaymentStatus.PENDING for row in table_rows),
+                "is_table_group": True,
+            })
+
+        return grouped_rows + standalone_rows
+
+    cold_grouped_rows = grouped_table_rows("cold")
+    hot_grouped_rows = grouped_table_rows("hot")
+
     def station_sort_key(row, station):
         order = row["order"]
         status = getattr(order, f"{station}_bar_status")
@@ -820,11 +886,11 @@ def build_kitchen_context(filter_mode=None):
         return (0, order.created_at, order.created_at)
 
     cold_rows = sorted(
-        (row for row in rows if row["cold_items"]),
+        (row for row in cold_grouped_rows if row["cold_items"]),
         key=lambda row: station_sort_key(row, "cold"),
     )
     hot_rows = sorted(
-        (row for row in rows if row["hot_items"]),
+        (row for row in hot_grouped_rows if row["hot_items"]),
         key=lambda row: station_sort_key(row, "hot"),
     )
     two_player_rows = []
@@ -840,8 +906,8 @@ def build_kitchen_context(filter_mode=None):
         "cold_rows": cold_rows,
         "hot_rows": hot_rows,
         "two_player_rows": two_player_rows,
-        "cold_count": sum(bool(row["cold_items"]) for row in rows),
-        "hot_count": sum(bool(row["hot_items"]) for row in rows),
+        "cold_count": len(cold_rows),
+        "hot_count": len(hot_rows),
     }
 
 
@@ -868,30 +934,66 @@ def update_bar_status(request, order_id):
         if status not in Order.BarStatus.values:
             return JsonResponse({"success": False, "error": "Estado no válido"}, status=400)
         
-        with transaction.atomic():
-            order = get_object_or_404(Order.objects.select_for_update(), id=order_id)
-            station_items = order.items.filter(preparation_station_snapshot=bar)
-            if not station_items.exists():
-                return JsonResponse(
-                    {"success": False, "error": "Esta orden no tiene productos para esa barra."},
-                    status=400,
-                )
-            
-            if bar == "cold":
-                order.cold_bar_status = status
-                order.cold_bar_completed_at = timezone.now() if status == Order.BarStatus.COMPLETED else None
-            else:
-                order.hot_bar_status = status
-                order.hot_bar_completed_at = timezone.now() if status == Order.BarStatus.COMPLETED else None
+        raw_order_ids = data.get("order_ids") or [order_id]
+        if not isinstance(raw_order_ids, list):
+            return JsonResponse({"success": False, "error": "La comanda no es válida."}, status=400)
+        try:
+            order_ids = list(dict.fromkeys(int(candidate) for candidate in raw_order_ids))
+        except (TypeError, ValueError):
+            return JsonResponse({"success": False, "error": "La comanda no es válida."}, status=400)
+        if not order_ids or order_id not in order_ids:
+            return JsonResponse({"success": False, "error": "La comanda no es válida."}, status=400)
 
-            order.save(update_fields=[
-                "cold_bar_status", "hot_bar_status",
-                "cold_bar_completed_at", "hot_bar_completed_at", "updated_at",
-            ])
-            station_items.update(preparation_status=status)
-            
-            # Update overall status based on bar statuses
-            order.update_overall_status()
+        with transaction.atomic():
+            orders = list(
+                Order.objects.select_for_update().prefetch_related("items").filter(id__in=order_ids)
+            )
+            if len(orders) != len(order_ids):
+                return JsonResponse({"success": False, "error": "Uno de los pedidos ya no existe."}, status=404)
+
+            # Una tarjeta agrupada solamente puede cerrar la mesa abierta que la originó.
+            if len(orders) > 1:
+                table_reference = orders[0].table_reference.strip()
+                valid_table_group = (
+                    bool(table_reference)
+                    and all(
+                        order.order_type == Order.OrderType.EAT_IN
+                        and order.table_reference.strip().casefold() == table_reference.casefold()
+                        and order.operating_date == timezone.localdate()
+                        and getattr(order, f"{bar}_bar_status") == Order.BarStatus.PENDING
+                        for order in orders
+                    )
+                )
+                if not valid_table_group:
+                    return JsonResponse({"success": False, "error": "La mesa ya no está abierta."}, status=400)
+
+            completed_at = timezone.now() if status == Order.BarStatus.COMPLETED else None
+            for order in orders:
+                station_items = [
+                    item for item in order.items.all()
+                    if item.preparation_station_snapshot == bar
+                ]
+                if not station_items:
+                    return JsonResponse(
+                        {"success": False, "error": "Esta orden no tiene productos para esa barra."},
+                        status=400,
+                    )
+
+                if bar == "cold":
+                    order.cold_bar_status = status
+                    order.cold_bar_completed_at = completed_at
+                else:
+                    order.hot_bar_status = status
+                    order.hot_bar_completed_at = completed_at
+
+                order.save(update_fields=[
+                    "cold_bar_status", "hot_bar_status",
+                    "cold_bar_completed_at", "hot_bar_completed_at", "updated_at",
+                ])
+                order.items.filter(id__in=[item.id for item in station_items]).update(preparation_status=status)
+                order.update_overall_status()
+
+            order = next(order for order in orders if order.id == order_id)
         
         return JsonResponse({
             "success": True,
