@@ -828,6 +828,11 @@ def build_kitchen_context(filter_mode=None):
         standalone_rows = []
 
         for row in rows:
+            # Una mesa puede tener artículos repartidos entre ambas barras. Cada
+            # tarjeta sólo debe agrupar los pedidos que sí contienen trabajo para
+            # la barra que está renderizando.
+            if not row[item_key]:
+                continue
             order = row["order"]
             table_reference = order.table_reference.strip()
             is_open_table = (

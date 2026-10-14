@@ -263,6 +263,33 @@ class CreateOrderTests(TestCase):
         self.assertEqual(len(pending_rows), 1)
         self.assertEqual(pending_rows[0]["order_ids"], [third.id])
 
+    def test_kitchen_table_group_only_contains_orders_for_its_station(self):
+        cold_category = Category.objects.create(
+            name="Bebidas frías",
+            preparation_station=Category.PreparationStation.COLD,
+        )
+        cold_product = Product.objects.create(
+            category=cold_category,
+            name="Limonada",
+            price=Decimal("25.00"),
+            is_available=True,
+        )
+        hot_order = create_order(
+            user=self.user,
+            order_type=Order.OrderType.EAT_IN,
+            customer_data={"table_reference": "6"},
+            items=[{"product_id": self.product.id, "quantity": 1}],
+        )
+        cold_order = create_order(
+            user=self.user,
+            order_type=Order.OrderType.EAT_IN,
+            customer_data={"table_reference": "6"},
+            items=[{"product_id": cold_product.id, "quantity": 1}],
+        )
+
+        self.assertEqual(build_kitchen_context("hot")["hot_rows"][0]["order_ids"], [hot_order.id])
+        self.assertEqual(build_kitchen_context("cold")["cold_rows"][0]["order_ids"], [cold_order.id])
+
     def test_rejects_unavailable_product(self):
         self.product.is_available = False
         self.product.save(update_fields=["is_available"])
