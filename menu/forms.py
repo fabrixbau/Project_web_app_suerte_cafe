@@ -83,6 +83,7 @@ class ProductForm(forms.ModelForm):
             "description",
             "is_available",
             "is_visible_to_customers",
+            "requires_customization",
             "preparation_station",
             "packaging_type",
         ]
@@ -94,6 +95,7 @@ class ProductForm(forms.ModelForm):
             "description": "Descripción",
             "is_available": "Disponible",
             "is_visible_to_customers": "Mostrar a clientes del QR",
+            "requires_customization": "Requerir personalización antes de agregar",
             "preparation_station": "Barra de preparación (opcional)",
             "packaging_type": "Envase específico (opcional)",
         }

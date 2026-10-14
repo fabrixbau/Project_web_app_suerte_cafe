@@ -77,6 +77,10 @@ class Product(models.Model):
         default=True,
         help_text="Controla si aparece en el menú público del QR.",
     )
+    requires_customization = models.BooleanField(
+        default=False,
+        help_text="Abre la personalización antes de poder agregarlo al pedido.",
+    )
     preparation_station = models.CharField(
         max_length=10,
         choices=Category.PreparationStation.choices,

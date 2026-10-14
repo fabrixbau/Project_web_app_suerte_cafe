@@ -13,7 +13,7 @@
                 <div class="form-field switch-field">
                     <div>
                         <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                        <small>Permite agregar este producto a pedidos nuevos.</small>
+                        <small>{% if field.help_text %}{{ field.help_text }}{% else %}Permite agregar este producto a pedidos nuevos.{% endif %}</small>
                     </div>
                     <label class="modern-switch" for="{{ field.id_for_label }}">
                         {{ field }}

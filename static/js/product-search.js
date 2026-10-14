@@ -47,8 +47,15 @@
         input.value = "";
         clearSuggestions();
         restoreProducts();
-        const firstCategory = categoryButtons[0];
-        if (firstCategory) firstCategory.click();
+        // No usar .click() aquí: el listener global de documento volvería a
+        // cerrar la búsqueda y se creaba un ciclo al tocar una categoría.
+        const selectedCategory = categoryButtons.find((button) => button.classList.contains("is-selected")) || categoryButtons[0];
+        if (selectedCategory) {
+            categoryButtons.forEach((button) => button.classList.toggle("is-selected", button === selectedCategory));
+            sections.forEach((section) => {
+                section.hidden = section.id !== selectedCategory.dataset.categoryTarget;
+            });
+        }
     }
 
     function positionSuggestions() {

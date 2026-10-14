@@ -117,6 +117,7 @@ def prepare_product_customizations(products):
             "name": product.name,
             "base_price": str(product.price),
             "standard_price": str(product.standard_price),
+            "requires_customization": product.requires_customization,
             "groups": groups_payload,
         }
     return payload

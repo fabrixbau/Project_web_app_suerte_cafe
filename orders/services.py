@@ -73,6 +73,11 @@ def prepare_configured_item(product, quantity, selected_option_ids=None, comment
     if quantity < 1:
         raise ValidationError("La cantidad debe ser mayor que cero.")
 
+    if product.requires_customization and not selected_option_ids:
+        raise ValidationError(
+            f"{product.name} requiere elegir una personalización antes de agregarlo."
+        )
+
     explicit_selection = selected_option_ids is not None
     try:
         requested_ids = {int(option_id) for option_id in (selected_option_ids or [])}
@@ -151,7 +156,7 @@ def prepare_configured_item(product, quantity, selected_option_ids=None, comment
         "unit_price": unit_price,
         "configuration_snapshot": snapshot,
         "configuration_signature": ",".join(map(str, sorted(selected_ids))),
-        "is_customized": selected_ids != default_ids or bool(clean_comment),
+        "is_customized": product.requires_customization or selected_ids != default_ids or bool(clean_comment),
         "customization_comment": clean_comment,
     }
 

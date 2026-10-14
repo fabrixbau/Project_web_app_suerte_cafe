@@ -54,7 +54,7 @@
             unit_price: price,
             labels,
             comment: cleanComment,
-            is_customized: signature !== defaultSignature || Boolean(cleanComment),
+            is_customized: product.requires_customization || signature !== defaultSignature || Boolean(cleanComment),
         };
     }
 
@@ -184,6 +184,12 @@
         );
     }
 
+    function initialSelectionIds(product) {
+        // Estos productos no pueden entrar como la versión estándar: cada unidad
+        // debe iniciar sin selección para que la persona elija su configuración.
+        return product.requires_customization ? [] : defaultOptionIds(product);
+    }
+
     function selectDialogOptions(optionIds) {
         const selected = new Set(optionIds.map(Number));
         dialog.querySelectorAll(".customization-choice-input").forEach((input) => {
@@ -216,7 +222,7 @@
     function openDialog(productId, optionIds = null, quantity = 1, editContext = {}) {
         activeProduct = products[String(productId)];
         if (!activeProduct) return;
-        const initialOptionIds = optionIds ? optionIds.map(Number) : defaultOptionIds(activeProduct);
+        const initialOptionIds = optionIds ? optionIds.map(Number) : initialSelectionIds(activeProduct);
         const initialQuantity = Math.max(1, Number.parseInt(quantity, 10) || 1);
         const initialComment = editContext.comment || "";
         pendingDialogUnits = Array.from({ length: initialQuantity - 1 }, () => ({option_ids: [...initialOptionIds], comment: initialComment}));
@@ -307,7 +313,7 @@
     dialog.querySelector("[data-dialog-increase]").addEventListener("click", () => {
         if (dialogQuantity >= 99 || !validateDialogSelection()) return;
         pendingDialogUnits.push({option_ids: selectedOptionIds(), comment: selectedComment()});
-        selectDialogUnit({option_ids: defaultOptionIds(activeProduct), comment: ""});
+        selectDialogUnit({option_ids: initialSelectionIds(activeProduct), comment: ""});
         dialogQuantity = pendingDialogUnits.length + 1;
         updateDialogPrice();
     });

@@ -152,8 +152,9 @@
                             data-price="{{ product.standard_price|unlocalize }}"
                             data-product-id="{{ product.id }}"
                             data-has-options="{% if product.has_options %}true{% else %}false{% endif %}"
+                            data-requires-customization="{% if product.requires_customization %}true{% else %}false{% endif %}"
                             data-packaging-type="{{ product.effective_packaging_type_id|default:'' }}"
-                            title="Haz clic en la tarjeta para agregar una unidad"
+                            title="{% if product.requires_customization %}Personaliza el producto antes de agregarlo{% else %}Haz clic en la tarjeta para agregar una unidad{% endif %}"
                         >
                             <div class="product-card-image-frame">
                                 {% if product.image %}
@@ -180,6 +181,7 @@
                                         min="0"
                                         value="{{ product.selected_quantity }}"
                                         aria-label="Cantidad de {{ product.name }}"
+                                        {% if product.requires_customization %}readonly tabindex="-1"{% endif %}
                                     >
                                     <output class="product-total-quantity" data-product-total-quantity aria-label="Cantidad total de {{ product.name }}">{{ product.selected_quantity }}</output>
                                     <button type="button" class="increase-quantity" aria-label="Agregar uno">+</button>
@@ -440,14 +442,29 @@
 
     productCards.forEach((card) => {
         const input = card.querySelector(".quantity-input");
-        card.querySelector(".decrease-quantity").addEventListener("click", () => changeQuantity(input, -1));
-        card.querySelector(".increase-quantity").addEventListener("click", () => changeQuantity(input, 1));
+        const requiresCustomization = card.dataset.requiresCustomization === "true";
+        const openCustomization = () => {
+            const button = card.querySelector("[data-customize-product]");
+            if (button) button.click();
+        };
+        card.querySelector(".decrease-quantity").addEventListener("click", () => {
+            if (!requiresCustomization) changeQuantity(input, -1);
+        });
+        card.querySelector(".increase-quantity").addEventListener("click", () => {
+            if (requiresCustomization) openCustomization();
+            else changeQuantity(input, 1);
+        });
         input.addEventListener("input", () => {
+            if (requiresCustomization) input.value = 0;
             if ((Number.parseInt(input.value, 10) || 0) < 0) input.value = 0;
             updateOrderSummary();
         });
         card.addEventListener("click", (event) => {
             if (event.target.closest("button, input, a")) return;
+            if (requiresCustomization) {
+                openCustomization();
+                return;
+            }
             changeQuantity(input, 1);
             card.classList.remove("was-added");
             window.requestAnimationFrame(() => card.classList.add("was-added"));
@@ -458,11 +475,11 @@
     updateOrderSummary();
 </script>{% else %}<script src="{% static 'js/legacy/order-create-page.js' %}?v=1"></script>{% endif %}
 {% if not public_order %}<script src="{% compatible_js 'customer-autocomplete.js' %}?v=2"></script>{% endif %}
-<script src="{% compatible_js 'product-customizer.js' %}?v=7"></script>
+<script src="{% compatible_js 'product-customizer.js' %}?v=8"></script>
 <script src="{% compatible_js 'packaging-charge.js' %}?v=3"></script>
 {% if not public_order %}<script src="{% compatible_js 'payment.js' %}?v=7"></script>{% endif %}
 {% if not public_order %}<script src="{% compatible_js 'table-map.js' %}?v=3"></script>{% endif %}
 <script src="{% compatible_js 'order-flow-focus.js' %}?v=3"></script>
 <script src="{% compatible_js 'order-comment.js' %}?v=2"></script>
-<script src="{% compatible_js 'product-search.js' %}?v=5"></script>
+<script src="{% compatible_js 'product-search.js' %}?v=6"></script>
 {% endblock %}
